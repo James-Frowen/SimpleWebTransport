@@ -54,7 +54,7 @@ namespace Mirror.SimpleWeb
 
         private void LateUpdate()
         {
-            server?.Update();
+            server?.Update(this);
         }
 
         #region Client

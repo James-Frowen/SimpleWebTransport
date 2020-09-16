@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace Mirror.SimpleWeb
 {
@@ -53,7 +54,7 @@ namespace Mirror.SimpleWeb
             return server.GetClientAddress(connectionId);
         }
 
-        public void Update()
+        public void Update(MonoBehaviour behaviour)
         {
             while (server.receiveQueue.TryDequeue(out WebSocketServer.Message next))
             {
@@ -69,6 +70,10 @@ namespace Mirror.SimpleWeb
                         onDisconnect?.Invoke(next.connId);
                         break;
                 }
+
+                // return if behaviour was disabled after data
+                if (!behaviour.enabled)
+                    return;
             }
         }
     }
