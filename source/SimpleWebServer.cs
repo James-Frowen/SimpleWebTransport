@@ -7,17 +7,15 @@ namespace Mirror.SimpleWeb
     {
         const int RecieveLoopSleepTime = 1;
 
-        readonly int sendTimeout;
-        readonly bool noDelay;
         readonly short port;
 
-        WebSocketServer server;
+        readonly WebSocketServer server;
 
         public SimpleWebServer(short port, bool noDelay, int sendTimeout)
         {
             this.port = port;
-            this.sendTimeout = sendTimeout;
-            this.noDelay = noDelay;
+
+            server = new WebSocketServer(noDelay, sendTimeout, RecieveLoopSleepTime);
         }
 
         public bool Active { get; internal set; }
@@ -27,18 +25,17 @@ namespace Mirror.SimpleWeb
         public event Action<int, ArraySegment<byte>> onData;
         public event Action<int> onError;
 
-        internal void Start()
+        public void Start()
         {
-            server = new WebSocketServer(noDelay, sendTimeout, RecieveLoopSleepTime);
             server.Listen(port);
         }
 
-        internal void Stop()
+        public void Stop()
         {
             server.Stop();
         }
 
-        internal void SendAll(List<int> connectionIds, ArraySegment<byte> segment)
+        public void SendAll(List<int> connectionIds, ArraySegment<byte> segment)
         {
             foreach (int id in connectionIds)
             {
@@ -46,14 +43,33 @@ namespace Mirror.SimpleWeb
             }
         }
 
-        internal bool KickClient(int connectionId)
+        public bool KickClient(int connectionId)
         {
             return server.CloseConnection(connectionId);
         }
 
-        internal string GetClientAddress(int connectionId)
+        public string GetClientAddress(int connectionId)
         {
             return server.GetClientAddress(connectionId);
+        }
+
+        public void Update()
+        {
+            while (server.receiveQueue.TryDequeue(out WebSocketServer.Message next))
+            {
+                switch (next.type)
+                {
+                    case WebSocketServer.EventType.Connected:
+                        onConnect?.Invoke(next.connId);
+                        break;
+                    case WebSocketServer.EventType.Data:
+                        onData?.Invoke(next.connId, next.data);
+                        break;
+                    case WebSocketServer.EventType.Disconnected:
+                        onDisconnect?.Invoke(next.connId);
+                        break;
+                }
+            }
         }
     }
 }

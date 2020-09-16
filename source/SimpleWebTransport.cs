@@ -17,7 +17,13 @@ namespace Mirror.SimpleWeb
 
         [Tooltip("Protect against allocation attacks by keeping the max message size small. Otherwise an attacker might send multiple fake packets with 2GB headers, causing the server to run out of memory after allocating multiple large packets.")]
         public int maxMessageSize = 16 * 1024;
-        public ushort port = 7776;
+        public short port = 7776;
+
+        [Tooltip("disables nagle algorithm. lowers CPU% and latency but increases bandwidth")]
+        public bool noDelay = true;
+
+        [Tooltip("Send would stall forever if the network is cut off during a send, so we need a timeout (in milliseconds)")]
+        public int sendTimeout = 5000;
 
 
         SimpleWebClient client;
@@ -38,6 +44,10 @@ namespace Mirror.SimpleWeb
             server?.Stop();
         }
 
+        private void LateUpdate()
+        {
+            server?.Update();
+        }
 
         #region Client
         public override bool ClientConnected()
@@ -105,8 +115,6 @@ namespace Mirror.SimpleWeb
         }
         #endregion
 
-
-
         #region Server
         public override bool ServerActive()
         {
@@ -124,7 +132,7 @@ namespace Mirror.SimpleWeb
                 Debug.LogError("SimpleWebServer Already Started");
             }
 
-            server = new SimpleWebServer();
+            server = new SimpleWebServer(port, noDelay, sendTimeout);
 
             server.onConnect += OnServerConnected.Invoke;
             server.onDisconnect += OnServerDisconnected.Invoke;

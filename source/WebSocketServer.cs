@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -36,7 +36,7 @@ namespace Mirror.SimpleWeb
             Disconnected
         }
 
-        ConcurrentQueue<Message> receiveQueue = new ConcurrentQueue<Message>();
+        public readonly ConcurrentQueue<Message> receiveQueue = new ConcurrentQueue<Message>();
 
 
         private readonly bool noDelay;
