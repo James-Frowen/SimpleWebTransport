@@ -1,7 +1,12 @@
 let websocket;
 
 function IsConnected() {
-    return websocket?.readyState === WebSocket.OPEN;
+    if (websocket !== undefined) {
+        return websocket.readyState === WebSocket.OPEN;
+    }
+    else {
+        return false;
+    }
 }
 
 function Connect(addressPtr, openCallbackPtr, closeCallBackPtr, messageCallbackPtr, errorCallbackPtr) {
