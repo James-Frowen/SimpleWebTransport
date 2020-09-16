@@ -25,6 +25,14 @@ namespace Mirror.SimpleWeb
         [Tooltip("Send would stall forever if the network is cut off during a send, so we need a timeout (in milliseconds)")]
         public int sendTimeout = 5000;
 
+        private void OnValidate()
+        {
+            if (maxMessageSize > ushort.MaxValue)
+            {
+                Debug.LogWarning($"max supported value for maxMessageSize is {ushort.MaxValue}");
+                maxMessageSize = ushort.MaxValue;
+            }
+        }
 
         SimpleWebClient client;
         SimpleWebServer server;
@@ -110,6 +118,12 @@ namespace Mirror.SimpleWeb
                 return false;
             }
 
+            if (segment.Count > maxMessageSize)
+            {
+                Debug.LogError("Message greater than max size");
+                return false;
+            }
+
             client.Send(segment);
             return true;
         }
@@ -161,6 +175,12 @@ namespace Mirror.SimpleWeb
             if (!ServerActive())
             {
                 Debug.LogError("SimpleWebServer Not Active");
+                return false;
+            }
+
+            if (segment.Count > maxMessageSize)
+            {
+                Debug.LogError("Message greater than max size");
                 return false;
             }
 
