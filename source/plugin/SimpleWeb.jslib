@@ -1,39 +1,42 @@
-let websocket;
+let webSocket = undefined;
 
 function IsConnected() {
-    if (websocket !== undefined) {
-        return websocket.readyState === WebSocket.OPEN;
+    if (webSocket) {
+        return webSocket.readyState === webSocket.OPEN;
     }
     else {
         return false;
     }
 }
 
+
 function Connect(addressPtr, openCallbackPtr, closeCallBackPtr, messageCallbackPtr, errorCallbackPtr) {
     const address = Pointer_stringify(addressPtr);
     console.log("Connecting to " + address);
 
-    // Create WebSocket connection.
-    const websocket = new WebSocket(address);
+    // Create webSocket connection.
+    webSocket = new WebSocket(address);
+    webSocket.binaryType = 'arraybuffer';
 
     // Connection opened
-    websocket.addEventListener('open', function (event) {
+    webSocket.addEventListener('open', function (event) {
         console.log('Connection opened!');
 
         Runtime.dynCall('v', openCallbackPtr, 0);
-        // websocket.send('Hello Server!');
+        // webSocket.send('Hello Server!');
     });
-    websocket.addEventListener('close', function (event) {
+    webSocket.addEventListener('close', function (event) {
         console.log('Socket Closed', event.data);
 
         Runtime.dynCall('v', closeCallBackPtr, 0);
     });
     // Listen for messages
-    websocket.addEventListener('message', function (event) {
+    webSocket.addEventListener('message', function (event) {
         console.log('Message from server ', event.data);
 
-        if (e.data instanceof ArrayBuffer) {
-            var array = new Uint8Array(e.data);
+        if (event.data instanceof ArrayBuffer) {
+            // TODO dont alloc each time
+            var array = new Uint8Array(event.data);
             var ptr = _malloc(array.length);
             var dataHeap = new Uint8Array(HEAPU8.buffer, ptr, array.length);
             dataHeap.set(array);
@@ -44,7 +47,7 @@ function Connect(addressPtr, openCallbackPtr, closeCallBackPtr, messageCallbackP
             console.error("message type not supported")
         }
     });
-    websocket.addEventListener('error', function (event) {
+    webSocket.addEventListener('error', function (event) {
         console.error('Socket Error', event.data);
 
         Runtime.dynCall('v', errorCallbackPtr, 0);
@@ -54,10 +57,11 @@ function Connect(addressPtr, openCallbackPtr, closeCallBackPtr, messageCallbackP
 function Disconnect() {
     console.log("Disconnect");
 
-    if (websocket)
-        websocket.close();
+    if (webSocket) {
+        webSocket.close();
+    }
 
-    websocket = undefined;
+    webSocket = undefined;
 }
 
 function Send(arrayPtr, offset, length) {
@@ -66,19 +70,27 @@ function Send(arrayPtr, offset, length) {
         console.log("    " + HEAPU8[arrayPtr + offset + i]);
     }
 
-    if (websocket) {
+    if (webSocket) {
         const start = arrayPtr + offset;
         const end = start + length;
         const data = HEAPU8.buffer.slice(start, end);
-        websocket.send(data);
+        webSocket.send(data);
     }
 }
 function InvokeCallback(callbackPtr) {
     Runtime.dynCall('v', callbackPtr, 0);
 }
 
+function Debug(str) {
+    window.alert(Pointer_stringify(str));
+}
+
 
 mergeInto(LibraryManager.library, {
+    DebugNone: Debug,
+    DebugAnsi: Debug,
+    DebugUnicode: Debug,
+    DebugAuto: Debug,
     IsConnected,
     Connect,
     Disconnect,

@@ -4,12 +4,14 @@ using System.Runtime.InteropServices;
 namespace Mirror.SimpleWeb
 {
 #if UNITY_WEBGL
-    internal static class SimpleWebJLib
+    public static class SimpleWebJLib
     {
         [DllImport("__Internal")]
         internal static extern bool IsConnected();
 
-        [DllImport("__Internal", CharSet = CharSet.Unicode)]
+#pragma warning disable CA2101 // Specify marshaling for P/Invoke string arguments
+        [DllImport("__Internal")]
+#pragma warning restore CA2101 // Specify marshaling for P/Invoke string arguments
         internal static extern void Connect(string address, Action openCallback, Action closeCallBack, Action<byte[], int> messageCallback, Action errorCallback);
 
         [DllImport("__Internal")]

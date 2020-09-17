@@ -1,11 +1,43 @@
 using System;
 using AOT;
+using UnityEngine;
 
 namespace Mirror.SimpleWeb
 {
     public class SimpleWebClient
     {
-        public bool IsConnected() => SimpleWebJLib.IsConnected();
+        static SimpleWebClient instance;
+
+        public static SimpleWebClient Create()
+        {
+            if (instance != null)
+            {
+                Debug.LogError("Cant create SimpleWebClient while one already exists");
+                return null;
+            }
+
+            instance = new SimpleWebClient();
+            return instance;
+        }
+
+        public static void CloseExisting()
+        {
+            if (instance == null)
+            {
+                Debug.LogError("Cant Close SimpleWebClient because none was open");
+                return;
+            }
+
+            instance.Disconnect();
+            instance = null;
+        }
+
+        // dont let others create new because only 1 instance can exist at once,
+        // this is because callbacks sent to JS must be static
+        private SimpleWebClient() { }
+
+        public bool CheckJsConnected() => SimpleWebJLib.IsConnected();
+        public bool IsConnected { get; private set; }
 
         public event Action onConnect;
         public event Action onDisconnect;
@@ -15,11 +47,13 @@ namespace Mirror.SimpleWeb
         public void Connect(string address)
         {
             SimpleWebJLib.Connect(address, OpenCallback, CloseCallBack, MessageCallback, ErrorCallback);
+            IsConnected = true;
         }
 
         public void Disconnect()
         {
             SimpleWebJLib.Disconnect();
+            IsConnected = false;
         }
 
         public void Send(ArraySegment<byte> segment)
@@ -28,27 +62,30 @@ namespace Mirror.SimpleWeb
         }
 
         [MonoPInvokeCallback(typeof(Action))]
-        void OpenCallback()
+        static void OpenCallback()
         {
-            onConnect?.Invoke();
+            instance.onConnect?.Invoke();
         }
 
         [MonoPInvokeCallback(typeof(Action))]
-        void CloseCallBack()
+        static void CloseCallBack()
         {
-            onDisconnect?.Invoke();
+            instance.onDisconnect?.Invoke();
         }
 
         [MonoPInvokeCallback(typeof(Action<byte, int>))]
-        void MessageCallback(byte[] data, int count)
+        static void MessageCallback(byte[] data, int count)
         {
-            onData?.Invoke(new ArraySegment<byte>(data, 0, count));
+            instance.onData?.Invoke(new ArraySegment<byte>(data, 0, count));
         }
 
         [MonoPInvokeCallback(typeof(Action))]
-        void ErrorCallback()
+        static void ErrorCallback()
         {
-            onError?.Invoke();
+            instance.onError?.Invoke();
+
+            SimpleWebJLib.Disconnect();
+            instance.IsConnected = false;
         }
     }
 }

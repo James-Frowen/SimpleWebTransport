@@ -60,7 +60,7 @@ namespace Mirror.SimpleWeb
         #region Client
         public override bool ClientConnected()
         {
-            return client != null && client.IsConnected();
+            return client != null && client.IsConnected;
         }
 
         public override void ClientConnect(string address)
@@ -83,7 +83,8 @@ namespace Mirror.SimpleWeb
                 Port = port
             };
 
-            client = new SimpleWebClient();
+            client = SimpleWebClient.Create();
+            if (client == null) { return; }
 
             client.onConnect += OnClientConnected.Invoke;
             client.onDisconnect += OnClientDisconnected.Invoke;
@@ -134,6 +135,7 @@ namespace Mirror.SimpleWeb
         {
             return server != null && server.Active;
         }
+
         public override void ServerStart()
         {
             if (isWebGL)
@@ -170,6 +172,17 @@ namespace Mirror.SimpleWeb
             server = null;
         }
 
+        public override bool ServerDisconnect(int connectionId)
+        {
+            if (!ServerActive())
+            {
+                Debug.LogError(" SimpleWebServer Not Active");
+                return false;
+            }
+
+            return server.KickClient(connectionId);
+        }
+
         public override bool ServerSend(List<int> connectionIds, int channelId, ArraySegment<byte> segment)
         {
             if (!ServerActive())
@@ -186,17 +199,6 @@ namespace Mirror.SimpleWeb
 
             server.SendAll(connectionIds, segment);
             return true;
-        }
-
-        public override bool ServerDisconnect(int connectionId)
-        {
-            if (!ServerActive())
-            {
-                Debug.LogError(" SimpleWebServer Not Active");
-                return false;
-            }
-
-            return server.KickClient(connectionId);
         }
 
         public override string ServerGetClientAddress(int connectionId)

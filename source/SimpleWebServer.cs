@@ -19,7 +19,7 @@ namespace Mirror.SimpleWeb
             server = new WebSocketServer(noDelay, sendTimeout, RecieveLoopSleepTime);
         }
 
-        public bool Active { get; internal set; }
+        public bool Active { get; private set; }
 
         public event Action<int> onConnect;
         public event Action<int> onDisconnect;
@@ -29,11 +29,13 @@ namespace Mirror.SimpleWeb
         public void Start()
         {
             server.Listen(port);
+            Active = true;
         }
 
         public void Stop()
         {
             server.Stop();
+            Active = false;
         }
 
         public void SendAll(List<int> connectionIds, ArraySegment<byte> segment)

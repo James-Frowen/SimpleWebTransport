@@ -20,7 +20,7 @@ namespace Mirror.SimpleWeb
             public Thread receiveThread;
             public Thread sendThread;
 
-            public ManualResetEvent sendPending;
+            public ManualResetEvent sendPending = new ManualResetEvent(false);
             public ConcurrentQueue<ArraySegment<byte>> sendQueue = new ConcurrentQueue<ArraySegment<byte>>();
         }
         public struct Message
@@ -201,18 +201,12 @@ namespace Mirror.SimpleWeb
                     // 4 for mask
                     WaitForData(client, 6, recieveLoopSleepTime);
 
+                    // TODO dont allocate new buffer
                     int length = client.Available;
                     byte[] buffer = new byte[length];
                     stream.Read(buffer, 0, length);
 
-                    ArraySegment<byte> data = ProcessMessage(buffer, length);
-
-                    receiveQueue.Enqueue(new Message
-                    {
-                        connId = conn.connId,
-                        type = EventType.Data,
-                        data = data,
-                    });
+                    ProcessMessages(conn, buffer, length);
 
                     Thread.Sleep(recieveLoopSleepTime);
                 }
@@ -238,7 +232,27 @@ namespace Mirror.SimpleWeb
             }
         }
 
-        private static ArraySegment<byte> ProcessMessage(byte[] buffer, int length)
+        private void ProcessMessages(Connection conn, byte[] buffer, int length)
+        {
+            int bytesProcessed = ProcessMessage(conn, buffer, length);
+
+            while (bytesProcessed < length)
+            {
+                // TODO dont allocate new buffer
+                int newLength = length - bytesProcessed;
+                byte[] newBuffer = new byte[newLength];
+
+                bytesProcessed = ProcessMessage(conn, newBuffer, newLength);
+            }
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="conn"></param>
+        /// <param name="buffer"></param>
+        /// <param name="length"></param>
+        /// <returns>bytes processed</returns>
+        private int ProcessMessage(Connection conn, byte[] buffer, int length)
         {
             bool finished = (buffer[0] & 0b10000000) != 0; // has full message been sent
             bool hasMask = (buffer[1] & 0b10000000) != 0; // must be true, "All messages from the client to the server have this bit set"
@@ -267,10 +281,10 @@ namespace Mirror.SimpleWeb
                 throw new InvalidDataException("Message length was zero");
             }
 
-            if (offset + msglen != length)
-            {
-                throw new InvalidDataException("Message length was not equal to buffer length");
-            }
+            //if (offset + msglen != length)
+            //{
+            //    throw new InvalidDataException("Message length was not equal to buffer length");
+            //}
 
 
             byte[] decoded = new byte[msglen];
@@ -280,7 +294,16 @@ namespace Mirror.SimpleWeb
             for (int i = 0; i < msglen; i++)
                 decoded[i] = (byte)(buffer[offset + i] ^ mask.getMaskByte(i));
 
-            return new ArraySegment<byte>(decoded, 0, decoded.Length);
+            ArraySegment<byte> data = new ArraySegment<byte>(decoded, 0, decoded.Length);
+
+            receiveQueue.Enqueue(new Message
+            {
+                connId = conn.connId,
+                type = EventType.Data,
+                data = data,
+            });
+
+            return offset + msglen;
         }
 
         struct Mask
@@ -427,6 +450,7 @@ namespace Mirror.SimpleWeb
             if (connections.TryGetValue(id, out Connection conn))
             {
                 conn.sendQueue.Enqueue(segment);
+                conn.sendPending.Set();
             }
             else
             {
