@@ -1,0 +1,20 @@
+{
+    "name": "SimpleWebTransport.Tests.Editor",
+    "references": [
+        "Mirror",
+        "SimpleWebTransport",
+        "SimpleWebTransport.Tests.Common"
+    ],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": []
+}
