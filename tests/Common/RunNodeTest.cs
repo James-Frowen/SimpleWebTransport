@@ -1,21 +1,31 @@
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
 
-namespace SimpleWebTransport.Tests
+namespace Mirror.SimpleWeb.Tests
 {
     public static class RunNode
     {
+        static Thread mainThread = Thread.CurrentThread;
+
         public struct Result
         {
             public bool timedOut;
             public string[] output;
             public string[] error;
         }
-        public static Result Run(string scriptName, int msTimeout = 5000)
+
+        public static Result Run(string scriptName, bool continueOnCapturedContext, int msTimeout = 5000)
+        {
+            Task<RunNode.Result> task = RunAsync(scriptName, msTimeout, continueOnCapturedContext);
+            task.Wait();
+            return task.Result;
+        }
+        public static async Task<Result> RunAsync(string scriptName, int msTimeout = 5000, bool continueOnCapturedContext = true)
         {
             string fullPath = ResolvePath(scriptName);
 
@@ -34,8 +44,7 @@ namespace SimpleWebTransport.Tests
                 StreamReader output = process.StandardOutput;
                 StreamReader error = process.StandardError;
 
-                Task waitTask = WaitForEnd(process, msTimeout);
-                waitTask.Wait();
+                await WaitForEnd(process, msTimeout).ConfigureAwait(continueOnCapturedContext);
 
                 bool timeoutReached = !process.HasExited;
                 if (timeoutReached)
@@ -45,7 +54,7 @@ namespace SimpleWebTransport.Tests
                 string errorString = error.ReadToEnd();
 
                 UnityEngine.Debug.Log($"node outputStream: {outputString}");
-                UnityEngine.Debug.Log($"ndoe errorStream: {errorString}");
+                UnityEngine.Debug.Log($"node errorStream: {errorString}");
 
                 return new Result
                 {
@@ -57,7 +66,6 @@ namespace SimpleWebTransport.Tests
             }
         }
 
-
         static async Task WaitForEnd(Process process, int msTimeout)
         {
             bool cancel = false;
@@ -68,7 +76,7 @@ namespace SimpleWebTransport.Tests
 
                 cancel = true;
             });
-
+            int i = 4;
             while (!process.HasExited)
             {
                 if (cancel)

@@ -2,7 +2,7 @@ using System.Diagnostics;
 using System.IO;
 using NUnit.Framework;
 
-namespace SimpleWebTransport.Tests
+namespace Mirror.SimpleWeb.Tests
 {
     [Category("SimpleWebTransport")]
     public class CheckNodeTest
@@ -22,7 +22,7 @@ namespace SimpleWebTransport.Tests
         [Test]
         public void ShouldReturnHelloWorld()
         {
-            RunNode.Result result = RunNode.Run("HelloWorld.js");
+            RunNode.Result result = RunNode.Run("HelloWorld.js", false);
 
             Assert.That(result.timedOut, Is.False);
 
@@ -37,7 +37,7 @@ namespace SimpleWebTransport.Tests
         {
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
-            RunNode.Result result = RunNode.Run("HelloWorld.js");
+            RunNode.Result result = RunNode.Run("HelloWorld.js", false);
 
             stopwatch.Stop();
             double seconds = stopwatch.Elapsed.TotalSeconds;
@@ -48,7 +48,7 @@ namespace SimpleWebTransport.Tests
         [Test]
         public void ShouldStopAfterTimeout()
         {
-            RunNode.Result result = RunNode.Run("Timeout.js");
+            RunNode.Result result = RunNode.Run("Timeout.js", false);
 
             Assert.That(result.timedOut, Is.True);
 
