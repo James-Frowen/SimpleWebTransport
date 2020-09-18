@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
@@ -77,7 +78,18 @@ namespace Mirror.SimpleWeb
         }
         public void Stop()
         {
-            acceptThread.Interrupt();
+            acceptThread?.Interrupt();
+            acceptThread = null;
+
+            Connection[] connections = this.connections.Values.ToArray();
+            foreach (Connection conn in connections)
+            {
+                conn.client.Close();
+                conn.receiveThread.Interrupt();
+                conn.sendThread.Interrupt();
+            }
+
+            this.connections.Clear();
         }
 
         void acceptLoop()
@@ -108,10 +120,8 @@ namespace Mirror.SimpleWeb
                 }
 
             }
-            catch (ThreadInterruptedException)
-            {
-                return;
-            }
+            catch (ThreadInterruptedException) { return; }
+            catch (ThreadAbortException) { return; }
             catch (Exception e)
             {
                 Debug.LogException(e);
@@ -200,6 +210,7 @@ namespace Mirror.SimpleWeb
                     // 1+ for length (length can be be 1, 2, or 4)
                     // 4 for mask
                     WaitForData(client, 6, recieveLoopSleepTime);
+                    if (!client.Connected) { return; }
 
                     // TODO dont allocate new buffer
                     int length = client.Available;
@@ -226,7 +237,7 @@ namespace Mirror.SimpleWeb
 
         private static void WaitForData(TcpClient client, int minCount, int sleepTime)
         {
-            while (client.Available < minCount)
+            while (client.Connected && client.Available < minCount)
             {
                 Thread.Sleep(sleepTime);
             }
@@ -260,26 +271,14 @@ namespace Mirror.SimpleWeb
             int opcode = buffer[0] & 0b00001111; // expecting 1 - text message
             byte lenByte = (byte)(buffer[1] - 128); // & 0111 1111
 
-            if (!finished)
-            {
-                // TODO check if we need to deal with this
-                throw new InvalidDataException("Full message should have been sent, if the full message wasn't sent it wasn't sent from this trasnport");
-            }
-            if (!hasMask)
-            {
-                throw new InvalidDataException("Message from client should have mask set to true");
-            }
-            if (opcode != 2)
-            {
-                throw new InvalidDataException("Expected opcode to be 2 for binary");
-            }
+            throwIfNotFinished(finished);
+            throwIfNoMask(hasMask);
+            throwIfBadOpCode(opcode);
 
             (int msglen, int offset) = GetMessageLength(buffer, lenByte);
 
-            if (msglen == 0)
-            {
-                throw new InvalidDataException("Message length was zero");
-            }
+            throwIfLengthZero(msglen);
+
 
             //if (offset + msglen != length)
             //{
@@ -294,17 +293,72 @@ namespace Mirror.SimpleWeb
             for (int i = 0; i < msglen; i++)
                 decoded[i] = (byte)(buffer[offset + i] ^ mask.getMaskByte(i));
 
-            ArraySegment<byte> data = new ArraySegment<byte>(decoded, 0, decoded.Length);
-
-            receiveQueue.Enqueue(new Message
+            if (opcode == 2)
             {
-                connId = conn.connId,
-                type = EventType.Data,
-                data = data,
-            });
+                ArraySegment<byte> data = new ArraySegment<byte>(decoded, 0, decoded.Length);
+
+                receiveQueue.Enqueue(new Message
+                {
+                    connId = conn.connId,
+                    type = EventType.Data,
+                    data = data,
+                });
+
+            }
+            else if (opcode == 8)
+            {
+                Debug.Log(msglen);
+                short code = 0;
+                code |= (short)(decoded[0] << 8);
+                code |= (short)(decoded[1] << 0);
+                Debug.Log(code);
+
+                Debug.Log(Encoding.UTF8.GetString(decoded, 2, msglen - 2));
+            }
 
             return offset + msglen;
         }
+
+
+        /// <exception cref="InvalidDataException"></exception>
+        private void throwIfNotFinished(bool finished)
+        {
+            if (!finished)
+            {
+                // TODO check if we need to deal with this
+                throw new InvalidDataException("Full message should have been sent, if the full message wasn't sent it wasn't sent from this trasnport");
+            }
+        }
+
+        /// <exception cref="InvalidDataException"></exception>
+        private void throwIfNoMask(bool hasMask)
+        {
+            if (!hasMask)
+            {
+                throw new InvalidDataException("Message from client should have mask set to true");
+            }
+        }
+
+        /// <exception cref="InvalidDataException"></exception>
+        private void throwIfBadOpCode(int opcode)
+        {
+            // 2 = binary
+            // 8 = close
+            if (opcode != 2 && opcode != 8)
+            {
+                throw new InvalidDataException("Expected opcode to be binary or close");
+            }
+        }
+
+        /// <exception cref="InvalidDataException"></exception>
+        private void throwIfLengthZero(int msglen)
+        {
+            if (msglen == 0)
+            {
+                throw new InvalidDataException("Message length was zero");
+            }
+        }
+
 
         struct Mask
         {
@@ -382,6 +436,9 @@ namespace Mirror.SimpleWeb
                     while (conn.sendQueue.TryDequeue(out ArraySegment<byte> msg))
                     {
                         SendMessageToClient(stream, msg);
+
+                        // check if connection was closed after sending message
+                        if (!client.Connected) { return; }
                     }
                 }
             }
