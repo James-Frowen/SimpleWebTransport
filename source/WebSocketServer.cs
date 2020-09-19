@@ -17,7 +17,7 @@ namespace Mirror.SimpleWeb
         [System.Diagnostics.Conditional("SIMPLE_WEB_INFO_LOG")]
         static void Info(string msg) => Debug.Log($"<color=cyan>{msg}</color>");
 
-        private class Connection
+        class Connection
         {
             public int connId;
             public TcpClient client;
@@ -39,16 +39,44 @@ namespace Mirror.SimpleWeb
             Data,
             Disconnected
         }
+        struct Mask
+        {
+            byte a;
+            byte b;
+            byte c;
+            byte d;
+
+            public Mask(byte[] buffer, int offset)
+            {
+                a = buffer[offset];
+                b = buffer[offset + 1];
+                c = buffer[offset + 2];
+                d = buffer[offset + 3];
+            }
+
+            public byte getMaskByte(int index)
+            {
+                switch (index % 4)
+                {
+                    default:
+                    case 0: return a;
+                    case 1: return b;
+                    case 2: return c;
+                    case 3: return d;
+                }
+
+            }
+        }
 
         public readonly ConcurrentQueue<Message> receiveQueue = new ConcurrentQueue<Message>();
 
 
-        private readonly bool noDelay;
-        private readonly int sendTimeout;
-        private readonly int recieveLoopSleepTime;
+        readonly bool noDelay;
+        readonly int sendTimeout;
+        readonly int recieveLoopSleepTime;
 
-        private TcpListener listener;
-        private Thread acceptThread;
+        TcpListener listener;
+        Thread acceptThread;
         readonly ConcurrentDictionary<int, Connection> connections = new ConcurrentDictionary<int, Connection>();
         int _previousId = 0;
         int GetNextId()
@@ -131,7 +159,7 @@ namespace Mirror.SimpleWeb
             }
         }
 
-        private void HandshakeAndReceive(Connection conn)
+        void HandshakeAndReceive(Connection conn)
         {
             bool success = Handshake(conn);
 
@@ -153,7 +181,7 @@ namespace Mirror.SimpleWeb
             ReceiveLoop(conn);
         }
 
-        private bool Handshake(Connection conn)
+        bool Handshake(Connection conn)
         {
             NetworkStream stream = conn.client.GetStream();
             byte[] buffer = new byte[1000];
@@ -177,7 +205,7 @@ namespace Mirror.SimpleWeb
             return true;
         }
 
-        private static void AcceptHandshake(NetworkStream stream, string msg)
+        static void AcceptHandshake(NetworkStream stream, string msg)
         {
             const string eol = "\r\n"; // HTTP/1.1 defines the sequence CR LF as the end-of-line marker
 
@@ -199,7 +227,7 @@ namespace Mirror.SimpleWeb
             Debug.Log("Sent Handshake");
         }
 
-        private void ReceiveLoop(Connection conn)
+        void ReceiveLoop(Connection conn)
         {
             try
             {
@@ -235,7 +263,7 @@ namespace Mirror.SimpleWeb
             }
         }
 
-        private static void WaitForData(TcpClient client, int minCount, int sleepTime)
+        static void WaitForData(TcpClient client, int minCount, int sleepTime)
         {
             while (client.Connected && client.Available < minCount)
             {
@@ -243,7 +271,7 @@ namespace Mirror.SimpleWeb
             }
         }
 
-        private void ProcessMessages(Connection conn, byte[] buffer, int length)
+        void ProcessMessages(Connection conn, byte[] buffer, int length)
         {
             int bytesProcessed = ProcessMessage(conn, buffer, length);
 
@@ -256,6 +284,7 @@ namespace Mirror.SimpleWeb
                 bytesProcessed = ProcessMessage(conn, newBuffer, newLength);
             }
         }
+
         /// <summary>
         /// 
         /// </summary>
@@ -263,7 +292,7 @@ namespace Mirror.SimpleWeb
         /// <param name="buffer"></param>
         /// <param name="length"></param>
         /// <returns>bytes processed</returns>
-        private int ProcessMessage(Connection conn, byte[] buffer, int length)
+        int ProcessMessage(Connection conn, byte[] buffer, int length)
         {
             bool finished = (buffer[0] & 0b10000000) != 0; // has full message been sent
             bool hasMask = (buffer[1] & 0b10000000) != 0; // must be true, "All messages from the client to the server have this bit set"
@@ -316,7 +345,7 @@ namespace Mirror.SimpleWeb
 
 
         /// <exception cref="InvalidDataException"></exception>
-        private void throwIfNotFinished(bool finished)
+        static void throwIfNotFinished(bool finished)
         {
             if (!finished)
             {
@@ -326,7 +355,7 @@ namespace Mirror.SimpleWeb
         }
 
         /// <exception cref="InvalidDataException"></exception>
-        private void throwIfNoMask(bool hasMask)
+        static void throwIfNoMask(bool hasMask)
         {
             if (!hasMask)
             {
@@ -335,7 +364,7 @@ namespace Mirror.SimpleWeb
         }
 
         /// <exception cref="InvalidDataException"></exception>
-        private void throwIfBadOpCode(int opcode)
+        static void throwIfBadOpCode(int opcode)
         {
             // 2 = binary
             // 8 = close
@@ -346,7 +375,7 @@ namespace Mirror.SimpleWeb
         }
 
         /// <exception cref="InvalidDataException"></exception>
-        private void throwIfLengthZero(int msglen)
+        static void throwIfLengthZero(int msglen)
         {
             if (msglen == 0)
             {
@@ -354,37 +383,7 @@ namespace Mirror.SimpleWeb
             }
         }
 
-
-        struct Mask
-        {
-            byte a;
-            byte b;
-            byte c;
-            byte d;
-
-            public Mask(byte[] buffer, int offset)
-            {
-                a = buffer[offset];
-                b = buffer[offset + 1];
-                c = buffer[offset + 2];
-                d = buffer[offset + 3];
-            }
-
-            public byte getMaskByte(int index)
-            {
-                switch (index % 4)
-                {
-                    default:
-                    case 0: return a;
-                    case 1: return b;
-                    case 2: return c;
-                    case 3: return d;
-                }
-
-            }
-        }
-
-        private static (int length, int offset) GetMessageLength(byte[] buffer, byte lenByte)
+        static (int length, int offset) GetMessageLength(byte[] buffer, byte lenByte)
         {
             if (lenByte == 126)
             {
@@ -416,7 +415,7 @@ namespace Mirror.SimpleWeb
             }
         }
 
-        private void SendLoop(Connection conn)
+        void SendLoop(Connection conn)
         {
             try
             {
@@ -447,7 +446,7 @@ namespace Mirror.SimpleWeb
             }
         }
 
-        private void CloseConnection(Connection conn)
+        void CloseConnection(Connection conn)
         {
             conn.client.GetStream().Close();
             conn.client.Close();
@@ -457,7 +456,7 @@ namespace Mirror.SimpleWeb
             connections.TryRemove(conn.connId, out Connection _);
         }
 
-        private static void SendMessageToClient(NetworkStream stream, ArraySegment<byte> msg)
+        static void SendMessageToClient(NetworkStream stream, ArraySegment<byte> msg)
         {
             int msgLength = msg.Count;
             byte[] buffer = new byte[4 + msgLength];
@@ -494,7 +493,7 @@ namespace Mirror.SimpleWeb
             Debug.Log("Sent message to client");
         }
 
-        internal void Send(int id, ArraySegment<byte> segment)
+        public void Send(int id, ArraySegment<byte> segment)
         {
             if (connections.TryGetValue(id, out Connection conn))
             {
@@ -507,7 +506,7 @@ namespace Mirror.SimpleWeb
             }
         }
 
-        internal bool CloseConnection(int id)
+        public bool CloseConnection(int id)
         {
             if (connections.TryGetValue(id, out Connection conn))
             {
@@ -521,7 +520,7 @@ namespace Mirror.SimpleWeb
             }
         }
 
-        internal string GetClientAddress(int id)
+        public string GetClientAddress(int id)
         {
             if (connections.TryGetValue(id, out Connection conn))
             {
