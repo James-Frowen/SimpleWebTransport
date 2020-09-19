@@ -1,6 +1,6 @@
+#define SIMPLE_WEB_INFO_LOG
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
@@ -14,6 +14,9 @@ namespace Mirror.SimpleWeb
 {
     public class WebSocketServer
     {
+        [System.Diagnostics.Conditional("SIMPLE_WEB_INFO_LOG")]
+        static void Info(string msg) => Debug.Log($"<color=cyan>{msg}</color>");
+
         private class Connection
         {
             public int connId;
@@ -46,7 +49,7 @@ namespace Mirror.SimpleWeb
 
         private TcpListener listener;
         private Thread acceptThread;
-        readonly Dictionary<int, Connection> connections = new Dictionary<int, Connection>();
+        readonly ConcurrentDictionary<int, Connection> connections = new ConcurrentDictionary<int, Connection>();
         int _previousId = 0;
         int GetNextId()
         {
@@ -116,12 +119,12 @@ namespace Mirror.SimpleWeb
                     receiveThread.IsBackground = true;
                     receiveThread.Start();
 
-                    connections.Add(conn.connId, conn);
+                    connections.TryAdd(conn.connId, conn);
                 }
 
             }
-            catch (ThreadInterruptedException) { return; }
-            catch (ThreadAbortException) { return; }
+            catch (ThreadInterruptedException) { Info("Accept ThreadInterrupted"); return; }
+            catch (ThreadAbortException) { Info("Accept ThreadAbort"); return; }
             catch (Exception e)
             {
                 Debug.LogException(e);
@@ -222,11 +225,8 @@ namespace Mirror.SimpleWeb
                     Thread.Sleep(recieveLoopSleepTime);
                 }
             }
-            catch (ThreadInterruptedException)
-            {
-                // thread stopped from outside
-                return;
-            }
+            catch (ThreadInterruptedException) { Info($"Receive {conn.connId} ThreadInterrupted"); return; }
+            catch (ThreadAbortException) { Info($"Receive {conn.connId} ThreadAbort"); return; }
             catch (Exception e)
             {
                 Debug.LogException(e);
@@ -307,13 +307,8 @@ namespace Mirror.SimpleWeb
             }
             else if (opcode == 8)
             {
-                Debug.Log(msglen);
-                short code = 0;
-                code |= (short)(decoded[0] << 8);
-                code |= (short)(decoded[1] << 0);
-                Debug.Log(code);
-
-                Debug.Log(Encoding.UTF8.GetString(decoded, 2, msglen - 2));
+                Info($"Close: {decoded[0] << 8 | decoded[1]} message:{Encoding.UTF8.GetString(decoded, 2, msglen - 2)}");
+                CloseConnection(conn);
             }
 
             return offset + msglen;
@@ -442,11 +437,8 @@ namespace Mirror.SimpleWeb
                     }
                 }
             }
-            catch (ThreadInterruptedException)
-            {
-                // thread stopped from outside
-                return;
-            }
+            catch (ThreadInterruptedException) { Info($"Send {conn.connId} ThreadInterrupted"); return; }
+            catch (ThreadAbortException) { Info($"Send {conn.connId} ThreadAbort"); return; }
             catch (Exception e)
             {
                 Debug.LogException(e);
@@ -462,7 +454,7 @@ namespace Mirror.SimpleWeb
             conn.receiveThread.Interrupt();
             conn.sendThread.Interrupt();
             receiveQueue.Enqueue(new Message { connId = conn.connId, type = EventType.Disconnected });
-            connections.Remove(conn.connId);
+            connections.TryRemove(conn.connId, out Connection _);
         }
 
         private static void SendMessageToClient(NetworkStream stream, ArraySegment<byte> msg)
