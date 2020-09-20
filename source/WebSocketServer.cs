@@ -15,7 +15,7 @@ namespace Mirror.SimpleWeb
     public class WebSocketServer
     {
         [System.Diagnostics.Conditional("SIMPLE_WEB_INFO_LOG")]
-        static void Info(string msg) => Debug.Log($"<color=cyan>{msg}</color>");
+        static void Info(string msg) => Debug.Log($"<color=blue>{msg}</color>");
 
         class Connection
         {
@@ -109,6 +109,7 @@ namespace Mirror.SimpleWeb
         }
         public void Stop()
         {
+            listener?.Stop();
             acceptThread?.Interrupt();
             acceptThread = null;
 
@@ -127,29 +128,40 @@ namespace Mirror.SimpleWeb
         {
             try
             {
-                while (true)
+                try
                 {
-                    // TODO check this is blocking?
-                    TcpClient client = listener.AcceptTcpClient();
 
-                    Debug.Log("A client connected.");
 
-                    // only start receieve thread till Handshake is complete
-                    Connection conn = new Connection
+                    while (true)
                     {
-                        connId = GetNextId(),
-                        client = client,
-                    };
-                    Thread receiveThread = new Thread(() => HandshakeAndReceive(conn));
+                        // TODO check this is blocking?
+                        TcpClient client = listener.AcceptTcpClient();
 
-                    conn.receiveThread = receiveThread;
+                        Debug.Log("A client connected.");
 
-                    receiveThread.IsBackground = true;
-                    receiveThread.Start();
+                        // only start receieve thread till Handshake is complete
+                        Connection conn = new Connection
+                        {
+                            connId = GetNextId(),
+                            client = client,
+                        };
+                        Thread receiveThread = new Thread(() => HandshakeAndReceive(conn));
 
-                    connections.TryAdd(conn.connId, conn);
+                        conn.receiveThread = receiveThread;
+
+                        receiveThread.IsBackground = true;
+                        receiveThread.Start();
+
+                        connections.TryAdd(conn.connId, conn);
+                    }
                 }
+                catch (SocketException e)
+                {
+                    // check for Interrupted/Abort
+                    Thread.Sleep(1);
 
+                    Debug.LogException(e);
+                }
             }
             catch (ThreadInterruptedException) { Info("Accept ThreadInterrupted"); return; }
             catch (ThreadAbortException) { Info("Accept ThreadAbort"); return; }
