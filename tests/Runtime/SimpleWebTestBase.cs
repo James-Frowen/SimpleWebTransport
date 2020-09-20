@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -9,7 +9,7 @@ namespace Mirror.SimpleWeb.Tests
         List<GameObject> toCleanup = new List<GameObject>();
 
         [TearDown]
-        public void TearDown()
+        public virtual void TearDown()
         {
             foreach (GameObject obj in toCleanup)
             {
