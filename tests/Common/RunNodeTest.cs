@@ -76,7 +76,7 @@ namespace Mirror.SimpleWeb.Tests
 
                 cancel = true;
             });
-            int i = 4;
+
             while (!process.HasExited)
             {
                 if (cancel)
