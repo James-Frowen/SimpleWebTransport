@@ -4,19 +4,18 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace Mirror.SimpleWeb.Tests
+namespace Mirror.SimpleWeb.Tests.Server
 {
-
     [Category("SimpleWebTransport")]
     public class ConnectAndCloseTest : SimpleWebTestBase
     {
         [UnityTest]
-        public IEnumerator ServerAcceptsConnection()
+        public IEnumerator AcceptsConnection()
         {
             SimpleWebTransport transport = CreateRelayTransport();
             transport.ServerStart();
             int onConnectedCalled = 0;
-            transport.OnServerConnected.AddListener((int connId) =>
+            transport.OnServerConnected.AddListener((connId) =>
             {
                 onConnectedCalled++;
                 Assert.That(connId, Is.EqualTo(1), "First connection should have id 1");
@@ -42,18 +41,18 @@ namespace Mirror.SimpleWeb.Tests
         }
 
         [UnityTest]
-        public IEnumerator ServerReactsToClose()
+        public IEnumerator ReactsToClose()
         {
             SimpleWebTransport transport = CreateRelayTransport();
             transport.ServerStart();
             int onConnectedCalled = 0;
             int onDisconnectedCalled = 0;
-            transport.OnServerConnected.AddListener((int connId) =>
+            transport.OnServerConnected.AddListener((connId) =>
             {
                 onConnectedCalled++;
                 Assert.That(connId, Is.EqualTo(1), "First connection should have id 1");
             });
-            transport.OnServerDisconnected.AddListener((int connId) =>
+            transport.OnServerDisconnected.AddListener((connId) =>
             {
                 onDisconnectedCalled++;
                 Assert.That(connId, Is.EqualTo(1), "First connection should have id 1");
@@ -80,7 +79,7 @@ namespace Mirror.SimpleWeb.Tests
         }
 
         [UnityTest, Timeout(20_000)]
-        public IEnumerator ServerShouldTimeoutClientAfterClientProcessIsKilled()
+        public IEnumerator ShouldTimeoutClientAfterClientProcessIsKilled()
         {
             const int timeout = 4000;
             SimpleWebTransport transport = CreateRelayTransport();
@@ -89,12 +88,12 @@ namespace Mirror.SimpleWeb.Tests
 
             int onConnectedCalled = 0;
             int onDisconnectedCalled = 0;
-            transport.OnServerConnected.AddListener((int connId) =>
+            transport.OnServerConnected.AddListener((connId) =>
             {
                 onConnectedCalled++;
                 Assert.That(connId, Is.EqualTo(1), "First connection should have id 1");
             });
-            transport.OnServerDisconnected.AddListener((int connId) =>
+            transport.OnServerDisconnected.AddListener((connId) =>
             {
                 onDisconnectedCalled++;
                 Assert.That(connId, Is.EqualTo(1), "First connection should have id 1");
@@ -123,7 +122,7 @@ namespace Mirror.SimpleWeb.Tests
         }
 
         [UnityTest, Timeout(20_000)]
-        public IEnumerator ServerShouldTimeoutClientAfterNoMessage()
+        public IEnumerator ShouldTimeoutClientAfterNoMessage()
         {
             const int timeout = 4000;
             SimpleWebTransport transport = CreateRelayTransport();
@@ -132,12 +131,12 @@ namespace Mirror.SimpleWeb.Tests
 
             int onConnectedCalled = 0;
             int onDisconnectedCalled = 0;
-            transport.OnServerConnected.AddListener((int connId) =>
+            transport.OnServerConnected.AddListener((connId) =>
             {
                 onConnectedCalled++;
                 Assert.That(connId, Is.EqualTo(1), "First connection should have id 1");
             });
-            transport.OnServerDisconnected.AddListener((int connId) =>
+            transport.OnServerDisconnected.AddListener((connId) =>
             {
                 onDisconnectedCalled++;
                 Assert.That(connId, Is.EqualTo(1), "First connection should have id 1");

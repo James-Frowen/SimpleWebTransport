@@ -5,7 +5,7 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace Mirror.SimpleWeb.Tests
+namespace Mirror.SimpleWeb.Tests.Server
 {
     [Category("SimpleWebTransport")]
     public class ReceiveMessageTest : SimpleWebTestBase

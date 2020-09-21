@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEngine;
 
-namespace Mirror.SimpleWeb.Tests
+namespace Mirror.SimpleWeb.Tests.Server
 {
     public class SimpleWebTestBase
     {
