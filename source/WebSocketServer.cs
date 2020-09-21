@@ -1,6 +1,7 @@
 #define SIMPLE_WEB_INFO_LOG
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
@@ -8,7 +9,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using UnityEngine;
+using Debug = UnityEngine.Debug;
 
 namespace Mirror.SimpleWeb
 {
@@ -19,6 +20,8 @@ namespace Mirror.SimpleWeb
 
         class Connection
         {
+            public object lockObj = new object();
+            public bool hasClosed;
             public int connId;
             public TcpClient client;
             public Thread receiveThread;
@@ -26,6 +29,25 @@ namespace Mirror.SimpleWeb
 
             public ManualResetEvent sendPending = new ManualResetEvent(false);
             public ConcurrentQueue<ArraySegment<byte>> sendQueue = new ConcurrentQueue<ArraySegment<byte>>();
+
+            /// <summary>
+            /// disposes client and stops threads
+            /// </summary>
+            /// <returns>return true if closed by this call, false if was already closed</returns>
+            public bool Close()
+            {
+                lock (lockObj)
+                {
+                    if (hasClosed) { return false; }
+
+                    hasClosed = true;
+                    client.Dispose();
+                    receiveThread.Interrupt();
+                    sendThread.Interrupt();
+
+                    return true;
+                }
+            }
         }
         public struct Message
         {
@@ -73,6 +95,7 @@ namespace Mirror.SimpleWeb
 
         readonly bool noDelay;
         readonly int sendTimeout;
+        readonly int receiveTimeout;
         readonly int recieveLoopSleepTime;
 
         TcpListener listener;
@@ -87,10 +110,11 @@ namespace Mirror.SimpleWeb
 
         byte[] _buffer = new byte[10000];
 
-        public WebSocketServer(bool noDelay, int sendTimeout, int recieveLoopSleepTime)
+        public WebSocketServer(bool noDelay, int sendTimeout, int receiveTimeout, int recieveLoopSleepTime)
         {
             this.noDelay = noDelay;
             this.sendTimeout = sendTimeout;
+            this.receiveTimeout = receiveTimeout;
             this.recieveLoopSleepTime = recieveLoopSleepTime;
         }
 
@@ -116,9 +140,7 @@ namespace Mirror.SimpleWeb
             Connection[] connections = this.connections.Values.ToArray();
             foreach (Connection conn in connections)
             {
-                conn.client.Close();
-                conn.receiveThread.Interrupt();
-                conn.sendThread.Interrupt();
+                conn.Close();
             }
 
             this.connections.Clear();
@@ -130,12 +152,13 @@ namespace Mirror.SimpleWeb
             {
                 try
                 {
-
-
                     while (true)
                     {
                         // TODO check this is blocking?
                         TcpClient client = listener.AcceptTcpClient();
+                        client.SendTimeout = sendTimeout;
+                        client.ReceiveTimeout = receiveTimeout;
+                        client.NoDelay = noDelay;
 
                         Debug.Log("A client connected.");
 
@@ -163,8 +186,8 @@ namespace Mirror.SimpleWeb
                     Debug.LogException(e);
                 }
             }
-            catch (ThreadInterruptedException) { Info("Accept ThreadInterrupted"); return; }
-            catch (ThreadAbortException) { Info("Accept ThreadAbort"); return; }
+            catch (ThreadInterruptedException) { Info("acceptLoop ThreadInterrupted"); return; }
+            catch (ThreadAbortException) { Info("acceptLoop ThreadAbort"); return; }
             catch (Exception e)
             {
                 Debug.LogException(e);
@@ -252,8 +275,14 @@ namespace Mirror.SimpleWeb
                     // 1 for bit fields
                     // 1+ for length (length can be be 1, 2, or 4)
                     // 4 for mask
-                    WaitForData(client, 6, recieveLoopSleepTime);
-                    if (!client.Connected) { return; }
+                    bool recieved = WaitForData(conn, 6, recieveLoopSleepTime, receiveTimeout);
+                    if (!recieved)
+                    {
+                        Info($"ReceiveLoop {conn.connId} not connected or timed out");
+                        // check for interupt
+                        Thread.Sleep(1);
+                        return;
+                    }
 
                     // TODO dont allocate new buffer
                     int length = client.Available;
@@ -265,22 +294,61 @@ namespace Mirror.SimpleWeb
                     Thread.Sleep(recieveLoopSleepTime);
                 }
             }
-            catch (ThreadInterruptedException) { Info($"Receive {conn.connId} ThreadInterrupted"); return; }
-            catch (ThreadAbortException) { Info($"Receive {conn.connId} ThreadAbort"); return; }
+            catch (ThreadInterruptedException) { Info($"ReceiveLoop {conn.connId} ThreadInterrupted"); return; }
+            catch (ThreadAbortException) { Info($"ReceiveLoop {conn.connId} ThreadAbort"); return; }
             catch (Exception e)
             {
                 Debug.LogException(e);
-
+            }
+            finally
+            {
                 CloseConnection(conn);
             }
         }
 
-        static void WaitForData(TcpClient client, int minCount, int sleepTime)
+        bool WaitForData(Connection conn, int minCount, int sleepTime, int timeout)
         {
-            while (client.Connected && client.Available < minCount)
+            Stopwatch stopwatch = Stopwatch.StartNew();
+
+
+
+            TcpClient client = conn.client;
+            bool success = SpinWait.SpinUntil(() =>
             {
-                Thread.Sleep(sleepTime);
-            }
+                Console.WriteLine(stopwatch.ElapsedMilliseconds);
+                return !client.Connected || client.Available > minCount;
+            }, timeout);
+
+            if (!client.Connected) return false;
+            if (client.Available > minCount) return true;
+            else return false;
+
+
+            //Timer timer = new Timer(1000);
+            //timer.
+            //TcpClient client = conn.client;
+            //NetworkStream stream = client.GetStream();
+            //Debug.Log($"CanTimeout : {stream.CanTimeout}");
+            //Debug.Log($"ReadTimeout : {stream.ReadTimeout}");
+
+
+            //for (int i = 0; i < timeout; i += sleepTime)
+            //{
+            //    if (!client.Connected) return false;
+            //    if (client.Available > minCount) return true;
+
+            //    int read = stream.ReadByte();
+            //    //Debug.Log($"CanTimeout : {stream.ReadTimeout}");
+
+            //    Debug.Log($"{i} < {timeout} : {i < timeout}");
+
+            //    Thread.Sleep(sleepTime);
+            //}
+            //Console.WriteLine(stopwatch.ElapsedMilliseconds);
+
+            //// timeout
+            //Info($"WaitForData {conn.connId} timeout");
+            //return false;
         }
 
         void ProcessMessages(Connection conn, byte[] buffer, int length)
@@ -344,7 +412,6 @@ namespace Mirror.SimpleWeb
                     type = EventType.Data,
                     data = data,
                 });
-
             }
             else if (opcode == 8)
             {
@@ -441,15 +508,15 @@ namespace Mirror.SimpleWeb
 
                     while (conn.sendQueue.TryDequeue(out ArraySegment<byte> msg))
                     {
-                        SendMessageToClient(stream, msg);
+                        // check if connected before sending message
+                        if (!client.Connected) { Info($"SendLoop {conn.connId} not connected"); return; }
 
-                        // check if connection was closed after sending message
-                        if (!client.Connected) { return; }
+                        SendMessageToClient(stream, msg);
                     }
                 }
             }
-            catch (ThreadInterruptedException) { Info($"Send {conn.connId} ThreadInterrupted"); return; }
-            catch (ThreadAbortException) { Info($"Send {conn.connId} ThreadAbort"); return; }
+            catch (ThreadInterruptedException) { Info($"SendLoop {conn.connId} ThreadInterrupted"); return; }
+            catch (ThreadAbortException) { Info($"SendLoop {conn.connId} ThreadAbort"); return; }
             catch (Exception e)
             {
                 Debug.LogException(e);
@@ -460,12 +527,13 @@ namespace Mirror.SimpleWeb
 
         void CloseConnection(Connection conn)
         {
-            conn.client.GetStream().Close();
-            conn.client.Close();
-            conn.receiveThread.Interrupt();
-            conn.sendThread.Interrupt();
-            receiveQueue.Enqueue(new Message { connId = conn.connId, type = EventType.Disconnected });
-            connections.TryRemove(conn.connId, out Connection _);
+            bool closed = conn.Close();
+            // only send disconnect message if closed by the call
+            if (closed)
+            {
+                receiveQueue.Enqueue(new Message { connId = conn.connId, type = EventType.Disconnected });
+                connections.TryRemove(conn.connId, out Connection _);
+            }
         }
 
         static void SendMessageToClient(NetworkStream stream, ArraySegment<byte> msg)

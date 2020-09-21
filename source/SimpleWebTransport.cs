@@ -22,8 +22,12 @@ namespace Mirror.SimpleWeb
         [Tooltip("disables nagle algorithm. lowers CPU% and latency but increases bandwidth")]
         public bool noDelay = true;
 
+        [Header("Timeouts (in milliseconds)")]
         [Tooltip("Send would stall forever if the network is cut off during a send, so we need a timeout (in milliseconds)")]
         public int sendTimeout = 5000;
+
+        [Tooltip("How long without a message before disconnecting (in milliseconds)")]
+        public int receiveTimeout = 20000;
 
         private void OnValidate()
         {
@@ -148,7 +152,7 @@ namespace Mirror.SimpleWeb
                 Debug.LogError("SimpleWebServer Already Started");
             }
 
-            server = new SimpleWebServer(port, noDelay, sendTimeout);
+            server = new SimpleWebServer(port, noDelay, sendTimeout, receiveTimeout);
 
             server.onConnect += OnServerConnected.Invoke;
             server.onDisconnect += OnServerDisconnected.Invoke;
