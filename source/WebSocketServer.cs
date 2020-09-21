@@ -5,9 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
-using System.Security.Cryptography;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using Debug = UnityEngine.Debug;
 
@@ -15,83 +13,8 @@ namespace Mirror.SimpleWeb
 {
     public class WebSocketServer
     {
-        [System.Diagnostics.Conditional("SIMPLE_WEB_INFO_LOG")]
-        static void Info(string msg) => Debug.Log($"<color=blue>{msg}</color>");
-
-        class Connection
-        {
-            public object lockObj = new object();
-            public bool hasClosed;
-            public int connId;
-            public TcpClient client;
-            public Thread receiveThread;
-            public Thread sendThread;
-
-            public ManualResetEvent sendPending = new ManualResetEvent(false);
-            public ConcurrentQueue<ArraySegment<byte>> sendQueue = new ConcurrentQueue<ArraySegment<byte>>();
-
-            /// <summary>
-            /// disposes client and stops threads
-            /// </summary>
-            /// <returns>return true if closed by this call, false if was already closed</returns>
-            public bool Close()
-            {
-                lock (lockObj)
-                {
-                    if (hasClosed) { return false; }
-
-                    hasClosed = true;
-                    client.Dispose();
-                    receiveThread.Interrupt();
-                    sendThread.Interrupt();
-
-                    return true;
-                }
-            }
-        }
-        public struct Message
-        {
-            public int connId;
-            public EventType type;
-            public ArraySegment<byte> data;
-        }
-        public enum EventType
-        {
-            Connected,
-            Data,
-            Disconnected
-        }
-        struct Mask
-        {
-            byte a;
-            byte b;
-            byte c;
-            byte d;
-
-            public Mask(byte[] buffer, int offset)
-            {
-                a = buffer[offset];
-                b = buffer[offset + 1];
-                c = buffer[offset + 2];
-                d = buffer[offset + 3];
-            }
-
-            public byte getMaskByte(int index)
-            {
-                switch (index % 4)
-                {
-                    default:
-                    case 0: return a;
-                    case 1: return b;
-                    case 2: return c;
-                    case 3: return d;
-                }
-
-            }
-        }
 
         public readonly ConcurrentQueue<Message> receiveQueue = new ConcurrentQueue<Message>();
-
 
         readonly bool noDelay;
         readonly int sendTimeout;
@@ -100,7 +23,9 @@ namespace Mirror.SimpleWeb
 
         TcpListener listener;
         Thread acceptThread;
+        readonly HandShake handShake = new HandShake();
         readonly ConcurrentDictionary<int, Connection> connections = new ConcurrentDictionary<int, Connection>();
+
         int _previousId = 0;
         int GetNextId()
         {
@@ -160,22 +85,9 @@ namespace Mirror.SimpleWeb
                         client.ReceiveTimeout = receiveTimeout;
                         client.NoDelay = noDelay;
 
-                        Debug.Log("A client connected.");
+                        Log.Info("A client connected.");
 
-                        // only start receieve thread till Handshake is complete
-                        Connection conn = new Connection
-                        {
-                            connId = GetNextId(),
-                            client = client,
-                        };
-                        Thread receiveThread = new Thread(() => HandshakeAndReceive(conn));
-
-                        conn.receiveThread = receiveThread;
-
-                        receiveThread.IsBackground = true;
-                        receiveThread.Start();
-
-                        connections.TryAdd(conn.connId, conn);
+                        HandShakeAndConnect(client);
                     }
                 }
                 catch (SocketException e)
@@ -186,81 +98,51 @@ namespace Mirror.SimpleWeb
                     Debug.LogException(e);
                 }
             }
-            catch (ThreadInterruptedException) { Info("acceptLoop ThreadInterrupted"); return; }
-            catch (ThreadAbortException) { Info("acceptLoop ThreadAbort"); return; }
-            catch (Exception e)
-            {
-                Debug.LogException(e);
-            }
+            catch (ThreadInterruptedException) { Log.Info("acceptLoop ThreadInterrupted"); return; }
+            catch (ThreadAbortException) { Log.Info("acceptLoop ThreadAbort"); return; }
+            catch (Exception e) { Debug.LogException(e); }
         }
 
-        void HandshakeAndReceive(Connection conn)
+        void HandShakeAndConnect(TcpClient client)
         {
-            bool success = Handshake(conn);
+            // only start receieve thread till Handshake is complete, Send thread will be added after
+            // dont assign connection id till handshake is successful
+
+            bool success = handShake.TryHandshake(client);
 
             if (!success)
             {
-                CloseConnection(conn);
+                client.Dispose();
                 return;
             }
 
-            receiveQueue.Enqueue(new Message { connId = conn.connId, type = EventType.Connected });
+            Connection conn = new Connection
+            {
+                connId = GetNextId(),
+                client = client,
+            };
 
+            connections.TryAdd(conn.connId, conn);
+
+            receiveQueue.Enqueue(new Message
+            {
+                connId = conn.connId,
+                type = EventType.Connected
+            });
+
+            Thread receiveThread = new Thread(() => ReceiveLoop(conn));
             Thread sendThread = new Thread(() => SendLoop(conn));
 
             conn.sendThread = sendThread;
+            conn.receiveThread = receiveThread;
 
+            receiveThread.IsBackground = true;
+            receiveThread.Start();
             sendThread.IsBackground = true;
             sendThread.Start();
-
-            ReceiveLoop(conn);
         }
 
-        bool Handshake(Connection conn)
-        {
-            NetworkStream stream = conn.client.GetStream();
-            byte[] buffer = new byte[1000];
 
-            // blocking
-            stream.Read(buffer, 0, 3);
-
-            string getText = Encoding.UTF8.GetString(buffer, 0, 3);
-
-            if (getText != "GET")
-            {
-                Debug.LogError($"Did not recieve Handshake, instead got {getText}");
-                return false;
-            }
-
-            int length = conn.client.Available;
-            stream.Read(buffer, 3, length);
-            string msg = Encoding.UTF8.GetString(buffer, 0, length);
-
-            AcceptHandshake(stream, msg);
-            return true;
-        }
-
-        static void AcceptHandshake(NetworkStream stream, string msg)
-        {
-            const string eol = "\r\n"; // HTTP/1.1 defines the sequence CR LF as the end-of-line marker
-
-            string key = new Regex("Sec-WebSocket-Key: (.*)").Match(msg).Groups[1].Value.Trim() + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
-            byte[] keyBuffer = Encoding.UTF8.GetBytes(key);
-            byte[] keyHash = SHA1.Create().ComputeHash(keyBuffer);
-
-            string keyHashString = Convert.ToBase64String(keyHash);
-
-            string message = "HTTP/1.1 101 Switching Protocols" + eol
-                + "Connection: Upgrade" + eol
-                + "Upgrade: websocket" + eol
-                + "Sec-WebSocket-Accept: " + keyHashString + eol
-                + eol;
-
-            byte[] response = Encoding.UTF8.GetBytes(message);
-
-            stream.Write(response, 0, response.Length);
-            Debug.Log("Sent Handshake");
-        }
 
         void ReceiveLoop(Connection conn)
         {
@@ -278,7 +160,7 @@ namespace Mirror.SimpleWeb
                     bool recieved = WaitForData(conn, 6, recieveLoopSleepTime, receiveTimeout);
                     if (!recieved)
                     {
-                        Info($"ReceiveLoop {conn.connId} not connected or timed out");
+                        Log.Info($"ReceiveLoop {conn.connId} not connected or timed out");
                         // check for interupt
                         Thread.Sleep(1);
                         return;
@@ -294,12 +176,9 @@ namespace Mirror.SimpleWeb
                     Thread.Sleep(recieveLoopSleepTime);
                 }
             }
-            catch (ThreadInterruptedException) { Info($"ReceiveLoop {conn.connId} ThreadInterrupted"); return; }
-            catch (ThreadAbortException) { Info($"ReceiveLoop {conn.connId} ThreadAbort"); return; }
-            catch (Exception e)
-            {
-                Debug.LogException(e);
-            }
+            catch (ThreadInterruptedException) { Log.Info($"ReceiveLoop {conn.connId} ThreadInterrupted"); return; }
+            catch (ThreadAbortException) { Log.Info($"ReceiveLoop {conn.connId} ThreadAbort"); return; }
+            catch (Exception e) { Debug.LogException(e); }
             finally
             {
                 CloseConnection(conn);
@@ -415,7 +294,7 @@ namespace Mirror.SimpleWeb
             }
             else if (opcode == 8)
             {
-                Info($"Close: {decoded[0] << 8 | decoded[1]} message:{Encoding.UTF8.GetString(decoded, 2, msglen - 2)}");
+                Log.Info($"Close: {decoded[0] << 8 | decoded[1]} message:{Encoding.UTF8.GetString(decoded, 2, msglen - 2)}");
                 CloseConnection(conn);
             }
 
@@ -509,14 +388,14 @@ namespace Mirror.SimpleWeb
                     while (conn.sendQueue.TryDequeue(out ArraySegment<byte> msg))
                     {
                         // check if connected before sending message
-                        if (!client.Connected) { Info($"SendLoop {conn.connId} not connected"); return; }
+                        if (!client.Connected) { Log.Info($"SendLoop {conn.connId} not connected"); return; }
 
                         SendMessageToClient(stream, msg);
                     }
                 }
             }
-            catch (ThreadInterruptedException) { Info($"SendLoop {conn.connId} ThreadInterrupted"); return; }
-            catch (ThreadAbortException) { Info($"SendLoop {conn.connId} ThreadAbort"); return; }
+            catch (ThreadInterruptedException) { Log.Info($"SendLoop {conn.connId} ThreadInterrupted"); return; }
+            catch (ThreadAbortException) { Log.Info($"SendLoop {conn.connId} ThreadAbort"); return; }
             catch (Exception e)
             {
                 Debug.LogException(e);

@@ -58,17 +58,17 @@ namespace Mirror.SimpleWeb
 
         public void Update(MonoBehaviour behaviour)
         {
-            while (server.receiveQueue.TryDequeue(out WebSocketServer.Message next))
+            while (server.receiveQueue.TryDequeue(out Message next))
             {
                 switch (next.type)
                 {
-                    case WebSocketServer.EventType.Connected:
+                    case EventType.Connected:
                         onConnect?.Invoke(next.connId);
                         break;
-                    case WebSocketServer.EventType.Data:
+                    case EventType.Data:
                         onData?.Invoke(next.connId, next.data);
                         break;
-                    case WebSocketServer.EventType.Disconnected:
+                    case EventType.Disconnected:
                         onDisconnect?.Invoke(next.connId);
                         break;
                 }
