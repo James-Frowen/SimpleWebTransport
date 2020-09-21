@@ -80,6 +80,49 @@ namespace Mirror.SimpleWeb.Tests
         }
 
         [UnityTest, Timeout(20_000)]
+        public IEnumerator ServerShouldTimeoutClientAfterClientProcessIsKilled()
+        {
+            const int timeout = 4000;
+            SimpleWebTransport transport = CreateRelayTransport();
+            transport.receiveTimeout = timeout;
+            transport.ServerStart();
+
+            int onConnectedCalled = 0;
+            int onDisconnectedCalled = 0;
+            transport.OnServerConnected.AddListener((int connId) =>
+            {
+                onConnectedCalled++;
+                Assert.That(connId, Is.EqualTo(1), "First connection should have id 1");
+            });
+            transport.OnServerDisconnected.AddListener((int connId) =>
+            {
+                onDisconnectedCalled++;
+                Assert.That(connId, Is.EqualTo(1), "First connection should have id 1");
+            });
+
+            // kill js early so it doesn't send close message
+            Task<RunNode.Result> task = RunNode.RunAsync("Connect.js", 1000);
+            while (!task.IsCompleted)
+            {
+                yield return null;
+            }
+            RunNode.Result result = task.Result;
+
+            Assert.That(result.timedOut, Is.True, "Should have timed out");
+            Assert.That(result.output, Has.Length.EqualTo(1), "Should have 1 log, should not have close log as process was killed");
+            Assert.That(result.output[0], Is.EqualTo("Connection opened"), "Should be connection open log");
+            Assert.That(result.error, Has.Length.EqualTo(0), "Should have no errors");
+
+            // wait for timeout
+            yield return new WaitForSeconds(timeout / 1000);
+            // give time to process message
+            yield return new WaitForSeconds(10);
+
+            Assert.That(onConnectedCalled, Is.EqualTo(1), "Connect should be called once");
+            Assert.That(onDisconnectedCalled, Is.EqualTo(1), "Disconnected should be called once");
+        }
+
+        [UnityTest, Timeout(20_000)]
         public IEnumerator ServerShouldTimeoutClientAfterNoMessage()
         {
             const int timeout = 4000;
@@ -121,50 +164,6 @@ namespace Mirror.SimpleWeb.Tests
             Assert.That(result.output[0], Is.EqualTo("Connection opened"), "Should be connection open log");
             Assert.That(result.output[1], Is.EqualTo($"Connection closed"), "Should be connection close log");
             Assert.That(result.error, Has.Length.EqualTo(0), "Should have no errors");
-        }
-
-        [UnityTest, Timeout(20_000)]
-        public IEnumerator ServerShouldTimeoutClientAfterClientProcessIsKilled()
-        {
-            const int timeout = 4000;
-            SimpleWebTransport transport = CreateRelayTransport();
-            transport.receiveTimeout = timeout;
-            transport.ServerStart();
-
-            int onConnectedCalled = 0;
-            int onDisconnectedCalled = 0;
-            transport.OnServerConnected.AddListener((int connId) =>
-            {
-                onConnectedCalled++;
-                Assert.That(connId, Is.EqualTo(1), "First connection should have id 1");
-            });
-            transport.OnServerDisconnected.AddListener((int connId) =>
-            {
-                onDisconnectedCalled++;
-                Assert.That(connId, Is.EqualTo(1), "First connection should have id 1");
-            });
-
-            // kill js early so it doesn't send close message
-            Task<RunNode.Result> task = RunNode.RunAsync("Connect.js", 1000);
-            while (!task.IsCompleted)
-            {
-                yield return null;
-            }
-            RunNode.Result result = task.Result;
-
-            Assert.That(result.timedOut, Is.True, "Should have timed out");
-            Assert.That(result.output, Has.Length.EqualTo(2), "Should have 2 log");
-            Assert.That(result.output[0], Is.EqualTo("Connection opened"), "Should be connection open log");
-            Assert.That(result.output[1], Is.EqualTo($"Connection closed"), "Should be connection close log");
-            Assert.That(result.error, Has.Length.EqualTo(0), "Should have no errors");
-
-            // wait for timeout
-            yield return new WaitForSeconds(timeout / 1000);
-            // give time to process message
-            yield return new WaitForSeconds(1);
-
-            Assert.That(onConnectedCalled, Is.EqualTo(1), "Connect should be called once");
-            Assert.That(onDisconnectedCalled, Is.EqualTo(1), "Disconnected should be called once");
         }
     }
 }
