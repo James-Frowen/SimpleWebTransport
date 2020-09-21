@@ -33,6 +33,47 @@ namespace Mirror.SimpleWeb.Tests
         }
 
         [Test]
+        public void ShouldReturnHelloWorld2()
+        {
+            RunNode.Result result = RunNode.Run("HelloWorld2.js", false);
+
+            Assert.That(result.timedOut, Is.False);
+
+            Assert.That(result.output, Has.Length.EqualTo(2));
+            Assert.That(result.output[0], Is.EqualTo("Hello World!"));
+            Assert.That(result.output[1], Is.EqualTo("Hello again World!"));
+
+            Assert.That(result.error, Has.Length.EqualTo(0));
+        }
+
+        [Test]
+        public void ShouldReturnHelloError()
+        {
+            RunNode.Result result = RunNode.Run("HelloError.js", false);
+
+            Assert.That(result.timedOut, Is.False);
+
+            Assert.That(result.output, Has.Length.EqualTo(0));
+
+            Assert.That(result.error, Has.Length.EqualTo(1));
+            Assert.That(result.error[0], Is.EqualTo("Hello Error!"));
+        }
+
+        [Test]
+        public void ShouldReturnHelloError2()
+        {
+            RunNode.Result result = RunNode.Run("HelloError2.js", false);
+
+            Assert.That(result.timedOut, Is.False);
+
+            Assert.That(result.output, Has.Length.EqualTo(0));
+
+            Assert.That(result.error, Has.Length.EqualTo(2));
+            Assert.That(result.error[0], Is.EqualTo("Hello Error!"));
+            Assert.That(result.error[1], Is.EqualTo("Hello again Error!"));
+        }
+
+        [Test]
         public void ShouldFinishBeforeTimeout()
         {
             Stopwatch stopwatch = new Stopwatch();
