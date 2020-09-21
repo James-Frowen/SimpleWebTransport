@@ -13,7 +13,6 @@ namespace Mirror.SimpleWeb
 {
     public class WebSocketServer
     {
-
         public readonly ConcurrentQueue<Message> receiveQueue = new ConcurrentQueue<Message>();
 
         readonly bool noDelay;
@@ -32,8 +31,6 @@ namespace Mirror.SimpleWeb
             _previousId++;
             return _previousId;
         }
-
-        byte[] _buffer = new byte[10000];
 
         public WebSocketServer(bool noDelay, int sendTimeout, int receiveTimeout, int recieveLoopSleepTime)
         {
@@ -87,7 +84,18 @@ namespace Mirror.SimpleWeb
 
                         Log.Info("A client connected.");
 
-                        HandShakeAndConnect(client);
+                        Connection conn = new Connection
+                        {
+                            client = client,
+                        };
+
+                        // handshake needs its own thread as it needs to wait for message from client
+                        Thread receiveThread = new Thread(() => HandshakeAndReceiveLoop(conn));
+
+                        conn.receiveThread = receiveThread;
+
+                        receiveThread.IsBackground = true;
+                        receiveThread.Start();
                     }
                 }
                 catch (SocketException e)
@@ -103,25 +111,17 @@ namespace Mirror.SimpleWeb
             catch (Exception e) { Debug.LogException(e); }
         }
 
-        void HandShakeAndConnect(TcpClient client)
+        void HandshakeAndReceiveLoop(Connection conn)
         {
-            // only start receieve thread till Handshake is complete, Send thread will be added after
-            // dont assign connection id till handshake is successful
-
-            bool success = handShake.TryHandshake(client);
+            bool success = handShake.TryHandshake(conn.client);
 
             if (!success)
             {
-                client.Dispose();
+                conn.client.Dispose();
                 return;
             }
 
-            Connection conn = new Connection
-            {
-                connId = GetNextId(),
-                client = client,
-            };
-
+            conn.connId = GetNextId();
             connections.TryAdd(conn.connId, conn);
 
             receiveQueue.Enqueue(new Message
@@ -130,18 +130,14 @@ namespace Mirror.SimpleWeb
                 type = EventType.Connected
             });
 
-            Thread receiveThread = new Thread(() => ReceiveLoop(conn));
             Thread sendThread = new Thread(() => SendLoop(conn));
 
             conn.sendThread = sendThread;
-            conn.receiveThread = receiveThread;
-
-            receiveThread.IsBackground = true;
-            receiveThread.Start();
             sendThread.IsBackground = true;
             sendThread.Start();
-        }
 
+            ReceiveLoop(conn);
+        }
 
 
         void ReceiveLoop(Connection conn)
