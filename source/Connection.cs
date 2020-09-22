@@ -26,8 +26,12 @@ namespace Mirror.SimpleWeb
         /// <returns>return true if closed by this call, false if was already closed</returns>
         public bool Close()
         {
+            // check hasClosed first to stop ThreadInterruptedException on lock
+            if (hasClosed) { return false; }
+
             lock (lockObj)
             {
+                // check hasClosed again inside lock to make sure no other object has called this
                 if (hasClosed) { return false; }
 
                 hasClosed = true;
