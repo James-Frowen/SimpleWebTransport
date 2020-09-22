@@ -1,12 +1,16 @@
 {
-    "name": "SimpleWebTransport.Tests.Common",
+    "name": "SimpleWebTransport.Tests.Editor",
     "references": [
-        "Mirror"
+        "Mirror",
+        "SimpleWebTransport",
+        "SimpleWebTransport.Tests.Common"
     ],
     "optionalUnityReferences": [
         "TestAssemblies"
     ],
-    "includePlatforms": [],
+    "includePlatforms": [
+        "Editor"
+    ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
