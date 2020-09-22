@@ -11,31 +11,15 @@ namespace Mirror.SimpleWeb.Tests.Server
     [Category("SimpleWebTransport")]
     public class SendMessageTest : SimpleWebTestBase
     {
-        protected override bool StartServer => false;
-
-        SimpleWebTransport transport;
-        Task<RunNode.Result> task;
-
-        [UnitySetUp]
-        public IEnumerator Setup()
-        {
-            transport = CreateRelayTransport();
-            transport.ServerStart();
-
-            task = RunNode.RunAsync("ReceiveMessages.js");
-
-            int onConnectedCalled = 0;
-            transport.OnServerConnected.AddListener((int connId) =>
-            {
-                onConnectedCalled++;
-            });
-
-            yield return new WaitUntil(() => onConnectedCalled >= 1);
-        }
+        protected override bool StartServer => true;
 
         [UnityTest]
         public IEnumerator SendFullArray()
         {
+            Task<RunNode.Result> task = RunNode.RunAsync("ReceiveMessages.js");
+
+            yield return WaitForConnect;
+
             byte[] bytes = new byte[] { 1, 2, 3, 4, 5 };
             ArraySegment<byte> segment = new ArraySegment<byte>(bytes, 0, 5);
 

@@ -19,10 +19,16 @@ namespace Mirror.SimpleWeb.Tests.Server
         protected const int timeout = 4000;
 
         protected SimpleWebTransport transport;
-        protected int onConnectedCalled;
-        protected int onDisconnectedCalled;
-        protected int onDataReceived;
 
+        protected int onConnectedCount => onConnect.Count;
+        protected int onDisconnectedCount => onDisconnect.Count;
+        protected int onDataCount => onData.Count;
+
+        protected List<int> onConnect = new List<int>();
+        protected List<int> onDisconnect = new List<int>();
+        protected List<(int connId, ArraySegment<byte> data)> onData = new List<(int connId, ArraySegment<byte> data)>();
+
+        protected WaitUntil WaitForConnect => new WaitUntil(() => onConnectedCount >= 1);
 
         [SetUp]
         public virtual void Setup()
@@ -32,13 +38,14 @@ namespace Mirror.SimpleWeb.Tests.Server
             transport = CreateRelayTransport();
             transport.receiveTimeout = timeout;
             transport.sendTimeout = timeout;
-            onConnectedCalled = 0;
-            onDisconnectedCalled = 0;
-            onDataReceived = 0;
 
-            transport.OnServerConnected.AddListener((_) => onConnectedCalled++);
-            transport.OnServerDisconnected.AddListener((_) => onDisconnectedCalled++);
-            transport.OnServerDataReceived.AddListener((_, __, ___) => onDataReceived++);
+            onConnect.Clear();
+            onDisconnect.Clear();
+            onData.Clear();
+
+            transport.OnServerConnected.AddListener((connId) => onConnect.Add(connId));
+            transport.OnServerDisconnected.AddListener((connId) => onDisconnect.Add(connId));
+            transport.OnServerDataReceived.AddListener((connId, data, ___) => onData.Add((connId, data)));
             transport.ServerStart();
         }
 

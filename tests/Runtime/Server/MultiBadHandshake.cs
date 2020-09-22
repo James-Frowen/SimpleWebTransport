@@ -36,7 +36,8 @@ namespace Mirror.SimpleWeb.Tests.Server
                 Assert.That(connId == connectIndex, "Clients should be connected in order with the next index");
                 connectIndex++;
             });
-            for (int i = 0; i < 20; i++)
+            const int goodClientCount = 10;
+            for (int i = 0; i < goodClientCount * 2; i++)
             {
                 // alternate between good and bad clients
                 if (i % 2 == 0)
@@ -61,9 +62,9 @@ namespace Mirror.SimpleWeb.Tests.Server
             // wait extra second for stuff to process
             yield return new WaitForSeconds(1);
 
-            Assert.That(onConnectedCalled, Is.EqualTo(10), "Connect should not be called");
-            Assert.That(onDisconnectedCalled, Is.EqualTo(10), "Disconnect should not be called");
-            Assert.That(onDataReceived, Is.EqualTo(0), "Data should not be called");
+            Assert.That(onConnectedCount, Is.EqualTo(goodClientCount), "Connect should not be called");
+            Assert.That(onDisconnectedCount, Is.EqualTo(goodClientCount), "Disconnect should not be called");
+            Assert.That(onDataCount, Is.EqualTo(0), "Data should not be called");
 
             for (int i = 0; i < 10; i++)
             {

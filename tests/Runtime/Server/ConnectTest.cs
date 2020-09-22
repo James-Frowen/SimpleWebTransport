@@ -9,20 +9,11 @@ namespace Mirror.SimpleWeb.Tests.Server
     [Category("SimpleWebTransport")]
     public class ConnectAndCloseTest : SimpleWebTestBase
     {
-        protected override bool StartServer => false;
+        protected override bool StartServer => true;
 
         [UnityTest]
         public IEnumerator AcceptsConnection()
         {
-            SimpleWebTransport transport = CreateRelayTransport();
-            transport.ServerStart();
-            int onConnectedCalled = 0;
-            transport.OnServerConnected.AddListener((connId) =>
-            {
-                onConnectedCalled++;
-                Assert.That(connId, Is.EqualTo(1), "First connection should have id 1");
-            });
-
             Task<RunNode.Result> task = RunNode.RunAsync("ConnectAndClose.js");
             while (!task.IsCompleted)
             {
@@ -39,27 +30,12 @@ namespace Mirror.SimpleWeb.Tests.Server
             // wait for message to be processed
             yield return new WaitForSeconds(0.2f);
 
-            Assert.That(onConnectedCalled, Is.EqualTo(1), "Connect should be called once");
+            Assert.That(onConnectedCount, Is.EqualTo(1), "Connect should be called once");
         }
 
         [UnityTest]
         public IEnumerator ReactsToClose()
         {
-            SimpleWebTransport transport = CreateRelayTransport();
-            transport.ServerStart();
-            int onConnectedCalled = 0;
-            int onDisconnectedCalled = 0;
-            transport.OnServerConnected.AddListener((connId) =>
-            {
-                onConnectedCalled++;
-                Assert.That(connId, Is.EqualTo(1), "First connection should have id 1");
-            });
-            transport.OnServerDisconnected.AddListener((connId) =>
-            {
-                onDisconnectedCalled++;
-                Assert.That(connId, Is.EqualTo(1), "First connection should have id 1");
-            });
-
             Task<RunNode.Result> task = RunNode.RunAsync("ConnectAndClose.js");
             while (!task.IsCompleted)
             {
@@ -76,31 +52,13 @@ namespace Mirror.SimpleWeb.Tests.Server
             // wait for message to be processed
             yield return new WaitForSeconds(0.2f);
 
-            Assert.That(onConnectedCalled, Is.EqualTo(1), "Connect should be called once");
-            Assert.That(onDisconnectedCalled, Is.EqualTo(1), "Disconnected should be called once");
+            Assert.That(onConnectedCount, Is.EqualTo(1), "Connect should be called once");
+            Assert.That(onDisconnectedCount, Is.EqualTo(1), "Disconnected should be called once");
         }
 
-        [UnityTest, Timeout(20_000)]
+        [UnityTest]
         public IEnumerator ShouldTimeoutClientAfterClientProcessIsKilled()
         {
-            const int timeout = 4000;
-            SimpleWebTransport transport = CreateRelayTransport();
-            transport.receiveTimeout = timeout;
-            transport.ServerStart();
-
-            int onConnectedCalled = 0;
-            int onDisconnectedCalled = 0;
-            transport.OnServerConnected.AddListener((connId) =>
-            {
-                onConnectedCalled++;
-                Assert.That(connId, Is.EqualTo(1), "First connection should have id 1");
-            });
-            transport.OnServerDisconnected.AddListener((connId) =>
-            {
-                onDisconnectedCalled++;
-                Assert.That(connId, Is.EqualTo(1), "First connection should have id 1");
-            });
-
             // kill js early so it doesn't send close message
             Task<RunNode.Result> task = RunNode.RunAsync("Connect.js", 1000);
             while (!task.IsCompleted)
@@ -119,31 +77,13 @@ namespace Mirror.SimpleWeb.Tests.Server
             // give time to process message
             yield return new WaitForSeconds(1);
 
-            Assert.That(onConnectedCalled, Is.EqualTo(1), "Connect should be called once");
-            Assert.That(onDisconnectedCalled, Is.EqualTo(1), "Disconnected should be called once");
+            Assert.That(onConnectedCount, Is.EqualTo(1), "Connect should be called once");
+            Assert.That(onDisconnectedCount, Is.EqualTo(1), "Disconnected should be called once");
         }
 
-        [UnityTest, Timeout(20_000)]
+        [UnityTest]
         public IEnumerator ShouldTimeoutClientAfterNoMessage()
         {
-            const int timeout = 4000;
-            SimpleWebTransport transport = CreateRelayTransport();
-            transport.receiveTimeout = timeout;
-            transport.ServerStart();
-
-            int onConnectedCalled = 0;
-            int onDisconnectedCalled = 0;
-            transport.OnServerConnected.AddListener((connId) =>
-            {
-                onConnectedCalled++;
-                Assert.That(connId, Is.EqualTo(1), "First connection should have id 1");
-            });
-            transport.OnServerDisconnected.AddListener((connId) =>
-            {
-                onDisconnectedCalled++;
-                Assert.That(connId, Is.EqualTo(1), "First connection should have id 1");
-            });
-
             // make sure doesn't timeout
             Task<RunNode.Result> task = RunNode.RunAsync("Connect.js", timeout * 2);
 
@@ -152,8 +92,8 @@ namespace Mirror.SimpleWeb.Tests.Server
             // give time to process message
             yield return new WaitForSeconds(1);
 
-            Assert.That(onConnectedCalled, Is.EqualTo(1), "Connect should be called once");
-            Assert.That(onDisconnectedCalled, Is.EqualTo(1), "Disconnected should be called once");
+            Assert.That(onConnectedCount, Is.EqualTo(1), "Connect should be called once");
+            Assert.That(onDisconnectedCount, Is.EqualTo(1), "Disconnected should be called once");
 
             yield return new WaitForSeconds(0.2f);
 
