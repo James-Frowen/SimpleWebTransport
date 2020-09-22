@@ -7,7 +7,7 @@ using Debug = UnityEngine.Debug;
 
 namespace Mirror.SimpleWeb
 {
-    internal class HandShake
+    internal class Handshake
     {
         private const int ResponseLength = 129;
         private const int KeyLength = 24;
@@ -15,16 +15,16 @@ namespace Mirror.SimpleWeb
         const string HandshakeGUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 
         readonly object lockObj = new object();
-        readonly byte[] readBuffer = new byte[300];
+        readonly byte[] readBuffer = new byte[3000];
         readonly byte[] keyBuffer = new byte[60];
         readonly byte[] response = new byte[ResponseLength];
         readonly SHA1 sha1 = SHA1.Create();
 
-        public HandShake()
+        public Handshake()
         {
             Encoding.UTF8.GetBytes(HandshakeGUID, 0, HandshakeGUID.Length, keyBuffer, KeyLength);
         }
-        ~HandShake()
+        ~Handshake()
         {
             sha1.Dispose();
         }
@@ -68,6 +68,7 @@ namespace Mirror.SimpleWeb
                         return false;
 
                     string msg = Encoding.UTF8.GetString(readBuffer, 0, length);
+                    Log.Info(msg);
 
                     AcceptHandshake(stream, msg);
                     return true;
