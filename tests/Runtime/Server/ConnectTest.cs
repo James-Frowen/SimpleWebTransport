@@ -115,7 +115,7 @@ namespace Mirror.SimpleWeb.Tests.Server
             // wait for timeout
             yield return new WaitForSeconds(timeout / 1000);
             // give time to process message
-            yield return new WaitForSeconds(10);
+            yield return new WaitForSeconds(1);
 
             Assert.That(onConnectedCalled, Is.EqualTo(1), "Connect should be called once");
             Assert.That(onDisconnectedCalled, Is.EqualTo(1), "Disconnected should be called once");
