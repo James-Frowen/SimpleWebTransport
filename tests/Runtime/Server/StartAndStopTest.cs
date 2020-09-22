@@ -8,6 +8,8 @@ namespace Mirror.SimpleWeb.Tests.Server
     [Category("SimpleWebTransport")]
     public class StartAndStopTest : SimpleWebTestBase
     {
+        protected override bool StartServer => false;
+
         [UnityTest]
         public IEnumerator ServerCanStartAndStopWithoutErrors()
         {

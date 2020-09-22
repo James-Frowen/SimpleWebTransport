@@ -10,6 +10,8 @@ namespace Mirror.SimpleWeb.Tests.Server
     [Category("SimpleWebTransport")]
     public class ReceiveMessageTest : SimpleWebTestBase
     {
+        protected override bool StartServer => false;
+
         SimpleWebTransport transport;
         List<(int connId, ArraySegment<byte> data)> messages = new List<(int connId, ArraySegment<byte> data)>();
 

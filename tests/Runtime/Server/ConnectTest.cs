@@ -9,6 +9,8 @@ namespace Mirror.SimpleWeb.Tests.Server
     [Category("SimpleWebTransport")]
     public class ConnectAndCloseTest : SimpleWebTestBase
     {
+        protected override bool StartServer => false;
+
         [UnityTest]
         public IEnumerator AcceptsConnection()
         {

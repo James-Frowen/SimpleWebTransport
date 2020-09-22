@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Threading.Tasks;
@@ -9,8 +9,10 @@ using UnityEngine.TestTools;
 namespace Mirror.SimpleWeb.Tests.Server
 {
     [Category("SimpleWebTransport")]
-    public class MultiBadHandshake : BadClientTestBase
+    public class MultiBadHandshake : SimpleWebTestBase
     {
+        protected override bool StartServer => true;
+
         List<TcpClient> badClients = new List<TcpClient>();
         List<Task<RunNode.Result>> goodClients = new List<Task<RunNode.Result>>();
 

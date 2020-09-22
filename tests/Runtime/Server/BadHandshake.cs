@@ -8,8 +8,10 @@ using UnityEngine.TestTools;
 namespace Mirror.SimpleWeb.Tests.Server
 {
     [Category("SimpleWebTransport")]
-    public class BadHandshake : BadClientTestBase
+    public class BadHandshake : SimpleWebTestBase
     {
+        protected override bool StartServer => true;
+
         TcpClient client;
 
         [TearDown]
@@ -97,6 +99,5 @@ namespace Mirror.SimpleWeb.Tests.Server
 
             Assert.That(HasDisconnected(client), Is.True, "Client should have been disconnected");
         }
-
     }
 }

@@ -11,6 +11,8 @@ namespace Mirror.SimpleWeb.Tests.Server
     [Category("SimpleWebTransport")]
     public class SendMessageTest : SimpleWebTestBase
     {
+        protected override bool StartServer => false;
+
         SimpleWebTransport transport;
         Task<RunNode.Result> task;
 

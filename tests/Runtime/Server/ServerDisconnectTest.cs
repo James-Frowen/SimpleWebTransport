@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using UnityEngine;
@@ -9,6 +9,8 @@ namespace Mirror.SimpleWeb.Tests.Server
     [Category("SimpleWebTransport")]
     public class DisconnectTest : SimpleWebTestBase
     {
+        protected override bool StartServer => false;
+
         SimpleWebTransport transport;
         Task<RunNode.Result> task;
 
