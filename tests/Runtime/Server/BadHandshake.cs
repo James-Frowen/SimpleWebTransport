@@ -34,11 +34,24 @@ namespace Mirror.SimpleWeb.Tests.Server
 
 
             TcpClient client = new TcpClient();
-            Task task = client.ConnectAsync("localhost", 7776);
+
+            Task task = Task.Run(() =>
+            {
+                try
+                {
+                    client.Connect("localhost", 7776);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogException(e);
+                }
+            });
             while (!task.IsCompleted)
             {
                 yield return null;
             }
+            Assert.That(task.IsFaulted, Is.False, $"ConnectAsync should not have errors, instead had error:{task.Exception}");
+            Assert.That(client.Connected, Is.True, "Client should have connected");
 
             Assert.That(onConnectedCalled, Is.EqualTo(0), "Connect should not be called");
             Assert.That(onDisconnectedCalled, Is.EqualTo(0), "Disconnect should not be called");
@@ -92,6 +105,27 @@ namespace Mirror.SimpleWeb.Tests.Server
 
             // clean up
             client.Dispose();
+        }
+
+        [UnityTest]
+        public IEnumerator OtherClientsCanConnectWhileWaitingForBadClient()
+        {
+            yield return null;
+            Assert.Fail();
+
+
+            Task<RunNode.Result> task = RunNode.RunAsync("ConnectAndClose.js");
+            while (!task.IsCompleted)
+            {
+                yield return null;
+            }
+            RunNode.Result result = task.Result;
+
+            Assert.That(result.timedOut, Is.False, "js should close before timeout");
+            Assert.That(result.output, Has.Length.EqualTo(2), "Should have 2 log");
+            Assert.That(result.output[0], Is.EqualTo("Connection opened"), "Should be connection open log");
+            Assert.That(result.output[1], Is.EqualTo($"Closed after 2000ms"), "Should be connection close log");
+            Assert.That(result.error, Has.Length.EqualTo(0), "Should have no errors");
         }
     }
 }
