@@ -222,12 +222,14 @@ namespace Mirror.SimpleWeb
             throwIfLengthZero(msglen);
             throwIfMsgLengthTooLong(msglen, length);
 
-            //byte[] decoded = new byte[msglen];
-            Mask mask = new Mask(buffer, offset);
+            int maskOffset = offset;
             offset += 4;
 
             for (int i = 0; i < msglen; i++)
-                buffer[offset + i] = (byte)(buffer[offset + i] ^ mask.getMaskByte(i));
+            {
+                byte maskByte = buffer[maskOffset + i % 4];
+                buffer[offset + i] = (byte)(buffer[offset + i] ^ maskByte);
+            }
 
             if (opcode == 2)
             {
