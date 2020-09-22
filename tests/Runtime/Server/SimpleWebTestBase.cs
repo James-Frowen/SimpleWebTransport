@@ -12,23 +12,18 @@ namespace Mirror.SimpleWeb.Tests.Server
     [Category("SimpleWebTransport")]
     public abstract class SimpleWebTestBase
     {
-        protected abstract bool StartServer { get; }
-
-        List<GameObject> toCleanup = new List<GameObject>();
-
         protected const int timeout = 4000;
 
+        protected abstract bool StartServer { get; }
+
         protected SimpleWebTransport transport;
-
-        protected int onConnectedCount => onConnect.Count;
-        protected int onDisconnectedCount => onDisconnect.Count;
-        protected int onDataCount => onData.Count;
-
         protected List<int> onConnect = new List<int>();
         protected List<int> onDisconnect = new List<int>();
         protected List<(int connId, ArraySegment<byte> data)> onData = new List<(int connId, ArraySegment<byte> data)>();
 
-        protected WaitUntil WaitForConnect => new WaitUntil(() => onConnectedCount >= 1);
+        protected WaitUntil WaitForConnect => new WaitUntil(() => onConnect.Count >= 1);
+
+        List<GameObject> toCleanup = new List<GameObject>();
 
         [SetUp]
         public virtual void Setup()

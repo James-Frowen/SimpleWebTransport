@@ -62,9 +62,9 @@ namespace Mirror.SimpleWeb.Tests.Server
             // wait extra second for stuff to process
             yield return new WaitForSeconds(1);
 
-            Assert.That(onConnectedCount, Is.EqualTo(goodClientCount), "Connect should not be called");
-            Assert.That(onDisconnectedCount, Is.EqualTo(goodClientCount), "Disconnect should not be called");
-            Assert.That(onDataCount, Is.EqualTo(0), "Data should not be called");
+            Assert.That(onConnect, Has.Count.EqualTo(goodClientCount), "Connect should not be called");
+            Assert.That(onDisconnect, Has.Count.EqualTo(goodClientCount), "Disconnect should not be called");
+            Assert.That(onData, Has.Count.EqualTo(0), "Data should not be called");
 
             for (int i = 0; i < 10; i++)
             {

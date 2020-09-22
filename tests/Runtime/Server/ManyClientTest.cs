@@ -36,9 +36,9 @@ namespace Mirror.SimpleWeb.Tests.Server
             // 4 seconds should be enough time for clients to connect then close themselves
             yield return new WaitForSeconds(4);
 
-            Assert.That(onConnectedCount, Is.EqualTo(count), "All should be connectted");
-            Assert.That(onDisconnectedCount, Is.EqualTo(count), "All should be disconnected called");
-            Assert.That(onDataCount, Is.EqualTo(0), "Data should not be called");
+            Assert.That(onConnect, Has.Count.EqualTo(count), "All should be connectted");
+            Assert.That(onDisconnect, Has.Count.EqualTo(count), "All should be disconnected called");
+            Assert.That(onData, Has.Count.EqualTo(0), "Data should not be called");
 
             for (int i = 0; i < count; i++)
             {

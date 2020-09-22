@@ -30,7 +30,7 @@ namespace Mirror.SimpleWeb.Tests.Server
             // wait for message to be processed
             yield return new WaitForSeconds(0.2f);
 
-            Assert.That(onConnectedCount, Is.EqualTo(1), "Connect should be called once");
+            Assert.That(onConnect, Has.Count.EqualTo(1), "Connect should be called once");
         }
 
         [UnityTest]
@@ -52,8 +52,8 @@ namespace Mirror.SimpleWeb.Tests.Server
             // wait for message to be processed
             yield return new WaitForSeconds(0.2f);
 
-            Assert.That(onConnectedCount, Is.EqualTo(1), "Connect should be called once");
-            Assert.That(onDisconnectedCount, Is.EqualTo(1), "Disconnected should be called once");
+            Assert.That(onConnect, Has.Count.EqualTo(1), "Connect should be called once");
+            Assert.That(onDisconnect, Has.Count.EqualTo(1), "Disconnected should be called once");
         }
 
         [UnityTest]
@@ -77,8 +77,8 @@ namespace Mirror.SimpleWeb.Tests.Server
             // give time to process message
             yield return new WaitForSeconds(1);
 
-            Assert.That(onConnectedCount, Is.EqualTo(1), "Connect should be called once");
-            Assert.That(onDisconnectedCount, Is.EqualTo(1), "Disconnected should be called once");
+            Assert.That(onConnect, Has.Count.EqualTo(1), "Connect should be called once");
+            Assert.That(onDisconnect, Has.Count.EqualTo(1), "Disconnected should be called once");
         }
 
         [UnityTest]
@@ -92,8 +92,8 @@ namespace Mirror.SimpleWeb.Tests.Server
             // give time to process message
             yield return new WaitForSeconds(1);
 
-            Assert.That(onConnectedCount, Is.EqualTo(1), "Connect should be called once");
-            Assert.That(onDisconnectedCount, Is.EqualTo(1), "Disconnected should be called once");
+            Assert.That(onConnect, Has.Count.EqualTo(1), "Connect should be called once");
+            Assert.That(onDisconnect, Has.Count.EqualTo(1), "Disconnected should be called once");
 
             yield return new WaitForSeconds(0.2f);
 

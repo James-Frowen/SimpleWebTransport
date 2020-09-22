@@ -38,9 +38,9 @@ namespace Mirror.SimpleWeb.Tests.Server
 
             Assert.That(HasDisconnected(client), Is.True, "Client should have been disconnected");
 
-            Assert.That(onConnectedCount, Is.EqualTo(0), "Connect should not be called");
-            Assert.That(onDisconnectedCount, Is.EqualTo(0), "Disconnect should not be called");
-            Assert.That(onDataCount, Is.EqualTo(0), "Data should not be called");
+            Assert.That(onConnect, Has.Count.EqualTo(0), "Connect should not be called");
+            Assert.That(onDisconnect, Has.Count.EqualTo(0), "Disconnect should not be called");
+            Assert.That(onData, Has.Count.EqualTo(0), "Data should not be called");
         }
 
 
@@ -59,9 +59,9 @@ namespace Mirror.SimpleWeb.Tests.Server
 
             Assert.That(HasDisconnected(client), Is.True, "Client should have been disconnected");
 
-            Assert.That(onConnectedCount, Is.EqualTo(0), "Connect should not be called");
-            Assert.That(onDisconnectedCount, Is.EqualTo(0), "Disconnect should not be called");
-            Assert.That(onDataCount, Is.EqualTo(0), "Data should not be called");
+            Assert.That(onConnect, Has.Count.EqualTo(0), "Connect should not be called");
+            Assert.That(onDisconnect, Has.Count.EqualTo(0), "Disconnect should not be called");
+            Assert.That(onData, Has.Count.EqualTo(0), "Data should not be called");
         }
 
         [UnityTest]
@@ -89,9 +89,9 @@ namespace Mirror.SimpleWeb.Tests.Server
             Assert.That(result.error, Has.Length.EqualTo(0), "Should have no errors");
 
             // check server events
-            Assert.That(onConnectedCount, Is.EqualTo(1), "Connect should have been called once");
-            Assert.That(onDisconnectedCount, Is.EqualTo(1), "Disconnect should have been called once");
-            Assert.That(onDataCount, Is.EqualTo(0), "Data should not be called");
+            Assert.That(onConnect, Has.Count.EqualTo(1), "Connect should have been called once");
+            Assert.That(onDisconnect, Has.Count.EqualTo(1), "Disconnect should have been called once");
+            Assert.That(onData, Has.Count.EqualTo(0), "Data should not be called");
 
 
             // wait for timeout
