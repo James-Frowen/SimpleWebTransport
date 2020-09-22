@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace Mirror.SimpleWeb.Tests.Server
 {
+    [Category("SimpleWebTransport")]
     public class SimpleWebTestBase
     {
         List<GameObject> toCleanup = new List<GameObject>();
