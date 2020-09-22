@@ -97,7 +97,7 @@ namespace Mirror.SimpleWeb
                         receiveThread.Start();
                     }
                 }
-                catch (SocketException e)
+                catch (SocketException)
                 {
                     // check for Interrupted/Abort
                     CheckForInterupt();
@@ -115,6 +115,7 @@ namespace Mirror.SimpleWeb
 
             if (!success)
             {
+                Log.Info("Handshake Failed");
                 conn.client.Dispose();
                 return;
             }

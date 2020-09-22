@@ -50,7 +50,10 @@ namespace Mirror.SimpleWeb
                     return false;
 
                 if (!IsGet(getHeader))
+                {
+                    Log.Info("First bytes from client was not 'GET' for handshake");
                     return false;
+                }
             }
             catch (Exception e) { Debug.LogException(e); return false; }
 
