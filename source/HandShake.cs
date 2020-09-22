@@ -1,6 +1,5 @@
-﻿#define SIMPLE_WEB_INFO_LOG
+#define SIMPLE_WEB_INFO_LOG
 using System;
-using System.IO;
 using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
@@ -48,7 +47,8 @@ namespace Mirror.SimpleWeb
                 byte[] getHeader = new byte[3];
                 stream.Read(getHeader, 0, 3);
 
-                ThrowIfNotGet(getHeader);
+                if (!IsGet(getHeader))
+                    return false;
 
                 int length = client.Available;
 
@@ -63,33 +63,26 @@ namespace Mirror.SimpleWeb
                     return true;
                 }
             }
-            catch (InvalidDataException)
-            {
-                Log.Info("Failed handshake");
-                return false;
-            }
             catch (Exception e) { Debug.LogException(e); return false; }
         }
 
-        void ThrowIfNotGet(byte[] getHeader)
+        bool IsGet(byte[] getHeader)
         {
-            if (getHeader[0] != 71 || // G
-                getHeader[1] != 69 || // E
-                getHeader[2] != 84)   // T
-            {
-                throw new InvalidDataException("Did not recieve handshake");
-            }
+            // just check bytes here instead of using Encoding.UTF8
+            return getHeader[0] == 71 && // G
+                   getHeader[1] == 69 && // E
+                   getHeader[2] == 84;   // T
         }
 
         void AcceptHandshake(NetworkStream stream, string msg)
         {
-            CreateHandShake(msg);
+            CreateResponse(msg);
 
             stream.Write(response, 0, ResponseLength);
             Log.Info("Sent Handshake");
         }
 
-        void CreateHandShake(string msg)
+        void CreateResponse(string msg)
         {
             GetKey(msg, keyBuffer);
 
