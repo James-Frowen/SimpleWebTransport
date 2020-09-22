@@ -91,7 +91,7 @@ namespace Mirror.SimpleWeb.Tests
             }
         }
 
-        internal static string ResolvePath(string path)
+        public static string ResolvePath(string path)
         {
             string full = Path.Combine(NodeDir, path);
             if (full.StartsWith(Application.dataPath))
