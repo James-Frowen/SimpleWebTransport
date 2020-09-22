@@ -152,7 +152,7 @@ namespace Mirror.SimpleWeb
                 Debug.LogError("SimpleWebServer Already Started");
             }
 
-            server = new SimpleWebServer(port, noDelay, sendTimeout, receiveTimeout);
+            server = new SimpleWebServer(port, noDelay, sendTimeout, receiveTimeout, maxMessageSize);
 
             server.onConnect += OnServerConnected.Invoke;
             server.onDisconnect += OnServerDisconnected.Invoke;

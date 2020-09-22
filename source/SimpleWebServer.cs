@@ -6,17 +6,15 @@ namespace Mirror.SimpleWeb
 {
     public class SimpleWebServer
     {
-        const int RecieveLoopSleepTime = 1;
-
         readonly short port;
 
         readonly WebSocketServer server;
 
-        public SimpleWebServer(short port, bool noDelay, int sendTimeout, int receiveTimeout)
+        public SimpleWebServer(short port, bool noDelay, int sendTimeout, int receiveTimeout, int maxMessageSize)
         {
             this.port = port;
 
-            server = new WebSocketServer(noDelay, sendTimeout, receiveTimeout, RecieveLoopSleepTime);
+            server = new WebSocketServer(noDelay, sendTimeout, receiveTimeout, maxMessageSize);
         }
 
         public bool Active { get; private set; }

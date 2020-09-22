@@ -1,4 +1,4 @@
-﻿#define SIMPLE_WEB_INFO_LOG
+#define SIMPLE_WEB_INFO_LOG
 using System;
 using System.Collections.Concurrent;
 using System.Net.Sockets;
@@ -14,6 +14,8 @@ namespace Mirror.SimpleWeb
         public TcpClient client;
         public Thread receiveThread;
         public Thread sendThread;
+
+        public byte[] receiveBuffer;
 
         public ManualResetEvent sendPending = new ManualResetEvent(false);
         public ConcurrentQueue<ArraySegment<byte>> sendQueue = new ConcurrentQueue<ArraySegment<byte>>();

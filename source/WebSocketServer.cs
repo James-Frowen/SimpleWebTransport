@@ -1,7 +1,6 @@
 #define SIMPLE_WEB_INFO_LOG
 using System;
 using System.Collections.Concurrent;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
@@ -18,7 +17,7 @@ namespace Mirror.SimpleWeb
         readonly bool noDelay;
         readonly int sendTimeout;
         readonly int receiveTimeout;
-        readonly int recieveLoopSleepTime;
+        readonly int maxMessageSize;
 
         TcpListener listener;
         Thread acceptThread;
@@ -32,12 +31,12 @@ namespace Mirror.SimpleWeb
             return _previousId;
         }
 
-        public WebSocketServer(bool noDelay, int sendTimeout, int receiveTimeout, int recieveLoopSleepTime)
+        public WebSocketServer(bool noDelay, int sendTimeout, int receiveTimeout, int maxMessageSize)
         {
             this.noDelay = noDelay;
             this.sendTimeout = sendTimeout;
             this.receiveTimeout = receiveTimeout;
-            this.recieveLoopSleepTime = recieveLoopSleepTime;
+            this.maxMessageSize = maxMessageSize;
         }
 
         public void Listen(short port)
@@ -102,8 +101,7 @@ namespace Mirror.SimpleWeb
                 {
                     // check for Interrupted/Abort
                     Thread.Sleep(1);
-
-                    Debug.LogException(e);
+                    throw;
                 }
             }
             catch (ThreadInterruptedException) { Log.Info("acceptLoop ThreadInterrupted"); return; }
@@ -136,6 +134,8 @@ namespace Mirror.SimpleWeb
             sendThread.IsBackground = true;
             sendThread.Start();
 
+            conn.receiveBuffer = new byte[maxMessageSize];
+
             ReceiveLoop(conn);
         }
 
@@ -146,6 +146,7 @@ namespace Mirror.SimpleWeb
             {
                 TcpClient client = conn.client;
                 NetworkStream stream = client.GetStream();
+                byte[] buffer = conn.receiveBuffer;
 
                 while (true)
                 {
@@ -153,27 +154,32 @@ namespace Mirror.SimpleWeb
                     // 1 for bit fields
                     // 1+ for length (length can be be 1, 2, or 4)
                     // 4 for mask
-                    bool recieved = WaitForData(conn, 6, recieveLoopSleepTime, receiveTimeout);
-                    if (!recieved)
+                    int recieved;
+
+                    recieved = stream.Read(buffer, 0, 6);
+
+                    if (recieved == -1)
                     {
                         Log.Info($"ReceiveLoop {conn.connId} not connected or timed out");
                         // check for interupt
                         Thread.Sleep(1);
-                        return;
+                        // will go to finally block below
+                        break;
                     }
 
-                    // TODO dont allocate new buffer
                     int length = client.Available;
-                    byte[] buffer = new byte[length];
-                    stream.Read(buffer, 0, length);
+                    stream.Read(buffer, 6, length);
 
                     ProcessMessages(conn, buffer, length);
-
-                    Thread.Sleep(recieveLoopSleepTime);
                 }
             }
+            catch (ObjectDisposedException e) { Log.Info($"ReceiveLoop {conn.connId} Stream closed"); return; }
             catch (ThreadInterruptedException) { Log.Info($"ReceiveLoop {conn.connId} ThreadInterrupted"); return; }
             catch (ThreadAbortException) { Log.Info($"ReceiveLoop {conn.connId} ThreadAbort"); return; }
+            catch (IOException e)
+            {
+                Log.Info($"ReceiveLoop {conn.connId} IOException\n{e.Message}", false);
+            }
             catch (Exception e) { Debug.LogException(e); }
             finally
             {
@@ -181,62 +187,13 @@ namespace Mirror.SimpleWeb
             }
         }
 
-        bool WaitForData(Connection conn, int minCount, int sleepTime, int timeout)
-        {
-            Stopwatch stopwatch = Stopwatch.StartNew();
-
-
-
-            TcpClient client = conn.client;
-            bool success = SpinWait.SpinUntil(() =>
-            {
-                Console.WriteLine(stopwatch.ElapsedMilliseconds);
-                return !client.Connected || client.Available > minCount;
-            }, timeout);
-
-            if (!client.Connected) return false;
-            if (client.Available > minCount) return true;
-            else return false;
-
-
-            //Timer timer = new Timer(1000);
-            //timer.
-            //TcpClient client = conn.client;
-            //NetworkStream stream = client.GetStream();
-            //Debug.Log($"CanTimeout : {stream.CanTimeout}");
-            //Debug.Log($"ReadTimeout : {stream.ReadTimeout}");
-
-
-            //for (int i = 0; i < timeout; i += sleepTime)
-            //{
-            //    if (!client.Connected) return false;
-            //    if (client.Available > minCount) return true;
-
-            //    int read = stream.ReadByte();
-            //    //Debug.Log($"CanTimeout : {stream.ReadTimeout}");
-
-            //    Debug.Log($"{i} < {timeout} : {i < timeout}");
-
-            //    Thread.Sleep(sleepTime);
-            //}
-            //Console.WriteLine(stopwatch.ElapsedMilliseconds);
-
-            //// timeout
-            //Info($"WaitForData {conn.connId} timeout");
-            //return false;
-        }
-
         void ProcessMessages(Connection conn, byte[] buffer, int length)
         {
-            int bytesProcessed = ProcessMessage(conn, buffer, length);
+            int bytesProcessed = ProcessMessage(conn, buffer, 0, length);
 
             while (bytesProcessed < length)
             {
-                // TODO dont allocate new buffer
-                int newLength = length - bytesProcessed;
-                byte[] newBuffer = new byte[newLength];
-
-                bytesProcessed = ProcessMessage(conn, newBuffer, newLength);
+                bytesProcessed = ProcessMessage(conn, buffer, bytesProcessed, length);
             }
         }
 
@@ -247,39 +204,34 @@ namespace Mirror.SimpleWeb
         /// <param name="buffer"></param>
         /// <param name="length"></param>
         /// <returns>bytes processed</returns>
-        int ProcessMessage(Connection conn, byte[] buffer, int length)
+        int ProcessMessage(Connection conn, byte[] buffer, int offset, int length)
         {
-            bool finished = (buffer[0] & 0b10000000) != 0; // has full message been sent
-            bool hasMask = (buffer[1] & 0b10000000) != 0; // must be true, "All messages from the client to the server have this bit set"
+            bool finished = (buffer[offset + 0] & 0b10000000) != 0; // has full message been sent
+            bool hasMask = (buffer[offset + 1] & 0b10000000) != 0; // must be true, "All messages from the client to the server have this bit set"
 
-            int opcode = buffer[0] & 0b00001111; // expecting 1 - text message
-            byte lenByte = (byte)(buffer[1] - 128); // & 0111 1111
+            int opcode = buffer[offset + 0] & 0b00001111; // expecting 1 - text message
+            byte lenByte = (byte)(buffer[offset + 1] - 128); // & 0111 1111
 
             throwIfNotFinished(finished);
             throwIfNoMask(hasMask);
             throwIfBadOpCode(opcode);
 
-            (int msglen, int offset) = GetMessageLength(buffer, lenByte);
+            int msglen;
+            (msglen, offset) = GetMessageLength(buffer, offset, lenByte);
 
             throwIfLengthZero(msglen);
+            throwIfMsgLengthTooLong(msglen, length);
 
-
-            //if (offset + msglen != length)
-            //{
-            //    throw new InvalidDataException("Message length was not equal to buffer length");
-            //}
-
-
-            byte[] decoded = new byte[msglen];
+            //byte[] decoded = new byte[msglen];
             Mask mask = new Mask(buffer, offset);
             offset += 4;
 
             for (int i = 0; i < msglen; i++)
-                decoded[i] = (byte)(buffer[offset + i] ^ mask.getMaskByte(i));
+                buffer[offset + i] = (byte)(buffer[offset + i] ^ mask.getMaskByte(i));
 
             if (opcode == 2)
             {
-                ArraySegment<byte> data = new ArraySegment<byte>(decoded, 0, decoded.Length);
+                ArraySegment<byte> data = new ArraySegment<byte>(buffer, offset, msglen);
 
                 receiveQueue.Enqueue(new Message
                 {
@@ -290,7 +242,7 @@ namespace Mirror.SimpleWeb
             }
             else if (opcode == 8)
             {
-                Log.Info($"Close: {decoded[0] << 8 | decoded[1]} message:{Encoding.UTF8.GetString(decoded, 2, msglen - 2)}");
+                Log.Info($"Close: {buffer[offset + 0] << 8 | buffer[offset + 1]} message:{Encoding.UTF8.GetString(buffer, offset + 2, msglen - 2)}");
                 CloseConnection(conn);
             }
 
@@ -337,15 +289,27 @@ namespace Mirror.SimpleWeb
             }
         }
 
-        static (int length, int offset) GetMessageLength(byte[] buffer, byte lenByte)
+        /// <summary>
+        /// need to check this so that data from previous buffer isnt used
+        /// </summary>
+        /// <exception cref="InvalidDataException"></exception>
+        static void throwIfMsgLengthTooLong(int msglen, int readLength)
+        {
+            if (msglen > readLength)
+            {
+                throw new InvalidDataException("Message length was longer than read length");
+            }
+        }
+
+        static (int length, int offset) GetMessageLength(byte[] buffer, int offset, byte lenByte)
         {
             if (lenByte == 126)
             {
                 ushort value = 0;
-                value |= buffer[2];
-                value |= (ushort)(buffer[3] << 8);
+                value |= buffer[offset + 2];
+                value |= (ushort)(buffer[offset + 3] << 8);
 
-                return (value, 4);
+                return (value, offset + 4);
             }
             else if (lenByte == 127)
             {
@@ -365,7 +329,7 @@ namespace Mirror.SimpleWeb
             }
             else // is less than 126
             {
-                return (lenByte, 2);
+                return (lenByte, offset + 2);
             }
         }
 
