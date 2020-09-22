@@ -41,29 +41,40 @@ namespace Mirror.SimpleWeb
 
         public bool TryHandshake(TcpClient client)
         {
+            NetworkStream stream = client.GetStream();
             try
             {
-                NetworkStream stream = client.GetStream();
                 byte[] getHeader = new byte[3];
-                stream.Read(getHeader, 0, 3);
+                bool success = ReadHelper.SafeRead(stream, getHeader, 0, 3);
+                if (!success)
+                    return false;
 
                 if (!IsGet(getHeader))
                     return false;
+            }
+            catch (Exception e) { Debug.LogException(e); return false; }
 
-                int length = client.Available;
-
-                // lock so that buffers can only be used by this thread
-                lock (lockObj)
+            // lock so that buffers can only be used by this thread
+            lock (lockObj)
+            {
+                try
                 {
-                    stream.Read(readBuffer, 0, length);
+                    int length = client.Available;
+                    bool success = ReadHelper.SafeRead(stream, readBuffer, 0, length);
+                    if (!success)
+                        return false;
+
                     string msg = Encoding.UTF8.GetString(readBuffer, 0, length);
 
                     AcceptHandshake(stream, msg);
-                    ClearBuffers();
                     return true;
                 }
+                catch (Exception e) { Debug.LogException(e); return false; }
+                finally
+                {
+                    ClearBuffers();
+                }
             }
-            catch (Exception e) { Debug.LogException(e); return false; }
         }
 
         bool IsGet(byte[] getHeader)

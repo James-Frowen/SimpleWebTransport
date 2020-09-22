@@ -100,7 +100,7 @@ namespace Mirror.SimpleWeb
                 catch (SocketException e)
                 {
                     // check for Interrupted/Abort
-                    Thread.Sleep(1);
+                    CheckForInterupt();
                     throw;
                 }
             }
@@ -154,21 +154,18 @@ namespace Mirror.SimpleWeb
                     // 1 for bit fields
                     // 1+ for length (length can be be 1, 2, or 4)
                     // 4 for mask
-                    int recieved;
-
-                    recieved = stream.Read(buffer, 0, 6);
-
-                    if (recieved == -1)
+                    bool success = ReadHelper.SafeRead(stream, buffer, 0, 6);
+                    if (!success)
                     {
                         Log.Info($"ReceiveLoop {conn.connId} not connected or timed out");
-                        // check for interupt
-                        Thread.Sleep(1);
+                        CheckForInterupt();
                         // will go to finally block below
                         break;
                     }
 
+
                     int length = client.Available;
-                    stream.Read(buffer, 6, length);
+                    ReadHelper.SafeRead(stream, buffer, 6, length);
 
                     ProcessMessages(conn, buffer, length);
                 }
@@ -176,15 +173,16 @@ namespace Mirror.SimpleWeb
             catch (ObjectDisposedException e) { Log.Info($"ReceiveLoop {conn.connId} Stream closed"); return; }
             catch (ThreadInterruptedException) { Log.Info($"ReceiveLoop {conn.connId} ThreadInterrupted"); return; }
             catch (ThreadAbortException) { Log.Info($"ReceiveLoop {conn.connId} ThreadAbort"); return; }
-            catch (IOException e)
-            {
-                Log.Info($"ReceiveLoop {conn.connId} IOException\n{e.Message}", false);
-            }
             catch (Exception e) { Debug.LogException(e); }
             finally
             {
                 CloseConnection(conn);
             }
+        }
+        static void CheckForInterupt()
+        {
+            // sleep in order to check for ThreadInterruptedException
+            Thread.Sleep(1);
         }
 
         void ProcessMessages(Connection conn, byte[] buffer, int length)
