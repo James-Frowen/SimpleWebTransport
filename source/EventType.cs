@@ -6,6 +6,7 @@ namespace Mirror.SimpleWeb
     {
         Connected,
         Data,
-        Disconnected
+        Disconnected,
+        Error
     }
 }

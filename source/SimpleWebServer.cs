@@ -22,7 +22,7 @@ namespace Mirror.SimpleWeb
         public event Action<int> onConnect;
         public event Action<int> onDisconnect;
         public event Action<int, ArraySegment<byte>> onData;
-        public event Action<int> onError;
+        public event Action<int, Exception> onError;
 
         public void Start()
         {
@@ -68,6 +68,9 @@ namespace Mirror.SimpleWeb
                         break;
                     case EventType.Disconnected:
                         onDisconnect?.Invoke(next.connId);
+                        break;
+                    case EventType.Error:
+                        onError?.Invoke(next.connId, next.exception);
                         break;
                 }
 

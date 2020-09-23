@@ -1,4 +1,4 @@
-﻿#define SIMPLE_WEB_INFO_LOG
+#define SIMPLE_WEB_INFO_LOG
 using System;
 
 namespace Mirror.SimpleWeb
@@ -8,5 +8,6 @@ namespace Mirror.SimpleWeb
         public int connId;
         public EventType type;
         public ArraySegment<byte> data;
+        public Exception exception;
     }
 }
