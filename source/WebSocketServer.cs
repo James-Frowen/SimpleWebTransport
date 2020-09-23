@@ -21,7 +21,7 @@ namespace Mirror.SimpleWeb
 
         TcpListener listener;
         Thread acceptThread;
-        readonly HandShake handShake = new HandShake();
+        readonly Handshake handShake = new Handshake();
         readonly ConcurrentDictionary<int, Connection> connections = new ConcurrentDictionary<int, Connection>();
 
         int _previousId = 0;
@@ -135,7 +135,8 @@ namespace Mirror.SimpleWeb
             sendThread.IsBackground = true;
             sendThread.Start();
 
-            conn.receiveBuffer = new byte[maxMessageSize];
+            // max message size + size for header+mask
+            conn.receiveBuffer = new byte[maxMessageSize + 8];
 
             ReceiveLoop(conn);
         }
@@ -151,11 +152,12 @@ namespace Mirror.SimpleWeb
 
                 while (true)
                 {
-                    // we expect atleast 6 bytes
+                    const int minRead = 4;
+                    // header is atmost 4 bytes + mask
                     // 1 for bit fields
-                    // 1+ for length (length can be be 1, 2, or 4)
-                    // 4 for mask
-                    bool success = ReadHelper.SafeRead(stream, buffer, 0, 6);
+                    // 1+ for length (length can be be 1, 3, or 9 and we refuse 9)
+                    // 4 for mask (we can read this later
+                    bool success = ReadHelper.SafeRead(stream, buffer, 0, minRead);
                     if (!success)
                     {
                         Log.Info($"ReceiveLoop {conn.connId} not connected or timed out");
@@ -165,15 +167,27 @@ namespace Mirror.SimpleWeb
                     }
 
 
-                    int length = client.Available;
-                    ReadHelper.SafeRead(stream, buffer, 6, length);
+                    MessageProcessor.Result result = MessageProcessor.ProcessHeader(buffer, maxMessageSize);
 
-                    ProcessMessages(conn, buffer, length);
+                    ReadHelper.SafeRead(stream, buffer, minRead, result.readLength);
+
+                    MessageProcessor.DecodeMessage(buffer, result.maskOffset, result.msgLength);
+
+                    HandleMessage(result.opcode, conn, buffer, result.msgOffset, result.msgLength);
                 }
             }
-            catch (ObjectDisposedException e) { Log.Info($"ReceiveLoop {conn.connId} Stream closed"); return; }
+            catch (ObjectDisposedException) { Log.Info($"ReceiveLoop {conn.connId} Stream closed"); return; }
             catch (ThreadInterruptedException) { Log.Info($"ReceiveLoop {conn.connId} ThreadInterrupted"); return; }
             catch (ThreadAbortException) { Log.Info($"ReceiveLoop {conn.connId} ThreadAbort"); return; }
+            catch (InvalidDataException e)
+            {
+                receiveQueue.Enqueue(new Message
+                {
+                    connId = conn.connId,
+                    type = EventType.Error,
+                    exception = e
+                });
+            }
             catch (Exception e) { Debug.LogException(e); }
             finally
             {
@@ -186,53 +200,11 @@ namespace Mirror.SimpleWeb
             Thread.Sleep(1);
         }
 
-        void ProcessMessages(Connection conn, byte[] buffer, int length)
+        void HandleMessage(int opcode, Connection conn, byte[] buffer, int offset, int length)
         {
-            int bytesProcessed = ProcessMessage(conn, buffer, 0, length);
-
-            while (bytesProcessed < length)
-            {
-                bytesProcessed = ProcessMessage(conn, buffer, bytesProcessed, length);
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="conn"></param>
-        /// <param name="buffer"></param>
-        /// <param name="length"></param>
-        /// <returns>bytes processed</returns>
-        int ProcessMessage(Connection conn, byte[] buffer, int offset, int length)
-        {
-            bool finished = (buffer[offset + 0] & 0b10000000) != 0; // has full message been sent
-            bool hasMask = (buffer[offset + 1] & 0b10000000) != 0; // must be true, "All messages from the client to the server have this bit set"
-
-            int opcode = buffer[offset + 0] & 0b00001111; // expecting 1 - text message
-            byte lenByte = (byte)(buffer[offset + 1] - 128); // & 0111 1111
-
-            throwIfNotFinished(finished);
-            throwIfNoMask(hasMask);
-            throwIfBadOpCode(opcode);
-
-            int msglen;
-            (msglen, offset) = GetMessageLength(buffer, offset, lenByte);
-
-            throwIfLengthZero(msglen);
-            throwIfMsgLengthTooLong(msglen, length);
-
-            int maskOffset = offset;
-            offset += 4;
-
-            for (int i = 0; i < msglen; i++)
-            {
-                byte maskByte = buffer[maskOffset + i % 4];
-                buffer[offset + i] = (byte)(buffer[offset + i] ^ maskByte);
-            }
-
             if (opcode == 2)
             {
-                ArraySegment<byte> data = new ArraySegment<byte>(buffer, offset, msglen);
+                ArraySegment<byte> data = new ArraySegment<byte>(buffer, offset, length);
 
                 receiveQueue.Enqueue(new Message
                 {
@@ -243,96 +215,11 @@ namespace Mirror.SimpleWeb
             }
             else if (opcode == 8)
             {
-                Log.Info($"Close: {buffer[offset + 0] << 8 | buffer[offset + 1]} message:{Encoding.UTF8.GetString(buffer, offset + 2, msglen - 2)}");
+                Log.Info($"Close: {buffer[offset + 0] << 8 | buffer[offset + 1]} message:{Encoding.UTF8.GetString(buffer, offset + 2, length - 2)}");
                 CloseConnection(conn);
             }
-
-            return offset + msglen;
         }
 
-
-        /// <exception cref="InvalidDataException"></exception>
-        static void throwIfNotFinished(bool finished)
-        {
-            if (!finished)
-            {
-                // TODO check if we need to deal with this
-                throw new InvalidDataException("Full message should have been sent, if the full message wasn't sent it wasn't sent from this trasnport");
-            }
-        }
-
-        /// <exception cref="InvalidDataException"></exception>
-        static void throwIfNoMask(bool hasMask)
-        {
-            if (!hasMask)
-            {
-                throw new InvalidDataException("Message from client should have mask set to true");
-            }
-        }
-
-        /// <exception cref="InvalidDataException"></exception>
-        static void throwIfBadOpCode(int opcode)
-        {
-            // 2 = binary
-            // 8 = close
-            if (opcode != 2 && opcode != 8)
-            {
-                throw new InvalidDataException("Expected opcode to be binary or close");
-            }
-        }
-
-        /// <exception cref="InvalidDataException"></exception>
-        static void throwIfLengthZero(int msglen)
-        {
-            if (msglen == 0)
-            {
-                throw new InvalidDataException("Message length was zero");
-            }
-        }
-
-        /// <summary>
-        /// need to check this so that data from previous buffer isnt used
-        /// </summary>
-        /// <exception cref="InvalidDataException"></exception>
-        static void throwIfMsgLengthTooLong(int msglen, int readLength)
-        {
-            if (msglen > readLength)
-            {
-                throw new InvalidDataException("Message length was longer than read length");
-            }
-        }
-
-        static (int length, int offset) GetMessageLength(byte[] buffer, int offset, byte lenByte)
-        {
-            if (lenByte == 126)
-            {
-                ushort value = 0;
-                value |= buffer[offset + 2];
-                value |= (ushort)(buffer[offset + 3] << 8);
-
-                return (value, offset + 4);
-            }
-            else if (lenByte == 127)
-            {
-                throw new Exception("Max length is longer than allowed in a single message");
-
-                //ulong value = 0;
-                //value |= buffer[2];
-                //value |= (ulong)buffer[3] << 8;
-                //value |= (ulong)buffer[4] << 16;
-                //value |= (ulong)buffer[5] << 24;
-                //value |= (ulong)buffer[6] << 32;
-                //value |= (ulong)buffer[7] << 40;
-                //value |= (ulong)buffer[8] << 48;
-                //value |= (ulong)buffer[9] << 56;
-
-                //return (value, 10);
-            }
-            else // is less than 126
-            {
-                return (lenByte, offset + 2);
-            }
-        }
 
         void SendLoop(Connection conn)
         {
@@ -435,7 +322,6 @@ namespace Mirror.SimpleWeb
             }
             else
             {
-                Debug.LogError($"Cant close connection to {id} because connection was not found in dictionary");
                 return false;
             }
         }
