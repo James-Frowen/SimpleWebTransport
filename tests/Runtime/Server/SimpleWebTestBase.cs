@@ -20,6 +20,7 @@ namespace Mirror.SimpleWeb.Tests.Server
         protected List<int> onConnect = new List<int>();
         protected List<int> onDisconnect = new List<int>();
         protected List<(int connId, ArraySegment<byte> data)> onData = new List<(int connId, ArraySegment<byte> data)>();
+        protected List<(int connId, Exception exception)> onError = new List<(int connId, Exception exception)>();
 
         protected WaitUntil WaitForConnect => new WaitUntil(() => onConnect.Count >= 1);
 
@@ -41,6 +42,7 @@ namespace Mirror.SimpleWeb.Tests.Server
             transport.OnServerConnected.AddListener((connId) => onConnect.Add(connId));
             transport.OnServerDisconnected.AddListener((connId) => onDisconnect.Add(connId));
             transport.OnServerDataReceived.AddListener((connId, data, ___) => onData.Add((connId, data)));
+            transport.OnServerError.AddListener((connId, exception) => onError.Add((connId, exception)));
             transport.ServerStart();
         }
 
