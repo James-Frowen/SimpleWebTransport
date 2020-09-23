@@ -135,9 +135,6 @@ namespace Mirror.SimpleWeb
             sendThread.IsBackground = true;
             sendThread.Start();
 
-            // max message size + size for header+mask
-            conn.receiveBuffer = new byte[maxMessageSize + 8];
-
             ReceiveLoop(conn);
         }
 
@@ -148,16 +145,17 @@ namespace Mirror.SimpleWeb
             {
                 TcpClient client = conn.client;
                 NetworkStream stream = client.GetStream();
-                byte[] buffer = conn.receiveBuffer;
+                //byte[] buffer = conn.receiveBuffer;
+                const int HeaderLength = 4;
+                byte[] headerBuffer = new byte[HeaderLength];
 
                 while (true)
                 {
-                    const int minRead = 4;
                     // header is atmost 4 bytes + mask
                     // 1 for bit fields
                     // 1+ for length (length can be be 1, 3, or 9 and we refuse 9)
                     // 4 for mask (we can read this later
-                    bool success = ReadHelper.SafeRead(stream, buffer, 0, minRead);
+                    bool success = ReadHelper.SafeRead(stream, headerBuffer, 0, HeaderLength);
                     if (!success)
                     {
                         Log.Info($"ReceiveLoop {conn.connId} not connected or timed out");
@@ -167,9 +165,18 @@ namespace Mirror.SimpleWeb
                     }
 
 
-                    MessageProcessor.Result result = MessageProcessor.ProcessHeader(buffer, maxMessageSize);
+                    MessageProcessor.Result result = MessageProcessor.ProcessHeader(headerBuffer, maxMessageSize);
 
-                    ReadHelper.SafeRead(stream, buffer, minRead, result.readLength);
+                    // todo remove allocation
+                    // mask + msg
+                    byte[] buffer = new byte[HeaderLength + result.readLength];
+                    for (int i = 0; i < HeaderLength; i++)
+                    {
+                        // copy header as it might contain mask
+                        buffer[i] = headerBuffer[i];
+                    }
+
+                    ReadHelper.SafeRead(stream, buffer, HeaderLength, result.readLength);
 
                     MessageProcessor.DecodeMessage(buffer, result.maskOffset, result.msgLength);
 
@@ -266,6 +273,7 @@ namespace Mirror.SimpleWeb
         static void SendMessageToClient(NetworkStream stream, ArraySegment<byte> msg)
         {
             int msgLength = msg.Count;
+            // todo remove allocation
             byte[] buffer = new byte[4 + msgLength];
             int sendLength = 0;
 
@@ -304,7 +312,12 @@ namespace Mirror.SimpleWeb
         {
             if (connections.TryGetValue(id, out Connection conn))
             {
-                conn.sendQueue.Enqueue(segment);
+                // todo remove allocation
+                byte[] buffer = new byte[segment.Count];
+
+                Array.Copy(segment.Array, segment.Offset, buffer, 0, segment.Count);
+
+                conn.sendQueue.Enqueue(new ArraySegment<byte>(buffer));
                 conn.sendPending.Set();
             }
             else

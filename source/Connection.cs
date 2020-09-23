@@ -15,8 +15,6 @@ namespace Mirror.SimpleWeb
         public Thread receiveThread;
         public Thread sendThread;
 
-        public byte[] receiveBuffer;
-
         public ManualResetEvent sendPending = new ManualResetEvent(false);
         public ConcurrentQueue<ArraySegment<byte>> sendQueue = new ConcurrentQueue<ArraySegment<byte>>();
 
