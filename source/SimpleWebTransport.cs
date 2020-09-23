@@ -157,10 +157,7 @@ namespace Mirror.SimpleWeb
             server.onConnect += OnServerConnected.Invoke;
             server.onDisconnect += OnServerDisconnected.Invoke;
             server.onData += (int connId, ArraySegment<byte> data) => OnServerDataReceived.Invoke(connId, data, Channels.DefaultReliable);
-            server.onError += (connId) =>
-            {
-                OnServerError.Invoke(connId, new Exception("SimpleWebClient Error"));
-            };
+            server.onError += OnServerError.Invoke;
 
             server.Start();
         }
