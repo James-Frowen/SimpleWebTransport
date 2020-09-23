@@ -176,7 +176,6 @@ namespace Mirror.SimpleWeb.Tests.Server
             Assert.That(onError, Has.Count.EqualTo(1), $"Should have 1 error");
             Assert.That(onError[0].connId, Is.EqualTo(1), $"connId should be 1");
             Assert.That(onError[0].exception, Is.TypeOf<InvalidDataException>(), $"Should be InvalidDataException");
-            Assert.That(onError[0].exception.Message, Is.EqualTo("Recieve Data was too large"), $"Should be say data too large");
         }
     }
 }
