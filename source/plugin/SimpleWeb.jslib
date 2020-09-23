@@ -63,7 +63,7 @@ function Disconnect() {
     console.log("Disconnect");
 
     if (webSocket) {
-        webSocket.close();
+        webSocket.close(1000, "Disconnect Called by Mirror");
     }
 
     webSocket = undefined;
