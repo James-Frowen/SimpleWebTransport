@@ -1,4 +1,9 @@
 let webSocket = undefined;
+let debugLogs = false;
+
+function SetDebugLogs(enabled) {
+    debugLogs = enabled;
+}
 
 function IsConnected() {
     if (webSocket) {
@@ -9,10 +14,12 @@ function IsConnected() {
     }
 }
 
-
 function Connect(addressPtr, openCallbackPtr, closeCallBackPtr, messageCallbackPtr, errorCallbackPtr) {
     const address = Pointer_stringify(addressPtr);
-    console.log("Connecting to " + address);
+
+    if (debugLogs) {
+        console.log("Connecting to " + address);
+    }
 
     // Create webSocket connection.
     webSocket = new WebSocket(address);
@@ -20,13 +27,17 @@ function Connect(addressPtr, openCallbackPtr, closeCallBackPtr, messageCallbackP
 
     // Connection opened
     webSocket.addEventListener('open', function (event) {
-        console.log('Connection opened!');
+        if (debugLogs) {
+            console.log('Connection opened!');
+        }
 
         Runtime.dynCall('v', openCallbackPtr, 0);
         // webSocket.send('Hello Server!');
     });
     webSocket.addEventListener('close', function (event) {
-        console.log('Socket Closed', event.data);
+        if (debugLogs) {
+            console.log('Socket Closed', event.data);
+        }
 
         Runtime.dynCall('v', closeCallBackPtr, 0);
     });
@@ -43,7 +54,9 @@ function Connect(addressPtr, openCallbackPtr, closeCallBackPtr, messageCallbackP
             var dataBuffer = new Uint8Array(HEAPU8.buffer, bufferPtr, arrayLength);
             dataBuffer.set(array);
 
-            console.log("Message length " + arrayLength.toString());
+            if (debugLogs) {
+                console.log("Message received, length: " + arrayLength.toString());
+            }
             Runtime.dynCall('vii', messageCallbackPtr, [bufferPtr, arrayLength]);
             _free(bufferPtr);
         }
@@ -70,9 +83,8 @@ function Disconnect() {
 }
 
 function Send(arrayPtr, offset, length) {
-    console.log("Send Array, offset:" + offset + " length:" + length);
-    for (i = 0; i < length; i++) {
-        console.log("    " + HEAPU8[arrayPtr + offset + i]);
+    if (debugLogs) {
+        console.log("Send Array, offset: " + offset + " length: " + length);
     }
 
     if (webSocket) {
@@ -82,23 +94,11 @@ function Send(arrayPtr, offset, length) {
         webSocket.send(data);
     }
 }
-function InvokeCallback(callbackPtr) {
-    Runtime.dynCall('v', callbackPtr, 0);
-}
-
-function Debug(str) {
-    window.alert(Pointer_stringify(str));
-}
-
 
 mergeInto(LibraryManager.library, {
-    DebugNone: Debug,
-    DebugAnsi: Debug,
-    DebugUnicode: Debug,
-    DebugAuto: Debug,
+    SetDebugLogs,
     IsConnected,
     Connect,
     Disconnect,
-    Send,
-    InvokeCallback
+    Send
 });
