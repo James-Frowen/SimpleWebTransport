@@ -12,7 +12,7 @@ namespace Mirror.SimpleWeb
 #pragma warning disable CA2101 // Specify marshaling for P/Invoke string arguments
         [DllImport("__Internal")]
 #pragma warning restore CA2101 // Specify marshaling for P/Invoke string arguments
-        internal static extern void Connect(string address, Action openCallback, Action closeCallBack, Action<byte[], int> messageCallback, Action errorCallback);
+        internal static extern void Connect(string address, Action openCallback, Action closeCallBack, Action<IntPtr, int> messageCallback, Action errorCallback);
 
         [DllImport("__Internal")]
         internal static extern void Disconnect();

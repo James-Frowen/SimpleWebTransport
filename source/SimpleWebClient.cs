@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 using AOT;
 using UnityEngine;
 
@@ -73,10 +74,21 @@ namespace Mirror.SimpleWeb
             instance.onDisconnect?.Invoke();
         }
 
-        [MonoPInvokeCallback(typeof(Action<byte, int>))]
-        static void MessageCallback(byte[] data, int count)
+        [MonoPInvokeCallback(typeof(Action<IntPtr, int>))]
+        static void MessageCallback(IntPtr bufferPtr, int count)
         {
-            instance.onData?.Invoke(new ArraySegment<byte>(data, 0, count));
+            try
+            {
+                byte[] buffer = new byte[count];
+                Marshal.Copy(bufferPtr, buffer, 0, count);
+
+                instance.onData?.Invoke(new ArraySegment<byte>(buffer, 0, count));
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"onData {e.GetType()}: {e.Message}\n{e.StackTrace}");
+                instance.onError?.Invoke();
+            }
         }
 
         [MonoPInvokeCallback(typeof(Action))]

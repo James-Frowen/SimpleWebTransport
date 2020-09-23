@@ -30,23 +30,28 @@ function Connect(addressPtr, openCallbackPtr, closeCallBackPtr, messageCallbackP
 
         Runtime.dynCall('v', closeCallBackPtr, 0);
     });
+
     // Listen for messages
     webSocket.addEventListener('message', function (event) {
-        console.log('Message from server ', event.data);
 
         if (event.data instanceof ArrayBuffer) {
             // TODO dont alloc each time
             var array = new Uint8Array(event.data);
-            var ptr = _malloc(array.length);
-            var dataHeap = new Uint8Array(HEAPU8.buffer, ptr, array.length);
-            dataHeap.set(array);
-            Runtime.dynCall('vii', messageCallbackPtr, [ptr, array.length]);
-            _free(ptr);
+            var arrayLength = array.length;
+
+            var bufferPtr = _malloc(arrayLength);
+            var dataBuffer = new Uint8Array(HEAPU8.buffer, bufferPtr, arrayLength);
+            dataBuffer.set(array);
+
+            console.log("Message length " + arrayLength.toString());
+            Runtime.dynCall('vii', messageCallbackPtr, [bufferPtr, arrayLength]);
+            _free(bufferPtr);
         }
         else {
             console.error("message type not supported")
         }
     });
+
     webSocket.addEventListener('error', function (event) {
         console.error('Socket Error', event.data);
 
