@@ -151,7 +151,7 @@ namespace Mirror.SimpleWeb
 
                 while (true)
                 {
-                    // header is atmost 4 bytes + mask
+                    // header is at most 4 bytes + mask
                     // 1 for bit fields
                     // 1+ for length (length can be be 1, 3, or 9 and we refuse 9)
                     // 4 for mask (we can read this later
@@ -163,7 +163,6 @@ namespace Mirror.SimpleWeb
                         // will go to finally block below
                         break;
                     }
-
 
                     MessageProcessor.Result result = MessageProcessor.ProcessHeader(headerBuffer, maxMessageSize);
 
