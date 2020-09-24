@@ -1,5 +1,6 @@
 #define SIMPLE_WEB_INFO_LOG
 using System;
+using System.IO;
 using System.Linq;
 using System.Net.Sockets;
 using System.Security.Cryptography;
@@ -40,9 +41,10 @@ namespace Mirror.SimpleWeb
             Array.Clear(response, 0, ResponseLength);
         }
 
-        public bool TryHandshake(TcpClient client)
+        public bool TryHandshake(Connection conn)
         {
-            NetworkStream stream = client.GetStream();
+            TcpClient client = conn.client;
+            Stream stream = conn.stream;
             try
             {
                 byte[] getHeader = new byte[3];
@@ -89,7 +91,7 @@ namespace Mirror.SimpleWeb
                    getHeader[2] == 84;   // T
         }
 
-        void AcceptHandshake(NetworkStream stream, string msg)
+        void AcceptHandshake(Stream stream, string msg)
         {
             CreateResponse(msg);
 

@@ -122,7 +122,7 @@ namespace Mirror.SimpleWeb
                 return;
             }
 
-            success = handShake.TryHandshake(conn.client);
+            success = handShake.TryHandshake(conn);
 
             if (!success)
             {
