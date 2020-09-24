@@ -18,6 +18,7 @@ namespace Mirror.SimpleWeb
         readonly int sendTimeout;
         readonly int receiveTimeout;
         readonly int maxMessageSize;
+        readonly SslConfig sslConfig;
 
         TcpListener listener;
         Thread acceptThread;
@@ -25,18 +26,20 @@ namespace Mirror.SimpleWeb
         readonly ConcurrentDictionary<int, Connection> connections = new ConcurrentDictionary<int, Connection>();
 
         int _previousId = 0;
+
         int GetNextId()
         {
             _previousId++;
             return _previousId;
         }
 
-        public WebSocketServer(bool noDelay, int sendTimeout, int receiveTimeout, int maxMessageSize)
+        public WebSocketServer(bool noDelay, int sendTimeout, int receiveTimeout, int maxMessageSize, SslConfig sslConfig)
         {
             this.noDelay = noDelay;
             this.sendTimeout = sendTimeout;
             this.receiveTimeout = receiveTimeout;
             this.maxMessageSize = maxMessageSize;
+            this.sslConfig = sslConfig;
         }
 
         public void Listen(short port)
@@ -111,7 +114,15 @@ namespace Mirror.SimpleWeb
 
         void HandshakeAndReceiveLoop(Connection conn)
         {
-            bool success = handShake.TryHandshake(conn.client);
+            bool success = SslHelper.TryCreateStream(conn, sslConfig);
+            if (!success)
+            {
+                Log.Info("Failed to create SSL Stream");
+                conn.client.Dispose();
+                return;
+            }
+
+            success = handShake.TryHandshake(conn.client);
 
             if (!success)
             {
@@ -144,12 +155,12 @@ namespace Mirror.SimpleWeb
             try
             {
                 TcpClient client = conn.client;
-                NetworkStream stream = client.GetStream();
+                Stream stream = conn.stream;
                 //byte[] buffer = conn.receiveBuffer;
                 const int HeaderLength = 4;
                 byte[] headerBuffer = new byte[HeaderLength];
 
-                while (true)
+                while (client.Connected)
                 {
                     // header is at most 4 bytes + mask
                     // 1 for bit fields
@@ -232,7 +243,7 @@ namespace Mirror.SimpleWeb
             try
             {
                 TcpClient client = conn.client;
-                NetworkStream stream = client.GetStream();
+                Stream stream = conn.stream;
                 while (client.Connected)
                 {
                     // wait for message
@@ -269,7 +280,7 @@ namespace Mirror.SimpleWeb
             }
         }
 
-        static void SendMessageToClient(NetworkStream stream, ArraySegment<byte> msg)
+        static void SendMessageToClient(Stream stream, ArraySegment<byte> msg)
         {
             int msgLength = msg.Count;
             // todo remove allocation

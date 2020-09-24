@@ -28,6 +28,7 @@ namespace Mirror.SimpleWeb
 
         [Tooltip("How long without a message before disconnecting (in milliseconds)")]
         public int receiveTimeout = 20000;
+        public SslConfig sslConfig;
 
         private void OnValidate()
         {
@@ -177,7 +178,7 @@ namespace Mirror.SimpleWeb
                 Debug.LogError("SimpleWebServer Already Started");
             }
 
-            server = new SimpleWebServer(port, noDelay, sendTimeout, receiveTimeout, maxMessageSize);
+            server = new SimpleWebServer(port, noDelay, sendTimeout, receiveTimeout, maxMessageSize, sslConfig);
 
             server.onConnect += OnServerConnected.Invoke;
             server.onDisconnect += OnServerDisconnected.Invoke;

@@ -10,11 +10,11 @@ namespace Mirror.SimpleWeb
 
         readonly WebSocketServer server;
 
-        public SimpleWebServer(short port, bool noDelay, int sendTimeout, int receiveTimeout, int maxMessageSize)
+        public SimpleWebServer(short port, bool noDelay, int sendTimeout, int receiveTimeout, int maxMessageSize, SslConfig sslConfig)
         {
             this.port = port;
 
-            server = new WebSocketServer(noDelay, sendTimeout, receiveTimeout, maxMessageSize);
+            server = new WebSocketServer(noDelay, sendTimeout, receiveTimeout, maxMessageSize, sslConfig);
         }
 
         public bool Active { get; private set; }

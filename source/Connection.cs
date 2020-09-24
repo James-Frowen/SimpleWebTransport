@@ -1,6 +1,7 @@
 #define SIMPLE_WEB_INFO_LOG
 using System;
 using System.Collections.Concurrent;
+using System.IO;
 using System.Net.Sockets;
 using System.Threading;
 
@@ -12,6 +13,7 @@ namespace Mirror.SimpleWeb
         public bool hasClosed;
         public int connId;
         public TcpClient client;
+        public Stream stream;
         public Thread receiveThread;
         public Thread sendThread;
 
