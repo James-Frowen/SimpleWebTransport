@@ -1,5 +1,6 @@
 #define SIMPLE_WEB_INFO_LOG
 using System;
+using System.Linq;
 using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
@@ -51,7 +52,7 @@ namespace Mirror.SimpleWeb
 
                 if (!IsGet(getHeader))
                 {
-                    Log.Info("First bytes from client was not 'GET' for handshake");
+                    Log.Info($"First bytes from client was not 'GET' for handshake, instead was {string.Join("-", getHeader.Select(x => x.ToString()))}");
                     return false;
                 }
             }
@@ -68,7 +69,6 @@ namespace Mirror.SimpleWeb
                         return false;
 
                     string msg = Encoding.UTF8.GetString(readBuffer, 0, length);
-                    Log.Info(msg);
 
                     AcceptHandshake(stream, msg);
                     return true;
