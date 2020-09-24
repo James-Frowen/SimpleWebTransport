@@ -30,7 +30,7 @@ namespace Mirror.SimpleWeb
 
         internal static bool IsConnected() => throw new NotSupportedException();
 
-        internal static void Connect(string address, Action openCallback, Action closeCallBack, Action<byte[], int> messageCallback, Action errorCallback) => throw new NotSupportedException();
+        internal static void Connect(string address, Action openCallback, Action closeCallBack, Action<IntPtr, int> messageCallback, Action errorCallback) => throw new NotSupportedException();
 
         internal static void Disconnect() => throw new NotSupportedException();
 
