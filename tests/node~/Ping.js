@@ -4,6 +4,10 @@ const WebSocket = require("websocket").w3cwebsocket;
 const webSocket = new WebSocket("ws://localhost:7776/");
 webSocket.binaryType = 'arraybuffer';
 
+webSocket.addEventListener('error', function (event) {
+    console.error('Socket Error', event);
+});
+
 const pingInterval = 1000;
 // Connection opened
 webSocket.addEventListener('open', function (event) {

@@ -4,6 +4,10 @@ const WebSocket = require("websocket").w3cwebsocket;
 const webSocket = new WebSocket("ws://localhost:7776/");
 webSocket.binaryType = 'arraybuffer';
 
+webSocket.addEventListener('error', function (event) {
+    console.error('Socket Error', event);
+});
+
 // use ping to keep connection alive
 const pingInterval = 1000;
 // Connection opened
@@ -31,10 +35,6 @@ webSocket.addEventListener('message', function (event) {
         console.error("Message not array buffer");
     }
 });
-
-webSocket.addEventListener('error', function (event) {
-    console.error('Socket Error', event.data);
-})
 
 function buf2hex(buffer) { // buffer is an ArrayBuffer
     return Array.prototype.map.call(new Uint8Array(buffer), x => ('00' + x.toString(16)).slice(-2)).join(' ');

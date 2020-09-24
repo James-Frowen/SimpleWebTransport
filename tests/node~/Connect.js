@@ -4,7 +4,9 @@ const WebSocket = require("websocket").w3cwebsocket;
 const webSocket = new WebSocket("ws://localhost:7776/");
 webSocket.binaryType = 'arraybuffer';
 
-const closeTimeout = 2000;
+webSocket.addEventListener('error', function (event) {
+    console.error('Socket Error', event);
+});
 
 // Connection opened
 webSocket.addEventListener('open', function (event) {
