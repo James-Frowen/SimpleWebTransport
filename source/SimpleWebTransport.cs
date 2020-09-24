@@ -39,6 +39,8 @@ namespace Mirror.SimpleWeb
         }
 
         SimpleWebClient client;
+        readonly Queue<ArraySegment<byte>> clientDataQueue = new Queue<ArraySegment<byte>>();
+
         SimpleWebServer server;
 
         public override bool Available()
@@ -68,8 +70,6 @@ namespace Mirror.SimpleWeb
             return client != null && client.IsConnected;
         }
 
-
-        Queue<ArraySegment<byte>> clientDataQueue;
         public override void ClientConnect(string address)
         {
             if (!isWebGL)
@@ -102,6 +102,9 @@ namespace Mirror.SimpleWeb
                 OnClientError.Invoke(new Exception("SimpleWebClient Error"));
             };
 
+
+            // make sure queue is cleared in case of previous client
+            clientDataQueue.Clear();
 
             // TODO can this just be builder.ToString()
             client.Connect(builder.Uri.ToString());
