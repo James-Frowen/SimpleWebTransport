@@ -59,6 +59,7 @@ namespace Mirror.SimpleWeb
         private void LateUpdate()
         {
             server?.Update(this);
+            ClientUpdate();
         }
 
         #region Client
@@ -67,6 +68,8 @@ namespace Mirror.SimpleWeb
             return client != null && client.IsConnected;
         }
 
+
+        Queue<ArraySegment<byte>> clientDataQueue;
         public override void ClientConnect(string address)
         {
             if (!isWebGL)
@@ -92,7 +95,7 @@ namespace Mirror.SimpleWeb
 
             client.onConnect += OnClientConnected.Invoke;
             client.onDisconnect += OnClientDisconnected.Invoke;
-            client.onData += (ArraySegment<byte> data) => OnClientDataReceived.Invoke(data, Channels.DefaultReliable);
+            client.onData += (ArraySegment<byte> data) => clientDataQueue.Enqueue(data);
             client.onError += () =>
             {
                 ClientDisconnect();
@@ -131,6 +134,15 @@ namespace Mirror.SimpleWeb
 
             client.Send(segment);
             return true;
+        }
+
+        public void ClientUpdate()
+        {
+            while (enabled && clientDataQueue.Count > 0)
+            {
+                ArraySegment<byte> data = clientDataQueue.Dequeue();
+                OnClientDataReceived.Invoke(data, Channels.DefaultReliable);
+            }
         }
         #endregion
 
