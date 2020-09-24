@@ -66,7 +66,7 @@ function Connect(addressPtr, openCallbackPtr, closeCallBackPtr, messageCallbackP
     });
 
     webSocket.addEventListener('error', function (event) {
-        console.error('Socket Error', event.data);
+        console.error('Socket Error', event);
 
         Runtime.dynCall('v', errorCallbackPtr, 0);
     });
