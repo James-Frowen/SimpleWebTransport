@@ -154,7 +154,7 @@ namespace Mirror.SimpleWeb.Tests.Server
             int connectIndex = 1;
             transport.OnServerConnected.AddListener((connId) =>
             {
-                Assert.That(connId == connectIndex, "Clients should be connected in order with the next index");
+                Assert.That(connId, Is.EqualTo(connectIndex), "Clients should be connected in order with the next index");
                 connectIndex++;
             });
 
