@@ -10,13 +10,13 @@ using UnityEngine;
 namespace Mirror.SimpleWeb
 {
     [Serializable]
-    public struct SslConfig
+    public class SslConfig
     {
         public bool enabled;
         public string certPath;
         //public string certPassword;
         public bool ClientCertificateRequired;
-        public SslProtocols EnabledSslProtocols;
+        public SslProtocols EnabledSslProtocols = SslProtocols.Default;
         public bool CheckCertificateRevocation;
     }
     internal class SslHelper
