@@ -57,8 +57,9 @@ namespace Mirror.SimpleWeb
         }
         public void Stop()
         {
-            listener?.Stop();
+            // Interrupt then stop so that Exception is handled correctly
             acceptThread?.Interrupt();
+            listener?.Stop();
             acceptThread = null;
 
             Connection[] connections = this.connections.Values.ToArray();
