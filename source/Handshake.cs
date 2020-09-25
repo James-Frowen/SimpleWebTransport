@@ -5,7 +5,7 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
-using Debug = UnityEngine.Debug;
+using UnityEngine;
 
 namespace Mirror.SimpleWeb
 {
@@ -45,6 +45,17 @@ namespace Mirror.SimpleWeb
         {
             TcpClient client = conn.client;
             Stream stream = conn.stream;
+
+            //Console.WriteLine("****Handshake****");
+            //while (true)
+            //{
+            //    byte[] getHeader = new byte[3];
+            //    bool success = ReadHelper.SafeRead(stream, getHeader, 0, 1);
+            //    if (!success)
+            //        return false;
+
+            //    Console.Write((char)getHeader[0]);
+            //}
             try
             {
                 byte[] getHeader = new byte[3];
@@ -65,15 +76,9 @@ namespace Mirror.SimpleWeb
             {
                 try
                 {
-                    int length = client.Available;
-                    bool success = ReadHelper.SafeRead(stream, readBuffer, 0, length);
-                    if (!success)
-                        return false;
-
-                    string msg = Encoding.UTF8.GetString(readBuffer, 0, length);
-
-                    AcceptHandshake(stream, msg);
-                    return true;
+                    //return BatchReadsForHandshake(stream);
+                    return ReadToEndForHandshake(stream);
+                    //return ReadAvailableForHandsake(client, stream);
                 }
                 catch (Exception e) { Debug.LogException(e); return false; }
                 finally
@@ -81,6 +86,78 @@ namespace Mirror.SimpleWeb
                     ClearBuffers();
                 }
             }
+        }
+
+
+        private bool ReadAvailableForHandsake(TcpClient client, Stream stream)
+        {
+            int length = client.Available;
+            bool success = ReadHelper.SafeRead(stream, readBuffer, 0, length);
+            if (!success)
+                return false;
+
+            string msg = Encoding.UTF8.GetString(readBuffer, 0, length);
+
+            AcceptHandshake(stream, msg);
+            return true;
+        }
+
+        private bool ReadToEndForHandshake(Stream stream)
+        {
+            int readCount = ReadHelper.SafeReadToEnd(stream, readBuffer, 0);
+            Debug.Log(readCount);
+
+            string msg = Encoding.UTF8.GetString(readBuffer, 0, readCount);
+
+            AcceptHandshake(stream, msg);
+            return true;
+        }
+
+        private bool BatchReadsForHandshake(Stream stream)
+        {
+            int bufferIndex = 0;
+            bool success;
+            string part;
+            while (true)
+            {
+
+                Debug.Log(stream.Length);
+                bufferIndex = readString(stream, bufferIndex, KeyHeaderString.Length, out success, out part);
+                if (!success)
+                    return false;
+
+                int keyIndex = part.IndexOf(KeyHeaderString);
+                if (keyIndex != -1)
+                {
+                    Debug.Log("found");
+
+                    int keyStart = keyIndex + KeyHeaderString.Length;
+                    if (keyStart + KeyLength > bufferIndex) // havn't read all of key
+                    {
+                        int needToRead = keyIndex + KeyHeaderString.Length + KeyLength - bufferIndex;
+                        bufferIndex = readString(stream, bufferIndex, needToRead, out success, out part);
+                        if (!success)
+                            return false;
+                    }
+
+                    Encoding.UTF8.GetBytes(part, keyStart, KeyLength, keyBuffer, 0);
+
+
+                    CreateResponse();
+
+                    stream.Write(response, 0, ResponseLength);
+                    Log.Info("Sent Handshake");
+                }
+            }
+        }
+
+        private int readString(Stream stream, int offset, int length, out bool success, out string part)
+        {
+            success = ReadHelper.SafeRead(stream, readBuffer, offset, length);
+            offset += KeyHeaderString.Length;
+
+            part = Encoding.UTF8.GetString(readBuffer, 0, offset);
+            return offset;
         }
 
         bool IsGet(byte[] getHeader)
@@ -93,16 +170,15 @@ namespace Mirror.SimpleWeb
 
         void AcceptHandshake(Stream stream, string msg)
         {
-            CreateResponse(msg);
+            GetKey(msg, keyBuffer);
+            CreateResponse();
 
             stream.Write(response, 0, ResponseLength);
             Log.Info("Sent Handshake");
         }
 
-        void CreateResponse(string msg)
+        void CreateResponse()
         {
-            GetKey(msg, keyBuffer);
-
             byte[] keyHash = sha1.ComputeHash(keyBuffer);
 
             string keyHashString = Convert.ToBase64String(keyHash);
