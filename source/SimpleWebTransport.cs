@@ -60,7 +60,17 @@ namespace Mirror.SimpleWeb
 
         private void LateUpdate()
         {
-            server?.Update(this);
+            ProcessMessages();
+        }
+
+        /// <summary>
+        /// Processes message in server and client queues
+        /// <para>Invokes OnData events allowing mirror to handle messages (Cmd/SyncVar/etc)</para>
+        /// <para>Called within LateUpdate, Can be called by user to process message before important logic</para>
+        /// </summary>
+        public void ProcessMessages()
+        {
+            server?.ProcessMessageQueue(this);
             ClientUpdate();
         }
 

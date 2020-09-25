@@ -54,9 +54,10 @@ namespace Mirror.SimpleWeb
             return server.GetClientAddress(connectionId);
         }
 
-        public void Update(MonoBehaviour behaviour)
+        public void ProcessMessageQueue(MonoBehaviour behaviour)
         {
-            while (server.receiveQueue.TryDequeue(out Message next))
+            // check enabled every time incase behaviour was disabled after data
+            while (behaviour.enabled && server.receiveQueue.TryDequeue(out Message next))
             {
                 switch (next.type)
                 {
@@ -73,10 +74,6 @@ namespace Mirror.SimpleWeb
                         onError?.Invoke(next.connId, next.exception);
                         break;
                 }
-
-                // return if behaviour was disabled after data
-                if (!behaviour.enabled)
-                    return;
             }
         }
     }
