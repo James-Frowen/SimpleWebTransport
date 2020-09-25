@@ -5,6 +5,7 @@ using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
+using UnityEngine;
 
 namespace Mirror.SimpleWeb
 {
@@ -18,16 +19,25 @@ namespace Mirror.SimpleWeb
         public SslProtocols EnabledSslProtocols;
         public bool CheckCertificateRevocation;
     }
-    internal static class SslHelper
+    internal class SslHelper
     {
-        internal static bool TryCreateStream(Connection conn, SslConfig sslConfig)
+        readonly SslConfig sslConfig;
+        readonly X509Certificate2 certificate;
+
+        public SslHelper(SslConfig sslConfig)
+        {
+            this.sslConfig = sslConfig;
+            certificate = new X509Certificate2(sslConfig.certPath, string.Empty);
+        }
+
+        internal bool TryCreateStream(Connection conn, SslConfig sslConfig)
         {
             try
             {
                 NetworkStream stream = conn.client.GetStream();
                 if (sslConfig.enabled)
                 {
-                    conn.stream = CreateStream(stream, sslConfig);
+                    conn.stream = CreateStream(stream);
                     return true;
                 }
                 else
@@ -43,23 +53,28 @@ namespace Mirror.SimpleWeb
             }
         }
 
-        static Stream CreateStream(NetworkStream stream, SslConfig sslConfig)
+        Stream CreateStream(NetworkStream stream)
         {
-            //string certPath = "./certs/mirrorTest.pfx";
-            X509Certificate2 certificate = new X509Certificate2(sslConfig.certPath, string.Empty);
-
-
             // dont need RemoteCertificateValidationCallback for server stream
-            SslStream sslStream = new SslStream(stream, true, callback);
+            SslStream sslStream = new SslStream(stream, true, acceptClient);
             sslStream.AuthenticateAsServer(certificate, false, sslConfig.EnabledSslProtocols, false);
-
 
             return sslStream;
         }
 
-        private static bool callback(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+        bool acceptClient(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
         {
+            // always accept client
             return true;
+        }
+
+        bool ValidateServerCertificate(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+        {
+            if (sslPolicyErrors == SslPolicyErrors.None)
+                return true;
+
+            Debug.LogErrorFormat("Certificate error: {0}", sslPolicyErrors);
+            return false;
         }
     }
 }

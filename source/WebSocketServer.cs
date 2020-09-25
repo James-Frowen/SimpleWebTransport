@@ -23,6 +23,7 @@ namespace Mirror.SimpleWeb
         TcpListener listener;
         Thread acceptThread;
         readonly Handshake handShake = new Handshake();
+        readonly SslHelper sslHelper;
         readonly ConcurrentDictionary<int, Connection> connections = new ConcurrentDictionary<int, Connection>();
 
         int _previousId = 0;
@@ -40,6 +41,7 @@ namespace Mirror.SimpleWeb
             this.receiveTimeout = receiveTimeout;
             this.maxMessageSize = maxMessageSize;
             this.sslConfig = sslConfig;
+            sslHelper = new SslHelper(sslConfig);
         }
 
         public void Listen(short port)
@@ -115,7 +117,7 @@ namespace Mirror.SimpleWeb
 
         void HandshakeAndReceiveLoop(Connection conn)
         {
-            bool success = SslHelper.TryCreateStream(conn, sslConfig);
+            bool success = sslHelper.TryCreateStream(conn, sslConfig);
             if (!success)
             {
                 Log.Info("Failed to create SSL Stream");
