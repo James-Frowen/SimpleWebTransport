@@ -20,11 +20,13 @@ namespace Mirror.SimpleWeb
         readonly byte[] readBuffer = new byte[3000];
         readonly byte[] keyBuffer = new byte[60];
         readonly byte[] response = new byte[ResponseLength];
+        readonly byte[] endOfHeader;
         readonly SHA1 sha1 = SHA1.Create();
 
         public Handshake()
         {
             Encoding.UTF8.GetBytes(HandshakeGUID, 0, HandshakeGUID.Length, keyBuffer, KeyLength);
+            endOfHeader = new byte[4] { (byte)'\r', (byte)'\n', (byte)'\r', (byte)'\n' };
         }
         ~Handshake()
         {
@@ -77,7 +79,10 @@ namespace Mirror.SimpleWeb
                 try
                 {
                     //return BatchReadsForHandshake(stream);
-                    return ReadToEndForHandshake(stream);
+                    bool success = ReadToEndForHandshake(stream);
+                    if (success)
+                        Log.Info($"Sent Handshake {conn}");
+                    return success;
                     //return ReadAvailableForHandsake(client, stream);
                 }
                 catch (Exception e) { Debug.LogException(e); return false; }
@@ -104,8 +109,11 @@ namespace Mirror.SimpleWeb
 
         private bool ReadToEndForHandshake(Stream stream)
         {
-            int readCount = ReadHelper.SafeReadToEnd(stream, readBuffer, 0);
-            Debug.Log(readCount);
+            int? readCountOrFail = ReadHelper.SafeReadTillMatch(stream, readBuffer, 0, endOfHeader);
+            if (!readCountOrFail.HasValue)
+                return false;
+
+            int readCount = readCountOrFail.Value;
 
             string msg = Encoding.UTF8.GetString(readBuffer, 0, readCount);
 
@@ -174,7 +182,6 @@ namespace Mirror.SimpleWeb
             CreateResponse();
 
             stream.Write(response, 0, ResponseLength);
-            Log.Info("Sent Handshake");
         }
 
         void CreateResponse()
