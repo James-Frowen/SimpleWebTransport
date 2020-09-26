@@ -87,12 +87,12 @@ namespace Mirror.SimpleWeb
                         client.ReceiveTimeout = receiveTimeout;
                         client.NoDelay = noDelay;
 
-                        Log.Info("A client connected.");
 
                         Connection conn = new Connection
                         {
                             client = client,
                         };
+                        Log.Info($"A client connected {conn}");
 
                         // handshake needs its own thread as it needs to wait for message from client
                         Thread receiveThread = new Thread(() => HandshakeAndReceiveLoop(conn));
@@ -117,10 +117,10 @@ namespace Mirror.SimpleWeb
 
         void HandshakeAndReceiveLoop(Connection conn)
         {
-            bool success = sslHelper.TryCreateStream(conn, sslConfig);
+            bool success = sslHelper.TryCreateStream(conn);
             if (!success)
             {
-                Log.Info("Failed to create SSL Stream");
+                Log.Info($"Failed to create SSL Stream {conn}");
                 conn.client.Dispose();
                 return;
             }
@@ -129,7 +129,7 @@ namespace Mirror.SimpleWeb
 
             if (!success)
             {
-                Log.Info("Handshake Failed");
+                Log.Info($"Handshake Failed {conn}");
                 conn.client.Dispose();
                 return;
             }
@@ -196,9 +196,9 @@ namespace Mirror.SimpleWeb
                     HandleMessage(result.opcode, conn, buffer, result.msgOffset, result.msgLength);
                 }
             }
-            catch (ObjectDisposedException) { Log.Info($"ReceiveLoop {conn.connId} Stream closed"); return; }
-            catch (ThreadInterruptedException) { Log.Info($"ReceiveLoop {conn.connId} ThreadInterrupted"); return; }
-            catch (ThreadAbortException) { Log.Info($"ReceiveLoop {conn.connId} ThreadAbort"); return; }
+            catch (ObjectDisposedException) { Log.Info($"ReceiveLoop {conn} Stream closed"); return; }
+            catch (ThreadInterruptedException) { Log.Info($"ReceiveLoop {conn} ThreadInterrupted"); return; }
+            catch (ThreadAbortException) { Log.Info($"ReceiveLoop {conn} ThreadAbort"); return; }
             catch (InvalidDataException e)
             {
                 receiveQueue.Enqueue(new Message
@@ -256,14 +256,14 @@ namespace Mirror.SimpleWeb
                     while (conn.sendQueue.TryDequeue(out ArraySegment<byte> msg))
                     {
                         // check if connected before sending message
-                        if (!client.Connected) { Log.Info($"SendLoop {conn.connId} not connected"); return; }
+                        if (!client.Connected) { Log.Info($"SendLoop {conn} not connected"); return; }
 
                         SendMessageToClient(stream, msg);
                     }
                 }
             }
-            catch (ThreadInterruptedException) { Log.Info($"SendLoop {conn.connId} ThreadInterrupted"); return; }
-            catch (ThreadAbortException) { Log.Info($"SendLoop {conn.connId} ThreadAbort"); return; }
+            catch (ThreadInterruptedException) { Log.Info($"SendLoop {conn} ThreadInterrupted"); return; }
+            catch (ThreadAbortException) { Log.Info($"SendLoop {conn} ThreadAbort"); return; }
             catch (Exception e)
             {
                 Debug.LogException(e);

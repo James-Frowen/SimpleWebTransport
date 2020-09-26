@@ -11,7 +11,7 @@ namespace Mirror.SimpleWeb
     {
         public object lockObj = new object();
         public bool hasClosed;
-        public int connId;
+        public int connId = -1;
         public TcpClient client;
         public Stream stream;
         public Thread receiveThread;
@@ -33,14 +33,23 @@ namespace Mirror.SimpleWeb
             {
                 // check hasClosed again inside lock to make sure no other object has called this
                 if (hasClosed) { return false; }
-
                 hasClosed = true;
+
+                stream.Dispose();
+                stream = null;
                 client.Dispose();
+                client = null;
+
                 receiveThread.Interrupt();
                 sendThread?.Interrupt();
 
                 return true;
             }
+        }
+
+        public override string ToString()
+        {
+            return $"[Conn:{connId}, endPoint:{client?.Client.RemoteEndPoint}]";
         }
     }
 }
