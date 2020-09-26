@@ -40,8 +40,8 @@ namespace Mirror.SimpleWeb
             this.sendTimeout = sendTimeout;
             this.receiveTimeout = receiveTimeout;
             this.maxMessageSize = maxMessageSize;
-            this.sslConfig = sslConfig;
-            sslHelper = new SslHelper(sslConfig);
+            this.sslConfig = sslConfig ?? new SslConfig();
+            sslHelper = new SslHelper(this.sslConfig);
         }
 
         public void Listen(short port)

@@ -15,9 +15,9 @@ namespace Mirror.SimpleWeb
         public bool enabled;
         public string certPath;
         //public string certPassword;
-        public bool ClientCertificateRequired;
-        public SslProtocols EnabledSslProtocols = SslProtocols.Default;
-        public bool CheckCertificateRevocation;
+        //public bool ClientCertificateRequired;
+        //public SslProtocols EnabledSslProtocols = SslProtocols.Default;
+        //public bool CheckCertificateRevocation;
     }
     internal class SslHelper
     {
@@ -27,10 +27,11 @@ namespace Mirror.SimpleWeb
         public SslHelper(SslConfig sslConfig)
         {
             this.sslConfig = sslConfig;
-            certificate = new X509Certificate2(sslConfig.certPath, string.Empty);
+            if (sslConfig.enabled)
+                certificate = new X509Certificate2(sslConfig.certPath, string.Empty);
         }
 
-        internal bool TryCreateStream(Connection conn, SslConfig sslConfig)
+        internal bool TryCreateStream(Connection conn)
         {
             try
             {
