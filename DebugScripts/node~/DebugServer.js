@@ -1,17 +1,18 @@
 const WebSocketServer = require('websocket').server;
 const https = require('https');
+const fs = require('fs');
 
 const options = {
     key: fs.readFileSync('./certs/test2/key.pem'),
     cert: fs.readFileSync('./certs/test2/cert.pem')
 };
 
-var server = http.createServer(options, function (request, response) {
+var server = https.createServer(options, function (request, response) {
     console.log((new Date()) + ' Received request for ' + request.url);
     response.writeHead(404);
     response.end();
 });
-server.listen(8080, function () {
+server.listen(7776, function () {
     console.log((new Date()) + ' Server is listening on port 8080');
 });
 
