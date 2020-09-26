@@ -26,6 +26,7 @@ namespace Mirror.SimpleWeb
         public Handshake()
         {
             Encoding.UTF8.GetBytes(HandshakeGUID, 0, HandshakeGUID.Length, keyBuffer, KeyLength);
+            // header should always end with \r\n\r\n
             endOfHeader = new byte[4] { (byte)'\r', (byte)'\n', (byte)'\r', (byte)'\n' };
         }
         ~Handshake()
