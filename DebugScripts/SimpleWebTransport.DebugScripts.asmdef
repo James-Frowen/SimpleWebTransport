@@ -1,0 +1,15 @@
+{
+    "name": "SimpleWebTransport.DebugScripts",
+    "references": [
+        "Mirror",
+        "SimpleWebTransport"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": []
+}
