@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Security.Authentication;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using UnityEngine;
@@ -32,7 +31,7 @@ namespace Mirror.SimpleWeb.Tests.Server
             {
                 enabled = true,
                 certPath = "./certs/test1/mirrorTest.pfx",
-                EnabledSslProtocols = SslProtocols.Default,
+                //EnabledSslProtocols = SslProtocols.Default,
             };
             transport.ServerStart();
         }

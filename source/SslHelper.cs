@@ -57,8 +57,9 @@ namespace Mirror.SimpleWeb
         Stream CreateStream(NetworkStream stream)
         {
             // dont need RemoteCertificateValidationCallback for server stream
+            SslProtocols protocols = SslProtocols.Tls12 | SslProtocols.Tls11 | SslProtocols.Tls;
             SslStream sslStream = new SslStream(stream, true, acceptClient);
-            sslStream.AuthenticateAsServer(certificate, false, sslConfig.EnabledSslProtocols, false);
+            sslStream.AuthenticateAsServer(certificate, false, protocols, false);
 
             return sslStream;
         }
