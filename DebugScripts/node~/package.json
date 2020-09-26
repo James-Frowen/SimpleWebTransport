@@ -1,0 +1,10 @@
+{
+  "name": "simple-web-transport-debug",
+  "version": "1.0.0",
+  "description": "use nodejs websocket client to do unit tests",
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "websocket": "^1.0.32"
+  }
+}
