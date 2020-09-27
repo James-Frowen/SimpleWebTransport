@@ -62,8 +62,8 @@ namespace Mirror.SimpleWeb
             try
             {
                 byte[] getHeader = new byte[3];
-                bool success = ReadHelper.SafeRead(stream, getHeader, 0, 3);
-                if (!success)
+                ReadHelper.ReadResult result = ReadHelper.SafeRead(stream, getHeader, 0, 3);
+                if ((result & ReadHelper.ReadResult.Fail) > 0)
                     return false;
 
                 if (!IsGet(getHeader))

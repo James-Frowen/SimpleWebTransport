@@ -1,6 +1,8 @@
 #define SIMPLE_WEB_INFO_LOG
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
@@ -57,6 +59,7 @@ namespace Mirror.SimpleWeb
             acceptThread.IsBackground = true;
             acceptThread.Start();
         }
+
         public void Stop()
         {
             // Interrupt then stop so that Exception is handled correctly
@@ -86,7 +89,6 @@ namespace Mirror.SimpleWeb
                         client.SendTimeout = sendTimeout;
                         client.ReceiveTimeout = receiveTimeout;
                         client.NoDelay = noDelay;
-
 
                         Connection conn = new Connection
                         {
@@ -152,7 +154,6 @@ namespace Mirror.SimpleWeb
             ReceiveLoop(conn);
         }
 
-
         void ReceiveLoop(Connection conn)
         {
             try
@@ -165,35 +166,9 @@ namespace Mirror.SimpleWeb
 
                 while (client.Connected)
                 {
-                    // header is at most 4 bytes + mask
-                    // 1 for bit fields
-                    // 1+ for length (length can be be 1, 3, or 9 and we refuse 9)
-                    // 4 for mask (we can read this later
-                    bool success = ReadHelper.SafeRead(stream, headerBuffer, 0, HeaderLength);
+                    bool success = ReadOne(conn, stream, HeaderLength, headerBuffer);
                     if (!success)
-                    {
-                        Log.Info($"ReceiveLoop {conn.connId} not connected or timed out");
-                        CheckForInterupt();
-                        // will go to finally block below
                         break;
-                    }
-
-                    MessageProcessor.Result result = MessageProcessor.ProcessHeader(headerBuffer, maxMessageSize);
-
-                    // todo remove allocation
-                    // mask + msg
-                    byte[] buffer = new byte[HeaderLength + result.readLength];
-                    for (int i = 0; i < HeaderLength; i++)
-                    {
-                        // copy header as it might contain mask
-                        buffer[i] = headerBuffer[i];
-                    }
-
-                    ReadHelper.SafeRead(stream, buffer, HeaderLength, result.readLength);
-
-                    MessageProcessor.DecodeMessage(buffer, result.maskOffset, result.msgLength);
-
-                    HandleMessage(result.opcode, conn, buffer, result.msgOffset, result.msgLength);
                 }
             }
             catch (ObjectDisposedException) { Log.Info($"ReceiveLoop {conn} Stream closed"); return; }
@@ -214,6 +189,41 @@ namespace Mirror.SimpleWeb
                 CloseConnection(conn);
             }
         }
+
+        private bool ReadOne(Connection conn, Stream stream, int HeaderLength, byte[] headerBuffer)
+        {
+            // header is at most 4 bytes + mask
+            // 1 for bit fields
+            // 1+ for length (length can be be 1, 3, or 9 and we refuse 9)
+            // 4 for mask (we can read this later
+            ReadHelper.ReadResult readResult = ReadHelper.SafeRead(stream, headerBuffer, 0, HeaderLength, checkLength: true);
+            if ((readResult & ReadHelper.ReadResult.Fail) > 0)
+            {
+                Log.Info($"ReceiveLoop {conn.connId} read failed: {readResult}");
+                CheckForInterupt();
+                // will go to finally block below
+                return false;
+            }
+
+            MessageProcessor.Result header = MessageProcessor.ProcessHeader(headerBuffer, maxMessageSize);
+
+            // todo remove allocation
+            // mask + msg
+            byte[] buffer = new byte[HeaderLength + header.readLength];
+            for (int i = 0; i < HeaderLength; i++)
+            {
+                // copy header as it might contain mask
+                buffer[i] = headerBuffer[i];
+            }
+
+            ReadHelper.SafeRead(stream, buffer, HeaderLength, header.readLength);
+
+            MessageProcessor.DecodeMessage(buffer, header.maskOffset, header.msgLength);
+
+            HandleMessage(header.opcode, conn, buffer, header.msgOffset, header.msgLength);
+            return true;
+        }
+
         static void CheckForInterupt()
         {
             // sleep in order to check for ThreadInterruptedException
@@ -317,8 +327,6 @@ namespace Mirror.SimpleWeb
             sendLength += msgLength;
 
             stream.Write(buffer, 0, sendLength);
-
-            Debug.Log("Sent message to client");
         }
 
         public void Send(int id, ArraySegment<byte> segment)

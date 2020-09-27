@@ -5,23 +5,41 @@ namespace Mirror.SimpleWeb
 {
     public static class ReadHelper
     {
-        public static bool SafeRead(Stream stream, byte[] outBuffer, int outOffset, int length)
+        public enum ReadResult
+        {
+            Success = 1,
+            ReadMinusOne = 2,
+            ReadZero = 4,
+            ReadLessThanLength = 8,
+            Error = 16,
+            Fail = ReadMinusOne | ReadZero | ReadLessThanLength | Error
+        }
+        public static ReadResult SafeRead(Stream stream, byte[] outBuffer, int outOffset, int length, bool checkLength = false)
         {
             try
             {
-                int recieved = stream.Read(outBuffer, outOffset, length);
+                int received = stream.Read(outBuffer, outOffset, length);
 
-                if (recieved == -1)
+                if (received == -1)
                 {
-                    return false;
+                    return ReadResult.ReadMinusOne;
                 }
 
-                return true;
+                if (received == 0)
+                {
+                    return ReadResult.ReadZero;
+                }
+                if (checkLength && received != length)
+                {
+                    return ReadResult.ReadLessThanLength;
+                }
+
+                return ReadResult.Success;
             }
             catch (IOException e)
             {
                 Log.Info($"SafeRead IOException\n{e.Message}", false);
-                return false;
+                return ReadResult.Error;
             }
         }
 
