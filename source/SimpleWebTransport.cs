@@ -28,6 +28,10 @@ namespace Mirror.SimpleWeb
 
         [Tooltip("How long without a message before disconnecting (in milliseconds)")]
         public int receiveTimeout = 20000;
+
+        [Tooltip("Caps the number of messages the server will process per tick. Allows LateUpdate to finish to let the reset of unity contiue incase more messages arrive before they are processed")]
+        public int ServerMaxMessagesPerTick = 10000;
+
         public SslConfig sslConfig;
 
         private void OnValidate()
@@ -178,7 +182,7 @@ namespace Mirror.SimpleWeb
                 Debug.LogError("SimpleWebServer Already Started");
             }
 
-            server = new SimpleWebServer(port, noDelay, sendTimeout, receiveTimeout, maxMessageSize, sslConfig);
+            server = new SimpleWebServer(port, ServerMaxMessagesPerTick, noDelay, sendTimeout, receiveTimeout, maxMessageSize, sslConfig);
 
             server.onConnect += OnServerConnected.Invoke;
             server.onDisconnect += OnServerDisconnected.Invoke;

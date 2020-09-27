@@ -7,12 +7,14 @@ namespace Mirror.SimpleWeb
     public class SimpleWebServer
     {
         readonly short port;
+        readonly int maxMessagesPerTick;
 
         readonly WebSocketServer server;
 
-        public SimpleWebServer(short port, bool noDelay, int sendTimeout, int receiveTimeout, int maxMessageSize, SslConfig sslConfig)
+        public SimpleWebServer(short port, int maxMessagesPerTick, bool noDelay, int sendTimeout, int receiveTimeout, int maxMessageSize, SslConfig sslConfig)
         {
             this.port = port;
+            this.maxMessagesPerTick = maxMessagesPerTick;
 
             server = new WebSocketServer(noDelay, sendTimeout, receiveTimeout, maxMessageSize, sslConfig);
         }
@@ -56,9 +58,16 @@ namespace Mirror.SimpleWeb
 
         public void ProcessMessageQueue(MonoBehaviour behaviour)
         {
+            int processedCount = 0;
             // check enabled every time incase behaviour was disabled after data
-            while (behaviour.enabled && server.receiveQueue.TryDequeue(out Message next))
+            while (
+                behaviour.enabled &&
+                server.receiveQueue.TryDequeue(out Message next) &&
+                processedCount < maxMessagesPerTick
+                )
             {
+                processedCount++;
+
                 switch (next.type)
                 {
                     case EventType.Connected:
