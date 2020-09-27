@@ -324,9 +324,9 @@ MonoBehaviour:
   receiveTimeout: 5000
   ServerMaxMessagesPerTick: 10000
   sslConfig:
-    enabled: 0
+    enabled: 1
     certPath: ./certs/MirrorLocal.pfx
-  EnableLogs: 0
+  EnableLogs: 1
 --- !u!114 &1901296005
 MonoBehaviour:
   m_ObjectHideFlags: 0
