@@ -1,7 +1,7 @@
 const WebSocket = require("ws");
 
 // Create webSocket connection.
-const webSocket = new WebSocket("ws://localhost:7776/");
+const webSocket = new WebSocket("wss://localhost:7776/");
 webSocket.binaryType = 'arraybuffer';
 
 webSocket.addEventListener('error', function (event) {
