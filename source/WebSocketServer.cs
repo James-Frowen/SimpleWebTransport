@@ -304,8 +304,8 @@ namespace Mirror.SimpleWeb
             else if (msgLength < ushort.MaxValue)
             {
                 buffer[1] = 126;
-                buffer[2] = (byte)msgLength;
-                buffer[3] = (byte)(msgLength >> 8);
+                buffer[2] = (byte)(msgLength >> 8);
+                buffer[3] = (byte)msgLength;
                 sendLength += 3;
             }
             else
