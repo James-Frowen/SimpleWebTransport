@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -7,6 +8,7 @@ using UnityEngine.TestTools;
 namespace Mirror.SimpleWeb.Tests.Server
 {
     [Category("SimpleWebTransport")]
+    [Ignore("Needs a CA key to work, see bottom of setup")]
     public class SslServerTest : SimpleWebTestBase
     {
         protected override bool StartServer => false;
@@ -31,9 +33,12 @@ namespace Mirror.SimpleWeb.Tests.Server
             {
                 enabled = true,
                 certPath = "./certs/MirrorLocal.pfx",
-                //EnabledSslProtocols = SslProtocols.Default,
             };
             transport.ServerStart();
+
+            // to use these test you need to create a CA cert and use it to sign MirrorLocal
+            // then add the cert to node so that it will accept it
+            Environment.SetEnvironmentVariable("NODE_EXTRA_CA_CERTS", "path/to/CACert.pem");
         }
 
         [UnityTest]
