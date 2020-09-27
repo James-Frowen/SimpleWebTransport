@@ -29,24 +29,24 @@ namespace Mirror.SimpleWeb
 
         internal bool TryCreateStream(Connection conn)
         {
-            try
+            NetworkStream stream = conn.client.GetStream();
+            if (sslConfig.enabled)
             {
-                NetworkStream stream = conn.client.GetStream();
-                if (sslConfig.enabled)
+                try
                 {
                     conn.stream = CreateStream(stream);
                     return true;
                 }
-                else
+                catch (Exception e)
                 {
-                    conn.stream = stream;
-                    return true;
+                    Log.Error($"Create SSLStream Failed: {e}", false);
+                    return false;
                 }
             }
-            catch (Exception e)
+            else
             {
-                UnityEngine.Debug.LogException(e);
-                return false;
+                conn.stream = stream;
+                return true;
             }
         }
 
