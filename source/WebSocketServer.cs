@@ -1,8 +1,6 @@
 #define SIMPLE_WEB_INFO_LOG
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
@@ -42,7 +40,7 @@ namespace Mirror.SimpleWeb
             this.sendTimeout = sendTimeout;
             this.receiveTimeout = receiveTimeout;
             this.maxMessageSize = maxMessageSize;
-            this.sslConfig = sslConfig ?? new SslConfig();
+            this.sslConfig = sslConfig;
             sslHelper = new SslHelper(this.sslConfig);
         }
 
