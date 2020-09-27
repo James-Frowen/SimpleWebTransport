@@ -241,7 +241,7 @@ namespace Mirror.SimpleWeb
         {
             UriBuilder builder = new UriBuilder
             {
-                Scheme = Scheme,
+                Scheme = GetScheme(),
                 Host = Dns.GetHostName(),
                 Port = port
             };
