@@ -94,20 +94,6 @@ namespace Mirror.SimpleWeb
             }
         }
 
-
-        private bool ReadAvailableForHandsake(TcpClient client, Stream stream)
-        {
-            int length = client.Available;
-            bool success = ReadHelper.SafeRead(stream, readBuffer, 0, length);
-            if (!success)
-                return false;
-
-            string msg = Encoding.UTF8.GetString(readBuffer, 0, length);
-
-            AcceptHandshake(stream, msg);
-            return true;
-        }
-
         private bool ReadToEndForHandshake(Stream stream)
         {
             int? readCountOrFail = ReadHelper.SafeReadTillMatch(stream, readBuffer, 0, endOfHeader);
@@ -120,53 +106,6 @@ namespace Mirror.SimpleWeb
 
             AcceptHandshake(stream, msg);
             return true;
-        }
-
-        private bool BatchReadsForHandshake(Stream stream)
-        {
-            int bufferIndex = 0;
-            bool success;
-            string part;
-            while (true)
-            {
-
-                Debug.Log(stream.Length);
-                bufferIndex = readString(stream, bufferIndex, KeyHeaderString.Length, out success, out part);
-                if (!success)
-                    return false;
-
-                int keyIndex = part.IndexOf(KeyHeaderString);
-                if (keyIndex != -1)
-                {
-                    Debug.Log("found");
-
-                    int keyStart = keyIndex + KeyHeaderString.Length;
-                    if (keyStart + KeyLength > bufferIndex) // havn't read all of key
-                    {
-                        int needToRead = keyIndex + KeyHeaderString.Length + KeyLength - bufferIndex;
-                        bufferIndex = readString(stream, bufferIndex, needToRead, out success, out part);
-                        if (!success)
-                            return false;
-                    }
-
-                    Encoding.UTF8.GetBytes(part, keyStart, KeyLength, keyBuffer, 0);
-
-
-                    CreateResponse();
-
-                    stream.Write(response, 0, ResponseLength);
-                    Log.Info("Sent Handshake");
-                }
-            }
-        }
-
-        private int readString(Stream stream, int offset, int length, out bool success, out string part)
-        {
-            success = ReadHelper.SafeRead(stream, readBuffer, offset, length);
-            offset += KeyHeaderString.Length;
-
-            part = Encoding.UTF8.GetString(readBuffer, 0, offset);
-            return offset;
         }
 
         bool IsGet(byte[] getHeader)
