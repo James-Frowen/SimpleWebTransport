@@ -70,6 +70,8 @@ namespace Mirror.SimpleWeb.Tests.Server
 
             SimpleWebTransport transport = go.AddComponent<SimpleWebTransport>();
             transport.port = 7776;
+            transport.EnableLogs = true;
+            Log.enabled = true;
             return transport;
         }
 
