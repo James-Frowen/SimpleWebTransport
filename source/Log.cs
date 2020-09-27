@@ -26,5 +26,27 @@ namespace Mirror.SimpleWeb
             else
                 Debug.Log($"INFO: {msg}");
         }
+
+
+        [System.Diagnostics.Conditional("DEBUG")]
+        public static void Error(string msg)
+        {
+            if (!enabled)
+                return;
+
+            Debug.Log($"ERROR: <color=red>{msg}</color>");
+        }
+
+        [System.Diagnostics.Conditional("DEBUG")]
+        public static void Error(string msg, bool showColor)
+        {
+            if (!enabled)
+                return;
+
+            if (showColor)
+                Info(msg);
+            else
+                Debug.Log($"ERROR: {msg}");
+        }
     }
 }
