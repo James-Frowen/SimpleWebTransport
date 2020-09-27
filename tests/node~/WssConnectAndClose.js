@@ -1,4 +1,4 @@
-const WebSocket = require("ws");
+const WebSocket = require("websocket").w3cwebsocket;
 
 // Create webSocket connection.
 const webSocket = new WebSocket("wss://localhost:7776/");
