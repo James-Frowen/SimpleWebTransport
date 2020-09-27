@@ -35,13 +35,14 @@ namespace Mirror.SimpleWeb
                 if (hasClosed) { return false; }
                 hasClosed = true;
 
+                // stop threads first so they dont try to use disposed objects
+                receiveThread.Interrupt();
+                sendThread?.Interrupt();
+
                 stream.Dispose();
                 stream = null;
                 client.Dispose();
                 client = null;
-
-                receiveThread.Interrupt();
-                sendThread?.Interrupt();
 
                 return true;
             }
