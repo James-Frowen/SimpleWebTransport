@@ -3,17 +3,17 @@ const https = require('https');
 const fs = require('fs');
 
 const options = {
-    key: fs.readFileSync('./certs/test2/key.pem'),
-    cert: fs.readFileSync('./certs/test2/cert.pem')
+    key: fs.readFileSync('./certs/MirrorLocal.key'),
+    cert: fs.readFileSync('./certs/MirrorLocal.crt')
 };
 
 var server = https.createServer(options, function (request, response) {
     console.log((new Date()) + ' Received request for ' + request.url);
-    response.writeHead(404);
-    response.end();
+    response.writeHead(200);
+    response.end("hello world\n");
 });
 server.listen(7776, function () {
-    console.log((new Date()) + ' Server is listening on port 8080');
+    console.log('Server is listening on port 7776');
 });
 
 wsServer = new WebSocketServer({
@@ -27,22 +27,13 @@ wsServer = new WebSocketServer({
     autoAcceptConnections: false
 });
 
-function originIsAllowed(origin) {
-    // put logic here to detect whether the specified origin is allowed.
-    return true;
-}
-
 wsServer.on('request', function (request) {
-    if (!originIsAllowed(request.origin)) {
-        // Make sure we only accept requests from an allowed origin
-        request.reject();
-        console.log((new Date()) + ' Connection from origin ' + request.origin + ' rejected.');
-        return;
-    }
-
-    var connection = request.accept('echo-protocol', request.origin);
+    console.log("request:", request);
+    var connection = request.accept();
     console.log((new Date()) + ' Connection accepted.');
+
     connection.on('message', function (message) {
+        console.log(`Received Message: ${message.type}`);
         if (message.type === 'utf8') {
             console.log('Received Message: ' + message.utf8Data);
             connection.sendUTF(message.utf8Data);
@@ -53,6 +44,9 @@ wsServer.on('request', function (request) {
         }
     });
     connection.on('close', function (reasonCode, description) {
-        console.log((new Date()) + ' Peer ' + connection.remoteAddress + ' disconnected.');
+        console.log("close", reasonCode, description);
+    });
+    connection.on('error', function (err) {
+        console.log("Error", err);
     });
 });

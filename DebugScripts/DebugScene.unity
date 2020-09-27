@@ -323,8 +323,9 @@ MonoBehaviour:
   sendTimeout: 5000
   receiveTimeout: 5000
   sslConfig:
-    enabled: 1
-    certPath: ./certs/test1/mirrorTest.pfx
+    enabled: 0
+    certPath: ./certs/MirrorLocal.pfx
+  ServerMaxProcessPerTick: 1000
 --- !u!114 &1901296005
 MonoBehaviour:
   m_ObjectHideFlags: 0

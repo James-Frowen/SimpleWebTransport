@@ -1,6 +1,7 @@
 // copy paste this to console in chrome new tab
 (() => {
-    let webSocket = new WebSocket("wss://localhost:7776/");
+    // set MirrorLocal in host file to point to ip of pc on local networks
+    let webSocket = new WebSocket("ws://MirrorLocal:7776/");
     webSocket.binaryType = 'arraybuffer';
 
     const pingInterval = 1000;
