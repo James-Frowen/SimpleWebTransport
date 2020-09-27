@@ -13,16 +13,21 @@ namespace Mirror.SimpleWeb
         readonly bool isWebGL = false;
 #endif
 
-        public const string Scheme = "ws";
+        public const string NormalScheme = "ws";
+        public const string SecureScheme = "wss";
+
+        [Tooltip("Port to use for server and client")]
+        public short port = 7778;
+
 
         [Tooltip("Protect against allocation attacks by keeping the max message size small. Otherwise an attacker might send multiple fake packets with 2GB headers, causing the server to run out of memory after allocating multiple large packets.")]
         public int maxMessageSize = 16 * 1024;
-        public short port = 7776;
 
         [Tooltip("disables nagle algorithm. lowers CPU% and latency but increases bandwidth")]
         public bool noDelay = true;
 
-        [Header("Timeouts (in milliseconds)")]
+        [Header("Server Settings")]
+
         [Tooltip("Send would stall forever if the network is cut off during a send, so we need a timeout (in milliseconds)")]
         public int sendTimeout = 5000;
 
@@ -80,6 +85,7 @@ namespace Mirror.SimpleWeb
         }
 
         #region Client
+        string GetScheme() => sslConfig.enabled ? SecureScheme : NormalScheme;
         public override bool ClientConnected()
         {
             return client != null && client.IsConnected;
@@ -100,7 +106,7 @@ namespace Mirror.SimpleWeb
 
             UriBuilder builder = new UriBuilder
             {
-                Scheme = Scheme,
+                Scheme = GetScheme(),
                 Host = address,
                 Port = port
             };
