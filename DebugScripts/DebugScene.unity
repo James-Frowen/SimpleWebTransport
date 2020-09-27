@@ -317,15 +317,16 @@ MonoBehaviour:
   OnServerDisconnected:
     m_PersistentCalls:
       m_Calls: []
-  maxMessageSize: 16384
   port: 7776
+  maxMessageSize: 16384
   noDelay: 1
   sendTimeout: 5000
   receiveTimeout: 5000
+  ServerMaxMessagesPerTick: 10000
   sslConfig:
     enabled: 0
     certPath: ./certs/MirrorLocal.pfx
-  ServerMaxProcessPerTick: 1000
+  EnableLogs: 0
 --- !u!114 &1901296005
 MonoBehaviour:
   m_ObjectHideFlags: 0
