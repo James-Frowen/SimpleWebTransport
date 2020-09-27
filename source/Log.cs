@@ -1,16 +1,26 @@
-#define SIMPLE_WEB_INFO_LOG
 using Debug = UnityEngine.Debug;
 
 namespace Mirror.SimpleWeb
 {
     public static class Log
     {
-        [System.Diagnostics.Conditional("SIMPLE_WEB_INFO_LOG")]
-        public static void Info(string msg) => Debug.Log($"INFO: <color=blue>{msg}</color>");
+        public static bool enabled = false;
 
-        [System.Diagnostics.Conditional("SIMPLE_WEB_INFO_LOG")]
+        [System.Diagnostics.Conditional("DEBUG")]
+        public static void Info(string msg)
+        {
+            if (!enabled)
+                return;
+
+            Debug.Log($"INFO: <color=blue>{msg}</color>");
+        }
+
+        [System.Diagnostics.Conditional("DEBUG")]
         public static void Info(string msg, bool showColor)
         {
+            if (!enabled)
+                return;
+
             if (showColor)
                 Info(msg);
             else

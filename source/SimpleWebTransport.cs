@@ -39,6 +39,10 @@ namespace Mirror.SimpleWeb
 
         public SslConfig sslConfig;
 
+        [Header("Debug")]
+        [Tooltip("Log functions uses Conditional(\"DEBUG\") so are only included in Editor and Development builds")]
+        public bool EnableLogs;
+
         private void OnValidate()
         {
             if (maxMessageSize > ushort.MaxValue)
@@ -46,6 +50,8 @@ namespace Mirror.SimpleWeb
                 Debug.LogWarning($"max supported value for maxMessageSize is {ushort.MaxValue}");
                 maxMessageSize = ushort.MaxValue;
             }
+
+            Log.enabled = EnableLogs;
         }
 
         SimpleWebClient client;
@@ -62,6 +68,10 @@ namespace Mirror.SimpleWeb
             return maxMessageSize;
         }
 
+        private void Awake()
+        {
+            Log.enabled = EnableLogs;
+        }
         public override void Shutdown()
         {
             client?.Disconnect();
