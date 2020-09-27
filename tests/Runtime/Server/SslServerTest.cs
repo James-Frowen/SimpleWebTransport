@@ -30,7 +30,7 @@ namespace Mirror.SimpleWeb.Tests.Server
             transport.sslConfig = new SslConfig
             {
                 enabled = true,
-                certPath = "./certs/test1/mirrorTest.pfx",
+                certPath = "./certs/MirrorLocal.pfx",
                 //EnabledSslProtocols = SslProtocols.Default,
             };
             transport.ServerStart();
