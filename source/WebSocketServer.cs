@@ -164,7 +164,7 @@ namespace Mirror.SimpleWeb
 
                 while (client.Connected)
                 {
-                    bool success = ReadOne(conn, stream, HeaderLength, headerBuffer);
+                    bool success = ReadOneMessage(conn, stream, HeaderLength, headerBuffer);
                     if (!success)
                         break;
                 }
@@ -188,7 +188,7 @@ namespace Mirror.SimpleWeb
             }
         }
 
-        private bool ReadOne(Connection conn, Stream stream, int HeaderLength, byte[] headerBuffer)
+        private bool ReadOneMessage(Connection conn, Stream stream, int HeaderLength, byte[] headerBuffer)
         {
             // header is at most 4 bytes + mask
             // 1 for bit fields
