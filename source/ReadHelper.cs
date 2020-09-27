@@ -1,4 +1,5 @@
 #define SIMPLE_WEB_INFO_LOG
+using System;
 using System.IO;
 
 namespace Mirror.SimpleWeb
@@ -36,9 +37,22 @@ namespace Mirror.SimpleWeb
 
                 return ReadResult.Success;
             }
+            catch (AggregateException ae)
+            {
+                ae.Handle(e =>
+                {
+                    if (e is IOException io)
+                    {
+                        Log.Error($"SafeRead IOException\n{io.Message}", false);
+                        return true;
+                    }
+                    return false;
+                });
+                return ReadResult.Error;
+            }
             catch (IOException e)
             {
-                Log.Info($"SafeRead IOException\n{e.Message}", false);
+                Log.Error($"SafeRead IOException\n{e.Message}", false);
                 return ReadResult.Error;
             }
         }
