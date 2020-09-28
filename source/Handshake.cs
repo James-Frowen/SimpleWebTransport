@@ -58,7 +58,7 @@ namespace Mirror.SimpleWeb
 
                 if (!IsGet(getHeader))
                 {
-                    Log.Info($"First bytes from client was not 'GET' for handshake, instead was {string.Join("-", getHeader.Select(x => x.ToString()))}");
+                    Log.Error($"First bytes from client was not 'GET' for handshake, instead was {string.Join("-", getHeader.Select(x => x.ToString()))}");
                     return false;
                 }
             }

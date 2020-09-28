@@ -117,7 +117,7 @@ namespace Mirror.SimpleWeb
             bool success = sslHelper.TryCreateStream(conn);
             if (!success)
             {
-                Log.Info($"Failed to create SSL Stream {conn}");
+                Log.Error($"Failed to create SSL Stream {conn}");
                 conn.client.Dispose();
                 return;
             }
@@ -126,7 +126,7 @@ namespace Mirror.SimpleWeb
 
             if (!success)
             {
-                Log.Info($"Handshake Failed {conn}");
+                Log.Error($"Handshake Failed {conn}");
                 conn.client.Dispose();
                 return;
             }
