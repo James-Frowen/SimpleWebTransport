@@ -12,7 +12,7 @@ namespace Mirror.SimpleWeb
         public object lockObj = new object();
 
         public TcpClient client;
-        // used for tostring
+        // used for ToString
         private readonly string endpoint;
 
         public bool hasClosed;
