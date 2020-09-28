@@ -1,6 +1,7 @@
 #define SIMPLE_WEB_INFO_LOG
 using System;
 using System.IO;
+using System.Threading;
 
 namespace Mirror.SimpleWeb
 {
@@ -46,6 +47,13 @@ namespace Mirror.SimpleWeb
                         Log.Error($"SafeRead IOException\n{io.Message}", false);
                         return true;
                     }
+                    if (e is ObjectDisposedException)
+                    {
+                        CheckForInterupt();
+                        // if not interupted then return false to re-throw
+                        return false;
+                    }
+
                     return false;
                 });
                 return ReadResult.Error;
@@ -55,6 +63,11 @@ namespace Mirror.SimpleWeb
                 Log.Error($"SafeRead IOException\n{e.Message}", false);
                 return ReadResult.Error;
             }
+        }
+        static void CheckForInterupt()
+        {
+            // sleep in order to check for ThreadInterruptedException
+            Thread.Sleep(1);
         }
 
         public static int? SafeReadTillMatch(Stream stream, byte[] outBuffer, int outOffset, byte[] endOfHeader)
