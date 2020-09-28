@@ -49,16 +49,6 @@ namespace Mirror.SimpleWeb
             TcpClient client = conn.client;
             Stream stream = conn.stream;
 
-            //Console.WriteLine("****Handshake****");
-            //while (true)
-            //{
-            //    byte[] getHeader = new byte[3];
-            //    bool success = ReadHelper.SafeRead(stream, getHeader, 0, 1);
-            //    if (!success)
-            //        return false;
-
-            //    Console.Write((char)getHeader[0]);
-            //}
             try
             {
                 byte[] getHeader = new byte[3];
