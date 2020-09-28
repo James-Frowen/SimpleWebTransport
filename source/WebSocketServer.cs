@@ -88,10 +88,7 @@ namespace Mirror.SimpleWeb
                         client.ReceiveTimeout = receiveTimeout;
                         client.NoDelay = noDelay;
 
-                        Connection conn = new Connection
-                        {
-                            client = client,
-                        };
+                        Connection conn = new Connection(client);
                         Log.Info($"A client connected {conn}");
 
                         // handshake needs its own thread as it needs to wait for message from client

@@ -10,15 +10,25 @@ namespace Mirror.SimpleWeb
     internal class Connection
     {
         public object lockObj = new object();
+
+        public TcpClient client;
+        // used for tostring
+        private readonly string endpoint;
+
         public bool hasClosed;
         public int connId = -1;
-        public TcpClient client;
         public Stream stream;
         public Thread receiveThread;
         public Thread sendThread;
 
         public ManualResetEvent sendPending = new ManualResetEvent(false);
         public ConcurrentQueue<ArraySegment<byte>> sendQueue = new ConcurrentQueue<ArraySegment<byte>>();
+
+        public Connection(TcpClient client)
+        {
+            this.client = client ?? throw new ArgumentNullException(nameof(client));
+            endpoint = client.Client.RemoteEndPoint.ToString();
+        }
 
         /// <summary>
         /// disposes client and stops threads
@@ -50,7 +60,7 @@ namespace Mirror.SimpleWeb
 
         public override string ToString()
         {
-            return $"[Conn:{connId}, endPoint:{client?.Client.RemoteEndPoint}]";
+            return $"[Conn:{connId}, endPoint:{endpoint}]";
         }
     }
 }
