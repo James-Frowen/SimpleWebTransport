@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using UnityEngine;
 
 namespace Mirror.SimpleWeb
@@ -12,6 +12,10 @@ namespace Mirror.SimpleWeb
         }
         internal static SslConfig Load(SimpleWebTransport transport)
         {
+            // dont need to load anything if ssl is not enabled
+            if (!transport.sslEnabled)
+                return default;
+
             string certJsonPath = transport.sslCertJson;
 
             Cert cert = LoadCertJson(certJsonPath);
