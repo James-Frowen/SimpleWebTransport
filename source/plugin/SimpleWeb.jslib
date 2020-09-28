@@ -1,9 +1,4 @@
 let webSocket = undefined;
-let debugLogs = false;
-
-function SetDebugLogs(enabled) {
-    debugLogs = enabled;
-}
 
 function IsConnected() {
     if (webSocket) {
@@ -16,35 +11,23 @@ function IsConnected() {
 
 function Connect(addressPtr, openCallbackPtr, closeCallBackPtr, messageCallbackPtr, errorCallbackPtr) {
     const address = Pointer_stringify(addressPtr);
-
-    if (debugLogs) {
-        console.log("Connecting to " + address);
-    }
-
+    console.log("Connecting to " + address);
     // Create webSocket connection.
     webSocket = new WebSocket(address);
     webSocket.binaryType = 'arraybuffer';
 
     // Connection opened
     webSocket.addEventListener('open', function (event) {
-        if (debugLogs) {
-            console.log('Connection opened!');
-        }
-
+        console.log("Connected to " + address);
         Runtime.dynCall('v', openCallbackPtr, 0);
-        // webSocket.send('Hello Server!');
     });
     webSocket.addEventListener('close', function (event) {
-        if (debugLogs) {
-            console.log('Socket Closed', event.data);
-        }
-
+        console.log("Disconnected from " + address);
         Runtime.dynCall('v', closeCallBackPtr, 0);
     });
 
     // Listen for messages
     webSocket.addEventListener('message', function (event) {
-
         if (event.data instanceof ArrayBuffer) {
             // TODO dont alloc each time
             var array = new Uint8Array(event.data);
@@ -54,9 +37,6 @@ function Connect(addressPtr, openCallbackPtr, closeCallBackPtr, messageCallbackP
             var dataBuffer = new Uint8Array(HEAPU8.buffer, bufferPtr, arrayLength);
             dataBuffer.set(array);
 
-            if (debugLogs) {
-                console.log("Message received, length: " + arrayLength.toString());
-            }
             Runtime.dynCall('vii', messageCallbackPtr, [bufferPtr, arrayLength]);
             _free(bufferPtr);
         }
@@ -73,8 +53,6 @@ function Connect(addressPtr, openCallbackPtr, closeCallBackPtr, messageCallbackP
 }
 
 function Disconnect() {
-    console.log("Disconnect");
-
     if (webSocket) {
         webSocket.close(1000, "Disconnect Called by Mirror");
     }
@@ -83,10 +61,6 @@ function Disconnect() {
 }
 
 function Send(arrayPtr, offset, length) {
-    if (debugLogs) {
-        console.log("Send Array, offset: " + offset + " length: " + length);
-    }
-
     if (webSocket) {
         const start = arrayPtr + offset;
         const end = start + length;
@@ -96,7 +70,6 @@ function Send(arrayPtr, offset, length) {
 }
 
 mergeInto(LibraryManager.library, {
-    SetDebugLogs,
     IsConnected,
     Connect,
     Disconnect,

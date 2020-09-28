@@ -7,9 +7,6 @@ namespace Mirror.SimpleWeb
     public static class SimpleWebJLib
     {
         [DllImport("__Internal")]
-        internal static extern bool SetDebugLogs(bool enabled);
-
-        [DllImport("__Internal")]
         internal static extern bool IsConnected();
 
 #pragma warning disable CA2101 // Specify marshaling for P/Invoke string arguments
@@ -26,8 +23,6 @@ namespace Mirror.SimpleWeb
 #else
     internal static class SimpleWebJLib
     {
-        internal static bool SetDebugLogs(bool enabled) => throw new NotSupportedException();
-
         internal static bool IsConnected() => throw new NotSupportedException();
 
         internal static void Connect(string address, Action openCallback, Action closeCallBack, Action<IntPtr, int> messageCallback, Action errorCallback) => throw new NotSupportedException();
