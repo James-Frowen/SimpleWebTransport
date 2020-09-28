@@ -9,28 +9,29 @@ using UnityEngine;
 
 namespace Mirror.SimpleWeb
 {
-    [Serializable]
     public struct SslConfig
     {
         public bool enabled;
         public string certPath;
+        public string certPassword;
+        public SslProtocols sslProtocols;
     }
     internal class SslHelper
     {
-        readonly SslConfig sslConfig;
+        readonly SslConfig config;
         readonly X509Certificate2 certificate;
 
         public SslHelper(SslConfig sslConfig)
         {
-            this.sslConfig = sslConfig;
-            if (sslConfig.enabled)
-                certificate = new X509Certificate2(sslConfig.certPath, string.Empty);
+            config = sslConfig;
+            if (config.enabled)
+                certificate = new X509Certificate2(config.certPath, config.certPassword);
         }
 
         internal bool TryCreateStream(Connection conn)
         {
             NetworkStream stream = conn.client.GetStream();
-            if (sslConfig.enabled)
+            if (config.enabled)
             {
                 try
                 {
@@ -53,9 +54,8 @@ namespace Mirror.SimpleWeb
         Stream CreateStream(NetworkStream stream)
         {
             // dont need RemoteCertificateValidationCallback for server stream
-            SslProtocols protocols = SslProtocols.Tls12 | SslProtocols.Tls11 | SslProtocols.Tls;
             SslStream sslStream = new SslStream(stream, true, acceptClient);
-            sslStream.AuthenticateAsServer(certificate, false, protocols, false);
+            sslStream.AuthenticateAsServer(certificate, false, config.sslProtocols, false);
 
             return sslStream;
         }

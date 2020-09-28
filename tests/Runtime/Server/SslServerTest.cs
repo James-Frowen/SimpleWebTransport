@@ -29,11 +29,8 @@ namespace Mirror.SimpleWeb.Tests.Server
             transport.OnServerDataReceived.AddListener((connId, data, ___) => onData.Add((connId, data)));
             transport.OnServerError.AddListener((connId, exception) => onError.Add((connId, exception)));
 
-            transport.sslConfig = new SslConfig
-            {
-                enabled = true,
-                certPath = "./certs/MirrorLocal.pfx",
-            };
+            transport.sslEnabled = true;
+            transport.sslCertJson = "./Assets/SimpleWebTransport/cert.example.Json";
             transport.ServerStart();
 
             // to use these test you need to create a CA cert and use it to sign MirrorLocal

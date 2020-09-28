@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Security.Authentication;
 using UnityEngine;
 
 namespace Mirror.SimpleWeb
@@ -37,7 +38,11 @@ namespace Mirror.SimpleWeb
         [Tooltip("Caps the number of messages the server will process per tick. Allows LateUpdate to finish to let the reset of unity contiue incase more messages arrive before they are processed")]
         public int ServerMaxMessagesPerTick = 10000;
 
-        public SslConfig sslConfig;
+        [Header("Ssl Settings")]
+        public bool sslEnabled;
+        [Tooltip("Path to json file that contains path to cert and its password\n\nUse Json file so that cert password is not included in client builds\n\nSee cert.example.Json in SimpleWebTransport folder")]
+        public string sslCertJson = "./cert.Json";
+        public SslProtocols sslProtocols = SslProtocols.Ssl3 | SslProtocols.Tls12;
 
         [Header("Debug")]
         [Tooltip("Log functions uses Conditional(\"DEBUG\") so are only included in Editor and Development builds")]
@@ -95,7 +100,7 @@ namespace Mirror.SimpleWeb
         }
 
         #region Client
-        string GetScheme() => sslConfig.enabled ? SecureScheme : NormalScheme;
+        string GetScheme() => sslEnabled ? SecureScheme : NormalScheme;
         public override bool ClientConnected()
         {
             return client != null && client.IsConnected;
@@ -198,7 +203,8 @@ namespace Mirror.SimpleWeb
                 Debug.LogError("SimpleWebServer Already Started");
             }
 
-            server = new SimpleWebServer(port, ServerMaxMessagesPerTick, noDelay, sendTimeout, receiveTimeout, maxMessageSize, sslConfig);
+            SslConfig config = SslConfigLoader.Load(this);
+            server = new SimpleWebServer(port, ServerMaxMessagesPerTick, noDelay, sendTimeout, receiveTimeout, maxMessageSize, config);
 
             server.onConnect += OnServerConnected.Invoke;
             server.onDisconnect += OnServerDisconnected.Invoke;
@@ -264,6 +270,5 @@ namespace Mirror.SimpleWeb
             return builder.Uri;
         }
         #endregion
-
     }
 }
