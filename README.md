@@ -1,7 +1,5 @@
 # Simple Web Transport
 
-> **WARNING** this transport is still under construction, use at your own risk 
-
 WebGl Transport for [Mirror](https://github.com/vis2k/Mirror)
 
 
