@@ -62,8 +62,9 @@ namespace Mirror.SimpleWeb
             // check enabled every time incase behaviour was disabled after data
             while (
                 behaviour.enabled &&
-                server.receiveQueue.TryDequeue(out Message next) &&
-                processedCount < maxMessagesPerTick
+                processedCount < maxMessagesPerTick &&
+                // Dequeue last
+                server.receiveQueue.TryDequeue(out Message next)
                 )
             {
                 processedCount++;
