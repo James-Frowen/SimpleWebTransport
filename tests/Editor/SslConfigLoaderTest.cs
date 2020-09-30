@@ -10,7 +10,7 @@ namespace Mirror.SimpleWeb.Tests
         [Test]
         public void ExampleIsValid()
         {
-            SslConfigLoader.Cert result = SslConfigLoader.LoadCertJson("./Assets/SimpleWebTransport/cert.example.Json");
+            SslConfigLoader.Cert result = SslConfigLoader.LoadCertJson("./Assets/SimpleWebTransport/source/.cert.example.Json");
 
             Assert.That(result.path, Is.EqualTo("./certs/MirrorLocal.pfx"));
             Assert.That(result.password, Is.EqualTo(""));
