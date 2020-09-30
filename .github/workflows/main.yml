@@ -10,7 +10,6 @@ jobs:
 
   Release:
     runs-on: windows-latest
-    needs: CI
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
