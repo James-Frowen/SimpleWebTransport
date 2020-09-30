@@ -8,12 +8,6 @@ namespace Mirror.SimpleWeb
 {
     public class SimpleWebTransport : Transport
     {
-#if UNITY_WEBGL && !UNITY_EDITOR
-        readonly bool isWebGL = true;
-#else
-        readonly bool isWebGL = false;
-#endif
-
         public const string NormalScheme = "ws";
         public const string SecureScheme = "wss";
 
@@ -59,14 +53,14 @@ namespace Mirror.SimpleWeb
             Log.enabled = enableLogs;
         }
 
-        SimpleWebClient client;
+        IWebSocketClient client;
         readonly Queue<ArraySegment<byte>> clientDataQueue = new Queue<ArraySegment<byte>>();
 
         SimpleWebServer server;
 
         public override bool Available()
         {
-            return isWebGL;
+            return true;
         }
         public override int GetMaxPacketSize(int channelId = 0)
         {
@@ -109,15 +103,11 @@ namespace Mirror.SimpleWeb
 
         public override void ClientConnect(string address)
         {
-            if (!isWebGL)
-            {
-                Debug.LogError("SimpleWebTransport client is only available on WebGL");
-            }
-
             // connecting or connected
             if (client != null)
             {
                 Debug.LogError("Already Connected");
+                return;
             }
 
             UriBuilder builder = new UriBuilder
@@ -149,16 +139,18 @@ namespace Mirror.SimpleWeb
 
         public override void ClientDisconnect()
         {
-            // CloseExisting will call disconnect on instance if it exists
-            SimpleWebClient.CloseExisting();
+            client?.Disconnect();
             client = null;
+
+            // CloseExisting makes sure to clear the JS instance since there can only be one
+            SimpleWebClient.CloseExisting();
         }
 
         public override bool ClientSend(int channelId, ArraySegment<byte> segment)
         {
             if (!ClientConnected())
             {
-                Debug.LogError("Already Connected");
+                Debug.LogError("Not Connected");
                 return false;
             }
 
@@ -190,11 +182,6 @@ namespace Mirror.SimpleWeb
 
         public override void ServerStart()
         {
-            if (isWebGL)
-            {
-                Debug.LogError("SimpleWebTransport server is only available on standalone");
-            }
-
             if (ServerActive())
             {
                 Debug.LogError("SimpleWebServer Already Started");
