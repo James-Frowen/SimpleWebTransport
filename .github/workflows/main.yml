@@ -1,0 +1,46 @@
+name: CI
+
+on: 
+  push:
+    paths-ignore:
+      - 'doc/**'
+      - '*.md'
+  
+jobs:
+
+  Release:
+    runs-on: windows-latest
+    needs: CI
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '3.1.100'
+  
+      - name: Install unity-packer
+        run: dotnet tool install -g unity-packer
+  
+      - name: Package
+        run: |
+          unity-packer pack SimpleWebTransport.unitypackage source Assets/SimpleWebTransport LICENSE Assets/SimpleWebTransport/LICENSE README.md Assets/SimpleWebTransport/README.md
+
+      - uses: actions/upload-artifact@v1
+        with:
+          name: SimpleWebTransport.unitypackage
+          path: SimpleWebTransport.unitypackage
+
+      - name: Release
+        uses: cycjimmy/semantic-release-action@v2
+        with:
+          extra_plugins: |
+            @semantic-release/exec
+            @semantic-release/changelog
+            @semantic-release/git
+          branch: master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
