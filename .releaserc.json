@@ -5,7 +5,7 @@
     "prepare": [
         {
             "path": "@semantic-release/exec",
-            "prepareCmd": "echo ${nextRelease.version} > Assets/SimpleWebTransport/version.txt"
+            "prepareCmd": "echo ${nextRelease.version} > source/version.txt"
         }
     ],
     "publish": [
