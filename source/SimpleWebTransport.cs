@@ -36,7 +36,7 @@ namespace Mirror.SimpleWeb
         public int receiveTimeout = 20000;
 
         [Tooltip("Caps the number of messages the server will process per tick. Allows LateUpdate to finish to let the reset of unity contiue incase more messages arrive before they are processed")]
-        public int ServerMaxMessagesPerTick = 10000;
+        public int serverMaxMessagesPerTick = 10000;
 
         [Header("Ssl Settings")]
         public bool sslEnabled;
@@ -46,7 +46,7 @@ namespace Mirror.SimpleWeb
 
         [Header("Debug")]
         [Tooltip("Log functions uses Conditional(\"DEBUG\") so are only included in Editor and Development builds")]
-        public bool EnableLogs;
+        public bool enableLogs;
 
         private void OnValidate()
         {
@@ -56,7 +56,7 @@ namespace Mirror.SimpleWeb
                 maxMessageSize = ushort.MaxValue;
             }
 
-            Log.enabled = EnableLogs;
+            Log.enabled = enableLogs;
         }
 
         SimpleWebClient client;
@@ -75,7 +75,7 @@ namespace Mirror.SimpleWeb
 
         private void Awake()
         {
-            Log.enabled = EnableLogs;
+            Log.enabled = enableLogs;
         }
         public override void Shutdown()
         {
@@ -204,7 +204,7 @@ namespace Mirror.SimpleWeb
             }
 
             SslConfig config = SslConfigLoader.Load(this);
-            server = new SimpleWebServer(port, ServerMaxMessagesPerTick, noDelay, sendTimeout, receiveTimeout, maxMessageSize, config);
+            server = new SimpleWebServer(port, serverMaxMessagesPerTick, noDelay, sendTimeout, receiveTimeout, maxMessageSize, config);
 
             server.onConnect += OnServerConnected.Invoke;
             server.onDisconnect += OnServerDisconnected.Invoke;
