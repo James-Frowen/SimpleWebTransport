@@ -99,7 +99,7 @@ namespace Mirror.SimpleWeb.Tests
                     {
                         process.StartInfo = new ProcessStartInfo
                         {
-                            FileName = @"C:\Program Files\nodejs\node.exe",
+                            FileName = "node",
                             Arguments = $"--no-warnings {fullPath} {argString}",
                             RedirectStandardOutput = true,
                             RedirectStandardError = true,
