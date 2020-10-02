@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using UnityEngine;
@@ -32,11 +33,11 @@ namespace Mirror.SimpleWeb.Tests.Server
 
             RunNode.Result result = task.Result;
 
-            string expected = $"length: {5} msg: 01 02 03 04 05";
-            Assert.That(result.timedOut, Is.False, "js should close before timeout");
-            Assert.That(result.output, Has.Length.EqualTo(1), "Should have 1 log");
-            Assert.That(result.output[0], Is.EqualTo(expected), "Should have message log");
-            Assert.That(result.error, Has.Length.EqualTo(0), "Should have no errors");
+            result.AssetTimeout(false);
+            result.AssetOutput(
+                "length: 5 msg: 01 02 03 04 05"
+                );
+            result.AssetErrors();
         }
 
         [UnityTest]
@@ -67,14 +68,12 @@ namespace Mirror.SimpleWeb.Tests.Server
 
             RunNode.Result result = task.Result;
 
-            string expected = "length: 5 msg: {0:X2} 64 00 00 00";
-            Assert.That(result.timedOut, Is.False, "js should close before timeout");
-            Assert.That(result.output, Has.Length.EqualTo(messageCount), $"Should have {messageCount} logs");
-            for (int i = 0; i < messageCount; i++)
-            {
-                Assert.That(result.output[i].ToLower(), Is.EqualTo(string.Format(expected, i).ToLower()), "Should have message log");
-            }
-            Assert.That(result.error, Has.Length.EqualTo(0), "Should have no errors");
+            string expectedFormat = "length: 5 msg: {0:X2} 64 00 00 00";
+            IEnumerable<string> expected = Enumerable.Range(0, messageCount).Select(i => string.Format(expectedFormat, i));
+
+            result.AssetTimeout(false);
+            result.AssetOutput(expected.ToArray());
+            result.AssetErrors();
         }
     }
 }

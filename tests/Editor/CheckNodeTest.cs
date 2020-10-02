@@ -24,12 +24,12 @@ namespace Mirror.SimpleWeb.Tests
         {
             RunNode.Result result = RunNode.Run("HelloWorld.js", false);
 
-            Assert.That(result.timedOut, Is.False);
+            result.AssetTimeout(false);
 
-            Assert.That(result.output, Has.Length.EqualTo(1));
-            Assert.That(result.output[0], Is.EqualTo("Hello World!"));
-
-            Assert.That(result.error, Has.Length.EqualTo(0));
+            result.AssetOutput(
+                "Hello World!"
+                );
+            result.AssetErrors();
         }
 
         [Test]
@@ -37,13 +37,12 @@ namespace Mirror.SimpleWeb.Tests
         {
             RunNode.Result result = RunNode.Run("HelloWorld2.js", false);
 
-            Assert.That(result.timedOut, Is.False);
-
-            Assert.That(result.output, Has.Length.EqualTo(2));
-            Assert.That(result.output[0], Is.EqualTo("Hello World!"));
-            Assert.That(result.output[1], Is.EqualTo("Hello again World!"));
-
-            Assert.That(result.error, Has.Length.EqualTo(0));
+            result.AssetTimeout(false);
+            result.AssetOutput(
+                "Hello World!",
+                "Hello again World!"
+                );
+            result.AssetErrors();
         }
 
         [Test]
@@ -51,12 +50,11 @@ namespace Mirror.SimpleWeb.Tests
         {
             RunNode.Result result = RunNode.Run("HelloError.js", false);
 
-            Assert.That(result.timedOut, Is.False);
-
-            Assert.That(result.output, Has.Length.EqualTo(0));
-
-            Assert.That(result.error, Has.Length.EqualTo(1));
-            Assert.That(result.error[0], Is.EqualTo("Hello Error!"));
+            result.AssetTimeout(false);
+            result.AssetOutput();
+            result.AssetErrors(
+                "Hello Error!"
+                );
         }
 
         [Test]
@@ -64,13 +62,12 @@ namespace Mirror.SimpleWeb.Tests
         {
             RunNode.Result result = RunNode.Run("HelloError2.js", false);
 
-            Assert.That(result.timedOut, Is.False);
-
-            Assert.That(result.output, Has.Length.EqualTo(0));
-
-            Assert.That(result.error, Has.Length.EqualTo(2));
-            Assert.That(result.error[0], Is.EqualTo("Hello Error!"));
-            Assert.That(result.error[1], Is.EqualTo("Hello again Error!"));
+            result.AssetTimeout(false);
+            result.AssetOutput();
+            result.AssetErrors(
+                "Hello Error!",
+                "Hello again Error!"
+                );
         }
 
         [Test]
@@ -91,12 +88,13 @@ namespace Mirror.SimpleWeb.Tests
         {
             RunNode.Result result = RunNode.Run("Timeout.js", false);
 
-            Assert.That(result.timedOut, Is.True);
+            result.AssetTimeout(true);
 
-            Assert.That(result.output, Has.Length.EqualTo(1));
-            Assert.That(result.output[0], Is.EqualTo("Should be running"));
-
-            Assert.That(result.error, Has.Length.EqualTo(0));
+            result.AssetTimeout(true);
+            result.AssetOutput(
+                "Should be running"
+                );
+            result.AssetErrors();
         }
     }
 }

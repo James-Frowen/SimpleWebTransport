@@ -14,7 +14,6 @@ namespace Mirror.SimpleWeb.Tests.Server
         protected override bool StartServer => true;
 
         List<TcpClient> badClients = new List<TcpClient>();
-        List<Task<RunNode.Result>> goodClients = new List<Task<RunNode.Result>>();
 
         [TearDown]
         public override void TearDown()
@@ -37,48 +36,38 @@ namespace Mirror.SimpleWeb.Tests.Server
                 connectIndex++;
             });
             const int goodClientCount = 10;
-            for (int i = 0; i < goodClientCount * 2; i++)
+            for (int i = 0; i < goodClientCount; i++)
             {
                 // alternate between good and bad clients
-                if (i % 2 == 0)
-                {
-                    Task<TcpClient> createTask = CreateBadClient();
-                    while (!createTask.IsCompleted) { yield return null; }
-                    TcpClient client = createTask.Result;
-                    Assert.That(client.Connected, Is.True, "Client should have connected");
-                    badClients.Add(client);
-                }
-                else
-                {
-                    // connect good client
-                    Task<RunNode.Result> task = RunNode.RunAsync("ConnectAndClose.js");
-                    goodClients.Add(task);
-                    yield return null;
-                }
+                Task<TcpClient> createTask = CreateBadClient();
+                while (!createTask.IsCompleted) { yield return null; }
+                TcpClient client = createTask.Result;
+                Assert.That(client.Connected, Is.True, "Client should have connected");
+                badClients.Add(client);
             }
+            Task<RunNode.Result> task = RunNode.RunAsync("ConnectAndClose.js", arg0: goodClientCount.ToString());
 
             // wait for timeout so bad clients disconnect
             yield return new WaitForSeconds(timeout / 1000);
             // wait extra second for stuff to process
-            yield return new WaitForSeconds(1);
+            yield return new WaitForSeconds(2);
 
             Assert.That(onConnect, Has.Count.EqualTo(goodClientCount), "Connect should not be called");
             Assert.That(onDisconnect, Has.Count.EqualTo(goodClientCount), "Disconnect should not be called");
             Assert.That(onData, Has.Count.EqualTo(0), "Data should not be called");
 
-            for (int i = 0; i < 10; i++)
+            Assert.That(task.IsCompleted, Is.True, "Take should have been completed");
+            RunNode.Result result = task.Result;
+
+            result.AssetTimeout(false);
+            result.AssetErrors();
+            List<string> expected = new List<string>();
+            for (int i = 0; i < goodClientCount; i++)
             {
-                Task<RunNode.Result> task = goodClients[0];
-                Assert.That(task.IsCompleted, Is.True, "Take should have been completed");
-
-                RunNode.Result result = task.Result;
-
-                Assert.That(result.timedOut, Is.False, "js should close before timeout");
-                Assert.That(result.output, Has.Length.EqualTo(2), "Should have 2 log");
-                Assert.That(result.output[0], Is.EqualTo("Connection opened"), "Should be connection open log");
-                Assert.That(result.output[1], Is.EqualTo($"Closed after 2000ms"), "Should be connection close log");
-                Assert.That(result.error, Has.Length.EqualTo(0), "Should have no errors");
+                expected.Add($"{i}: Connection opened");
+                expected.Add($"{i}: Closed after 2000ms");
             }
+            result.AssetOutputUnordered(expected.ToArray());
         }
     }
 }

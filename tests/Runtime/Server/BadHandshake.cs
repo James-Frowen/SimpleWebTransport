@@ -82,11 +82,13 @@ namespace Mirror.SimpleWeb.Tests.Server
 
             // check good client connected and then closed by itself
             RunNode.Result result = task.Result;
-            Assert.That(result.timedOut, Is.False, "js should close before timeout");
-            Assert.That(result.output, Has.Length.EqualTo(2), "Should have 2 log");
-            Assert.That(result.output[0], Is.EqualTo("Connection opened"), "Should be connection open log");
-            Assert.That(result.output[1], Is.EqualTo($"Closed after 2000ms"), "Should be connection close log");
-            Assert.That(result.error, Has.Length.EqualTo(0), "Should have no errors");
+
+            result.AssetTimeout(false);
+            result.AssetOutput(
+                "Connection opened",
+                "Closed after 2000ms"
+                );
+            result.AssetErrors();
 
             // check server events
             Assert.That(onConnect, Has.Count.EqualTo(1), "Connect should have been called once");
