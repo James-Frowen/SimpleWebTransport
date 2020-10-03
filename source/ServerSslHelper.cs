@@ -15,12 +15,12 @@ namespace Mirror.SimpleWeb
         public string certPassword;
         public SslProtocols sslProtocols;
     }
-    internal class SslHelper
+    internal class ServerSslHelper
     {
         readonly SslConfig config;
         readonly X509Certificate2 certificate;
 
-        public SslHelper(SslConfig sslConfig)
+        public ServerSslHelper(SslConfig sslConfig)
         {
             config = sslConfig;
             if (config.enabled)
