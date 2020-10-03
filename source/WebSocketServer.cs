@@ -252,6 +252,11 @@ namespace Mirror.SimpleWeb
             {
                 TcpClient client = conn.client;
                 Stream stream = conn.stream;
+
+                // null check incase disconnect while send thread is starting
+                if (client == null)
+                    return;
+
                 while (client.Connected)
                 {
                     // wait for message
