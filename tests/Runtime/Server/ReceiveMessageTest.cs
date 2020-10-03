@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -173,9 +175,15 @@ namespace Mirror.SimpleWeb.Tests.Server
             Assert.That(onDisconnect, Has.Count.EqualTo(1), $"Should have 1 disconnect");
             Assert.That(onDisconnect[0], Is.EqualTo(1), $"connId should be 1");
 
-            Assert.That(onError, Has.Count.EqualTo(1), $"Should have 1 error");
+            Assert.That(onError, Has.Count.EqualTo(1), $"Should have 1 error, Errors:\n{WriteErrors(onError)}");
             Assert.That(onError[0].connId, Is.EqualTo(1), $"connId should be 1");
             Assert.That(onError[0].exception, Is.TypeOf<InvalidDataException>(), $"Should be InvalidDataException");
+        }
+
+        string WriteErrors(List<(int connId, Exception exception)> onError)
+        {
+            IEnumerable<int> range = Enumerable.Range(0, onError.Count);
+            return string.Join("", Enumerable.Zip(range, onError, (i, x) => $"{i}: connId:{x.connId} exception:{x.exception}\n"));
         }
     }
 }
