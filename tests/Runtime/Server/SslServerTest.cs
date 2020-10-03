@@ -17,8 +17,6 @@ namespace Mirror.SimpleWeb.Tests.Server
         public override void Setup()
         {
             transport = CreateRelayTransport();
-            transport.receiveTimeout = timeout;
-            transport.sendTimeout = timeout;
 
             onConnect.Clear();
             onDisconnect.Clear();

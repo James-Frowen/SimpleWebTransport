@@ -32,16 +32,15 @@ namespace Mirror.SimpleWeb.Tests.Server
             if (!StartServer) { return; }
 
             transport = CreateRelayTransport();
-            transport.receiveTimeout = timeout;
-            transport.sendTimeout = timeout;
 
             onConnect.Clear();
             onDisconnect.Clear();
             onData.Clear();
+            onError.Clear();
 
             transport.OnServerConnected.AddListener((connId) => onConnect.Add(connId));
             transport.OnServerDisconnected.AddListener((connId) => onDisconnect.Add(connId));
-            transport.OnServerDataReceived.AddListener((connId, data, ___) => onData.Add((connId, data)));
+            transport.OnServerDataReceived.AddListener((connId, data, _) => onData.Add((connId, data)));
             transport.OnServerError.AddListener((connId, exception) => onError.Add((connId, exception)));
             transport.ServerStart();
         }
@@ -71,6 +70,9 @@ namespace Mirror.SimpleWeb.Tests.Server
             SimpleWebTransport transport = go.AddComponent<SimpleWebTransport>();
             transport.port = 7776;
             transport.enableLogs = true;
+            transport.receiveTimeout = timeout;
+            transport.sendTimeout = timeout;
+
             Log.enabled = true;
             return transport;
         }
