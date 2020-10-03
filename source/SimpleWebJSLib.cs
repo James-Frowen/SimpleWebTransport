@@ -21,7 +21,7 @@ namespace Mirror.SimpleWeb
         internal static extern bool Send(byte[] array, int offset, int length);
     }
 #else
-    internal static class SimpleWebJLib
+    internal static class SimpleWebJSLib
     {
         internal static bool IsConnected() => throw new NotSupportedException();
 

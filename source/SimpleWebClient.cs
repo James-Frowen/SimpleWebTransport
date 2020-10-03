@@ -37,7 +37,7 @@ namespace Mirror.SimpleWeb
         // this is because callbacks sent to JS must be static
         private SimpleWebClient() { }
 
-        public bool CheckJsConnected() => SimpleWebJLib.IsConnected();
+        public bool CheckJsConnected() => SimpleWebJSLib.IsConnected();
         public bool IsConnected { get; private set; }
 
         public event Action onConnect;
@@ -47,19 +47,19 @@ namespace Mirror.SimpleWeb
 
         public void Connect(string address)
         {
-            SimpleWebJLib.Connect(address, OpenCallback, CloseCallBack, MessageCallback, ErrorCallback);
+            SimpleWebJSLib.Connect(address, OpenCallback, CloseCallBack, MessageCallback, ErrorCallback);
             IsConnected = true;
         }
 
         public void Disconnect()
         {
-            SimpleWebJLib.Disconnect();
+            SimpleWebJSLib.Disconnect();
             IsConnected = false;
         }
 
         public void Send(ArraySegment<byte> segment)
         {
-            SimpleWebJLib.Send(segment.Array, 0, segment.Count);
+            SimpleWebJSLib.Send(segment.Array, 0, segment.Count);
         }
 
         [MonoPInvokeCallback(typeof(Action))]
@@ -96,7 +96,7 @@ namespace Mirror.SimpleWeb
         {
             instance.onError?.Invoke();
 
-            SimpleWebJLib.Disconnect();
+            SimpleWebJSLib.Disconnect();
             instance.IsConnected = false;
         }
     }
