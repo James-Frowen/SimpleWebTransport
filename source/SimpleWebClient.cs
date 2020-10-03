@@ -23,13 +23,7 @@ namespace Mirror.SimpleWeb
 
         public static void CloseExisting()
         {
-            if (instance == null)
-            {
-                Debug.LogError("Cant Close SimpleWebClient because none was open");
-                return;
-            }
-
-            instance.Disconnect();
+            instance?.Disconnect();
             instance = null;
         }
 
@@ -98,6 +92,9 @@ namespace Mirror.SimpleWeb
 
             SimpleWebJSLib.Disconnect();
             instance.IsConnected = false;
+
+            // clean up after disconnect
+            CloseExisting();
         }
     }
 }

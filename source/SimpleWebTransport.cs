@@ -81,6 +81,7 @@ namespace Mirror.SimpleWeb
         {
             client?.Disconnect();
             server?.Stop();
+            SimpleWebClient.CloseExisting();
         }
 
         private void LateUpdate()
@@ -148,12 +149,8 @@ namespace Mirror.SimpleWeb
 
         public override void ClientDisconnect()
         {
-            if (client != null)
-            {
-                Debug.LogError("Not Connected");
-            }
-
-            client.Disconnect();
+            // CloseExisting will call disconnect on instance if it exists
+            SimpleWebClient.CloseExisting();
             client = null;
         }
 
