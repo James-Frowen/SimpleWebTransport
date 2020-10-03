@@ -27,14 +27,14 @@ namespace Mirror.SimpleWeb
                 certificate = new X509Certificate2(config.certPath, config.certPassword);
         }
 
-        internal bool TryCreateServerStream(Connection conn)
+        internal bool TryCreateStream(Connection conn)
         {
             NetworkStream stream = conn.client.GetStream();
             if (config.enabled)
             {
                 try
                 {
-                    conn.stream = CreateServerStream(stream);
+                    conn.stream = CreateStream(stream);
                     return true;
                 }
                 catch (Exception e)
@@ -50,9 +50,8 @@ namespace Mirror.SimpleWeb
             }
         }
 
-        Stream CreateServerStream(NetworkStream stream)
+        Stream CreateStream(NetworkStream stream)
         {
-            // dont need RemoteCertificateValidationCallback for server stream
             SslStream sslStream = new SslStream(stream, true, acceptClient);
             sslStream.AuthenticateAsServer(certificate, false, config.sslProtocols, false);
 
@@ -63,49 +62,6 @@ namespace Mirror.SimpleWeb
         {
             // always accept client
             return true;
-        }
-
-        internal bool TryCreateClientStream(Connection conn, Uri uri)
-        {
-            NetworkStream stream = conn.client.GetStream();
-            if (uri.Scheme == "wss")
-            {
-                try
-                {
-                    conn.stream = CreateClientStream(stream, uri);
-                    return true;
-                }
-                catch (Exception e)
-                {
-                    Log.Error($"Create SSLStream Failed: {e}", false);
-                    return false;
-                }
-            }
-            else
-            {
-                conn.stream = stream;
-                return true;
-            }
-        }
-
-        private Stream CreateClientStream(NetworkStream stream, Uri uri)
-        {
-            // dont need RemoteCertificateValidationCallback for server stream
-            SslStream sslStream = new SslStream(stream, true, ValidateServerCertificate);
-            sslStream.AuthenticateAsClient(uri.Host);
-
-            return sslStream;
-        }
-
-        static bool ValidateServerCertificate(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
-        {
-            if (sslPolicyErrors == SslPolicyErrors.None)
-            {
-                return true;
-            }
-
-            // Do not allow this client to communicate with unauthenticated servers.
-            return false;
         }
     }
 }
