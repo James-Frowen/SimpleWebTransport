@@ -5,7 +5,6 @@ using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
-using UnityEngine;
 
 namespace Mirror.SimpleWeb
 {
@@ -28,14 +27,14 @@ namespace Mirror.SimpleWeb
                 certificate = new X509Certificate2(config.certPath, config.certPassword);
         }
 
-        internal bool TryCreateStream(Connection conn)
+        internal bool TryCreateServerStream(Connection conn)
         {
             NetworkStream stream = conn.client.GetStream();
             if (config.enabled)
             {
                 try
                 {
-                    conn.stream = CreateStream(stream);
+                    conn.stream = CreateServerStream(stream);
                     return true;
                 }
                 catch (Exception e)
@@ -51,7 +50,7 @@ namespace Mirror.SimpleWeb
             }
         }
 
-        Stream CreateStream(NetworkStream stream)
+        Stream CreateServerStream(NetworkStream stream)
         {
             // dont need RemoteCertificateValidationCallback for server stream
             SslStream sslStream = new SslStream(stream, true, acceptClient);
@@ -66,12 +65,46 @@ namespace Mirror.SimpleWeb
             return true;
         }
 
-        bool ValidateServerCertificate(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+        internal bool TryCreateClientStream(Connection conn, Uri uri)
+        {
+            NetworkStream stream = conn.client.GetStream();
+            if (uri.Scheme == "wss")
+            {
+                try
+                {
+                    conn.stream = CreateClientStream(stream, uri);
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    Log.Error($"Create SSLStream Failed: {e}", false);
+                    return false;
+                }
+            }
+            else
+            {
+                conn.stream = stream;
+                return true;
+            }
+        }
+
+        private Stream CreateClientStream(NetworkStream stream, Uri uri)
+        {
+            // dont need RemoteCertificateValidationCallback for server stream
+            SslStream sslStream = new SslStream(stream, true, ValidateServerCertificate);
+            sslStream.AuthenticateAsClient(uri.Host);
+
+            return sslStream;
+        }
+
+        static bool ValidateServerCertificate(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
         {
             if (sslPolicyErrors == SslPolicyErrors.None)
+            {
                 return true;
+            }
 
-            Debug.LogErrorFormat("Certificate error: {0}", sslPolicyErrors);
+            // Do not allow this client to communicate with unauthenticated servers.
             return false;
         }
     }

@@ -114,7 +114,7 @@ namespace Mirror.SimpleWeb
 
         void HandshakeAndReceiveLoop(Connection conn)
         {
-            bool success = sslHelper.TryCreateStream(conn);
+            bool success = sslHelper.TryCreateServerStream(conn);
             if (!success)
             {
                 Log.Error($"Failed to create SSL Stream {conn}");
