@@ -10,7 +10,7 @@ using UnityEngine;
 namespace Mirror.SimpleWeb.Tests.Server
 {
     [Category("SimpleWebTransport")]
-    public abstract class SimpleWebTestBase
+    public abstract class SimpleWebServerTestBase
     {
         protected const int timeout = 4000;
 

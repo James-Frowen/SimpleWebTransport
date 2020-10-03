@@ -11,7 +11,7 @@ using UnityEngine.TestTools;
 namespace Mirror.SimpleWeb.Tests.Server
 {
     [Category("SimpleWebTransport")]
-    public class ReceiveMessageTest : SimpleWebTestBase
+    public class ReceiveMessageTest : SimpleWebServerTestBase
     {
         protected override bool StartServer => true;
 

@@ -8,7 +8,7 @@ using UnityEngine.TestTools;
 namespace Mirror.SimpleWeb.Tests.Server
 {
     [Category("SimpleWebTransport")]
-    public class BadHandshake : SimpleWebTestBase
+    public class BadHandshake : SimpleWebServerTestBase
     {
         protected override bool StartServer => true;
 

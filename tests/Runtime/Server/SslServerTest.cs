@@ -9,7 +9,7 @@ namespace Mirror.SimpleWeb.Tests.Server
 {
     [Category("SimpleWebTransport")]
     [Ignore("Needs a CA key to work, see bottom of setup")]
-    public class SslServerTest : SimpleWebTestBase
+    public class SslServerTest : SimpleWebServerTestBase
     {
         protected override bool StartServer => false;
 
