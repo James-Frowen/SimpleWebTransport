@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.InteropServices;
 using AOT;
 using UnityEngine;
@@ -14,7 +14,7 @@ namespace Mirror.SimpleWeb
         internal WebSocketClientWebGl() => throw new NotSupportedException();
 #endif
 
-        public bool CheckJsConnected() => SimpleWebJLib.IsConnected();
+        public bool CheckJsConnected() => SimpleWebJSLib.IsConnected();
         public bool IsConnected { get; private set; }
 
         public event Action onConnect;
@@ -24,14 +24,14 @@ namespace Mirror.SimpleWeb
 
         public void Connect(string address)
         {
-            SimpleWebJLib.Connect(address, OpenCallback, CloseCallBack, MessageCallback, ErrorCallback);
+            SimpleWebJSLib.Connect(address, OpenCallback, CloseCallBack, MessageCallback, ErrorCallback);
             IsConnected = true;
         }
 
         public void Disconnect()
         {
             // disconnect should cause closeCallback and OnDisconnect to be called
-            SimpleWebJLib.Disconnect();
+            SimpleWebJSLib.Disconnect();
         }
 
         private void OnDisconnect()
@@ -43,7 +43,7 @@ namespace Mirror.SimpleWeb
 
         public void Send(ArraySegment<byte> segment)
         {
-            SimpleWebJLib.Send(segment.Array, 0, segment.Count);
+            SimpleWebJSLib.Send(segment.Array, 0, segment.Count);
         }
 
 
@@ -81,7 +81,7 @@ namespace Mirror.SimpleWeb
         {
             instance.onError?.Invoke();
 
-            SimpleWebJLib.Disconnect();
+            SimpleWebJSLib.Disconnect();
             instance.IsConnected = false;
         }
     }
