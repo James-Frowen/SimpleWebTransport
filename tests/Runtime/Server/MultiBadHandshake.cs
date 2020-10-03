@@ -45,7 +45,7 @@ namespace Mirror.SimpleWeb.Tests.Server
                 Assert.That(client.Connected, Is.True, "Client should have connected");
                 badClients.Add(client);
             }
-            Task<RunNode.Result> task = RunNode.RunAsync("ConnectAndClose.js", arg0: goodClientCount.ToString());
+            Task<RunNode.Result> task = RunNode.RunAsync("ConnectAndCloseMany.js", arg0: goodClientCount.ToString());
 
             // wait for timeout so bad clients disconnect
             yield return new WaitForSeconds(timeout / 1000);
