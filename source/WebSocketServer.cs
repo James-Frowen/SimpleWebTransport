@@ -12,6 +12,8 @@ namespace Mirror.SimpleWeb
 {
     public class WebSocketServer
     {
+        const int HeaderLength = 4;
+
         public readonly ConcurrentQueue<Message> receiveQueue = new ConcurrentQueue<Message>();
 
         readonly bool noDelay;
@@ -22,8 +24,8 @@ namespace Mirror.SimpleWeb
 
         TcpListener listener;
         Thread acceptThread;
-        readonly Handshake handShake = new Handshake();
-        readonly SslHelper sslHelper;
+        readonly ServerHandshake handShake = new ServerHandshake();
+        readonly ServerSslHelper sslHelper;
         readonly ConcurrentDictionary<int, Connection> connections = new ConcurrentDictionary<int, Connection>();
 
         int _previousId = 0;
@@ -41,7 +43,7 @@ namespace Mirror.SimpleWeb
             this.receiveTimeout = receiveTimeout;
             this.maxMessageSize = maxMessageSize;
             this.sslConfig = sslConfig;
-            sslHelper = new SslHelper(this.sslConfig);
+            sslHelper = new ServerSslHelper(this.sslConfig);
         }
 
         public void Listen(short port)
@@ -114,7 +116,7 @@ namespace Mirror.SimpleWeb
 
         void HandshakeAndReceiveLoop(Connection conn)
         {
-            bool success = sslHelper.TryCreateServerStream(conn);
+            bool success = sslHelper.TryCreateStream(conn);
             if (!success)
             {
                 Log.Error($"Failed to create SSL Stream {conn}");
@@ -156,12 +158,11 @@ namespace Mirror.SimpleWeb
                 TcpClient client = conn.client;
                 Stream stream = conn.stream;
                 //byte[] buffer = conn.receiveBuffer;
-                const int HeaderLength = 4;
                 byte[] headerBuffer = new byte[HeaderLength];
 
                 while (client.Connected)
                 {
-                    bool success = ReadOneMessage(conn, stream, HeaderLength, headerBuffer);
+                    bool success = ReadOneMessage(conn, stream, headerBuffer);
                     if (!success)
                         break;
                 }
@@ -185,7 +186,7 @@ namespace Mirror.SimpleWeb
             }
         }
 
-        private bool ReadOneMessage(Connection conn, Stream stream, int HeaderLength, byte[] headerBuffer)
+        private bool ReadOneMessage(Connection conn, Stream stream, byte[] headerBuffer)
         {
             // header is at most 4 bytes + mask
             // 1 for bit fields
@@ -200,7 +201,7 @@ namespace Mirror.SimpleWeb
                 return false;
             }
 
-            MessageProcessor.Result header = MessageProcessor.ProcessHeader(headerBuffer, maxMessageSize);
+            MessageProcessor.Result header = MessageProcessor.ProcessHeader(headerBuffer, maxMessageSize, true);
 
             // todo remove allocation
             // mask + msg
@@ -213,7 +214,7 @@ namespace Mirror.SimpleWeb
 
             ReadHelper.SafeRead(stream, buffer, HeaderLength, header.readLength);
 
-            MessageProcessor.DecodeMessage(buffer, header.maskOffset, header.msgLength);
+            MessageProcessor.ToggleMask(buffer, header.offset + 4, header.msgLength, buffer, header.offset);
 
             HandleMessage(header.opcode, conn, buffer, header.msgOffset, header.msgLength);
             return true;
@@ -333,12 +334,7 @@ namespace Mirror.SimpleWeb
         {
             if (connections.TryGetValue(id, out Connection conn))
             {
-                // todo remove allocation
-                byte[] buffer = new byte[segment.Count];
-
-                Array.Copy(segment.Array, segment.Offset, buffer, 0, segment.Count);
-
-                conn.sendQueue.Enqueue(new ArraySegment<byte>(buffer));
+                conn.sendQueue.Enqueue(segment);
                 conn.sendPending.Set();
             }
             else

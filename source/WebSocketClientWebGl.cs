@@ -8,10 +8,17 @@ namespace Mirror.SimpleWeb
     internal class WebSocketClientWebGl : IWebSocketClient
     {
         static WebSocketClientWebGl instance;
+
+        readonly int maxMessageSize;
+
 #if UNITY_WEBGL && !UNITY_EDITOR
-        internal WebSocketClientWebGl() { instance = this; }
+        internal WebSocketClientWebGl(int maxMessageSize)
+        {
+            instance = this;
+            this.maxMessageSize = maxMessageSize;
+        }
 #else
-        internal WebSocketClientWebGl() => throw new NotSupportedException();
+        internal WebSocketClientWebGl(int maxMessageSize) => throw new NotSupportedException();
 #endif
 
         public bool CheckJsConnected() => SimpleWebJSLib.IsConnected();
@@ -43,6 +50,12 @@ namespace Mirror.SimpleWeb
 
         public void Send(ArraySegment<byte> segment)
         {
+            if (segment.Count > maxMessageSize)
+            {
+                Debug.LogError($"Cant send message with length {segment.Count} because it is over the max size of {maxMessageSize}");
+                return;
+            }
+
             SimpleWebJSLib.Send(segment.Array, 0, segment.Count);
         }
 

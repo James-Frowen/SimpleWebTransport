@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using NUnit.Framework;
 
 namespace Mirror.SimpleWeb.Tests
@@ -52,10 +52,10 @@ namespace Mirror.SimpleWeb.Tests
         {
             byte[] buffer = CreateMessage(opcode: opCode, length: length);
 
-            MessageProcessor.Result result = MessageProcessor.ProcessHeader(buffer, length);
+            MessageProcessor.Result result = MessageProcessor.ProcessHeader(buffer, length, true);
 
             Assert.That(result.opcode, Is.EqualTo(opCode));
-            Assert.That(result.maskOffset, Is.EqualTo(length < 126 ? 2 : 4));
+            Assert.That(result.offset, Is.EqualTo(length < 126 ? 2 : 4));
             Assert.That(result.msgLength, Is.EqualTo(length));
         }
 
@@ -66,20 +66,22 @@ namespace Mirror.SimpleWeb.Tests
 
             InvalidDataException expection = Assert.Throws<InvalidDataException>(() =>
             {
-                MessageProcessor.ProcessHeader(buffer, 10 * 1024);
+                MessageProcessor.ProcessHeader(buffer, 10 * 1024, true);
             });
 
             Assert.That(expection.Message, Is.EqualTo("Full message should have been sent, if the full message wasn't sent it wasn't sent from this trasnport"));
         }
 
         [Test]
-        public void ThrowsWhenNotMasked()
+        [TestCase(true)]
+        [TestCase(false)]
+        public void ThrowsWhenMaskIsWrong(bool mask)
         {
-            byte[] buffer = CreateMessage(hasMask: false);
+            byte[] buffer = CreateMessage(hasMask: !mask);
 
             InvalidDataException expection = Assert.Throws<InvalidDataException>(() =>
             {
-                MessageProcessor.ProcessHeader(buffer, 10 * 1024);
+                MessageProcessor.ProcessHeader(buffer, 10 * 1024, expectMask: mask);
             });
 
             Assert.That(expection.Message, Is.EqualTo("Message from client should have mask set to true"));
@@ -106,7 +108,7 @@ namespace Mirror.SimpleWeb.Tests
 
             InvalidDataException expection = Assert.Throws<InvalidDataException>(() =>
             {
-                MessageProcessor.ProcessHeader(buffer, 10 * 1024);
+                MessageProcessor.ProcessHeader(buffer, 10 * 1024, true);
             });
 
             Assert.That(expection.Message, Is.EqualTo("Expected opcode to be binary or close"));
@@ -119,7 +121,7 @@ namespace Mirror.SimpleWeb.Tests
 
             InvalidDataException expection = Assert.Throws<InvalidDataException>(() =>
             {
-                MessageProcessor.ProcessHeader(buffer, 10 * 1024);
+                MessageProcessor.ProcessHeader(buffer, 10 * 1024, true);
             });
 
             Assert.That(expection.Message, Is.EqualTo("Message length was zero"));
@@ -132,7 +134,7 @@ namespace Mirror.SimpleWeb.Tests
 
             InvalidDataException expection = Assert.Throws<InvalidDataException>(() =>
             {
-                MessageProcessor.ProcessHeader(buffer, 10 * 1024);
+                MessageProcessor.ProcessHeader(buffer, 10 * 1024, true);
             });
 
             Assert.That(expection.Message, Is.EqualTo("Message length is greater than max length"));
@@ -143,10 +145,10 @@ namespace Mirror.SimpleWeb.Tests
         {
             byte[] buffer = CreateMessage(length: 10 * 1024);
 
-            MessageProcessor.Result result = MessageProcessor.ProcessHeader(buffer, 10 * 1024);
+            MessageProcessor.Result result = MessageProcessor.ProcessHeader(buffer, 10 * 1024, true);
 
             Assert.That(result.opcode, Is.EqualTo(2));
-            Assert.That(result.maskOffset, Is.EqualTo(4));
+            Assert.That(result.offset, Is.EqualTo(4));
             Assert.That(result.msgLength, Is.EqualTo(10 * 1024));
         }
 
@@ -157,7 +159,7 @@ namespace Mirror.SimpleWeb.Tests
 
             InvalidDataException expection = Assert.Throws<InvalidDataException>(() =>
             {
-                MessageProcessor.ProcessHeader(buffer, 10 * 1024);
+                MessageProcessor.ProcessHeader(buffer, 10 * 1024, true);
             });
 
             Assert.That(expection.Message, Is.EqualTo("Max length is longer than allowed in a single message"));

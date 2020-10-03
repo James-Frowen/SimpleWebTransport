@@ -20,7 +20,7 @@ namespace Mirror.SimpleWeb
     {
         static IWebSocketClient instance;
 
-        public static IWebSocketClient Create()
+        public static IWebSocketClient Create(int maxMessageSize)
         {
             if (instance != null)
             {
@@ -29,9 +29,9 @@ namespace Mirror.SimpleWeb
             }
 
 #if UNITY_WEBGL && !UNITY_EDITOR
-            instance = new WebSocketClientWebGl();
+            instance = new WebSocketClientWebGl(maxMessageSize);
 #else
-            instance = new WebSocketClientStandAlone();
+            instance = new WebSocketClientStandAlone(maxMessageSize);
 #endif
             return instance;
         }

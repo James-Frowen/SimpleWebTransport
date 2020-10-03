@@ -117,7 +117,7 @@ namespace Mirror.SimpleWeb
                 Port = port
             };
 
-            client = SimpleWebClient.Create();
+            client = SimpleWebClient.Create(maxMessageSize);
             if (client == null) { return; }
 
             client.onConnect += OnClientConnected.Invoke;
