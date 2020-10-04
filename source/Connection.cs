@@ -51,7 +51,7 @@ namespace Mirror.SimpleWeb
                 receiveThread.Interrupt();
                 sendThread?.Interrupt();
 
-                stream.Dispose();
+                stream?.Dispose();
                 stream = null;
                 client.Dispose();
                 client = null;
