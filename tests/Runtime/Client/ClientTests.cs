@@ -95,42 +95,22 @@ namespace Mirror.SimpleWeb.Tests.Client
         [UnityTest]
         public IEnumerator CanPingAndStayConnectedForTime()
         {
-            // server gets message and sends reply
-            server.OnServerDataReceived.AddListener((i, data, __) =>
-            {
-                Assert.That(i, Is.EqualTo(1), "Conenction Id should be 1");
-
-                byte[] expectedBytes = new byte[4] { 11, 12, 13, 14 };
-                CollectionAssert.AreEqual(expectedBytes, data, "data should match");
-
-                byte[] relyBytes = new byte[4] { 1, 2, 3, 4 };
-                server.ServerSend(new List<int> { i }, 0, new ArraySegment<byte>(relyBytes));
-            });
-            transport.OnClientDataReceived.AddListener((data, __) =>
-            {
-                byte[] expectedBytes = new byte[4] { 1, 2, 3, 4 };
-
-                CollectionAssert.AreEqual(expectedBytes, data, "data should match");
-            });
-
             transport.ClientConnect("localhost");
 
             // wait for connect
             yield return new WaitForSeconds(1);
 
-            for (int i = 0; i < 100; i++)
-            {
-                byte[] sendBytes = new byte[4] { 11, 12, 13, 14 };
-                transport.ClientSend(0, new ArraySegment<byte>(sendBytes));
-                yield return new WaitForSeconds(0.1f);
-            }
+            Assert.That(onConnect, Is.EqualTo(1), "Connect should be called once");
+            Assert.That(server_onConnect, Has.Count.EqualTo(1), "server Connect should be called once");
 
-            // wait for message
-            yield return new WaitForSeconds(0.25f);
+            transport.ClientDisconnect();
 
+            // wait for disconnect
+            yield return new WaitForSeconds(1);
 
-            Assert.That(onData, Has.Count.EqualTo(100), "client should have 100 messages");
-            Assert.That(server_onData, Has.Count.EqualTo(100), "server should have 100 messages");
+            Assert.That(onDisconnect, Is.EqualTo(1), "Disconnect should be called once");
+            Assert.That(server_onDisconnect, Has.Count.EqualTo(1), "server Disconnect should be called once");
         }
+
     }
 }

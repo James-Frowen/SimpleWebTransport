@@ -16,16 +16,7 @@ namespace Mirror.SimpleWeb.Tests.Server
         [SetUp]
         public override void Setup()
         {
-            transport = CreateRelayTransport();
-
-            onConnect.Clear();
-            onDisconnect.Clear();
-            onData.Clear();
-
-            transport.OnServerConnected.AddListener((connId) => onConnect.Add(connId));
-            transport.OnServerDisconnected.AddListener((connId) => onDisconnect.Add(connId));
-            transport.OnServerDataReceived.AddListener((connId, data, ___) => onData.Add((connId, data)));
-            transport.OnServerError.AddListener((connId, exception) => onError.Add((connId, exception)));
+            base.Setup();
 
             transport.sslEnabled = true;
             transport.sslCertJson = "./Assets/SimpleWebTransport/source/.cert.example.Json";

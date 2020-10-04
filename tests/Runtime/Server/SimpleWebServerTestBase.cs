@@ -29,8 +29,6 @@ namespace Mirror.SimpleWeb.Tests.Server
         [SetUp]
         public virtual void Setup()
         {
-            if (!StartServer) { return; }
-
             transport = CreateRelayTransport();
 
             onConnect.Clear();
@@ -42,7 +40,11 @@ namespace Mirror.SimpleWeb.Tests.Server
             transport.OnServerDisconnected.AddListener((connId) => onDisconnect.Add(connId));
             transport.OnServerDataReceived.AddListener((connId, data, _) => onData.Add((connId, data)));
             transport.OnServerError.AddListener((connId, exception) => onError.Add((connId, exception)));
-            transport.ServerStart();
+
+            if (StartServer)
+            {
+                transport.ServerStart();
+            }
         }
 
         [TearDown]

@@ -44,19 +44,21 @@ namespace Mirror.SimpleWeb.Tests.Client
             transport.OnClientDataReceived.AddListener((data, _) => onData.Add(data));
             transport.OnClientError.AddListener((exception) => onError.Add(exception));
 
+
+            server = CreateRelayTransport();
+
+            server_onConnect.Clear();
+            server_onDisconnect.Clear();
+            server_onData.Clear();
+            server_onError.Clear();
+
+            server.OnServerConnected.AddListener((connId) => server_onConnect.Add(connId));
+            server.OnServerDisconnected.AddListener((connId) => server_onDisconnect.Add(connId));
+            server.OnServerDataReceived.AddListener((connId, data, _) => server_onData.Add((connId, data)));
+            server.OnServerError.AddListener((connId, exception) => server_onError.Add((connId, exception)));
+
             if (StartServer)
             {
-                server = CreateRelayTransport();
-
-                server_onConnect.Clear();
-                server_onDisconnect.Clear();
-                server_onData.Clear();
-                server_onError.Clear();
-
-                server.OnServerConnected.AddListener((connId) => server_onConnect.Add(connId));
-                server.OnServerDisconnected.AddListener((connId) => server_onDisconnect.Add(connId));
-                server.OnServerDataReceived.AddListener((connId, data, _) => server_onData.Add((connId, data)));
-                server.OnServerError.AddListener((connId, exception) => server_onError.Add((connId, exception)));
                 server.ServerStart();
             }
         }
