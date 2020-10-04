@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using NUnit.Framework;
@@ -132,14 +133,25 @@ namespace Mirror.SimpleWeb.Tests.Server
             // dont worry about result, run will timeout by itself
             _ = RunNode.RunAsync("SendManyLargeMessages.js");
 
+            Stopwatch stopwatch = Stopwatch.StartNew();
             yield return WaitForConnect;
 
-            // wait for message
-            yield return new WaitForSeconds(0.5f);
+            UnityEngine.Debug.Log(stopwatch.ElapsedMilliseconds);
+            // wait for messages
+            yield return new WaitForSeconds(2f);
+            UnityEngine.Debug.Log(stopwatch.ElapsedMilliseconds);
             const int expectedCount = 100;
             const int messageSize = 16384;
 
             Assert.That(onData, Has.Count.EqualTo(expectedCount), $"Should have {expectedCount} message");
+
+            // expected after index 1
+            // index 0 is the message index
+            int[] expected = new int[messageSize - 1];
+            for (int i = 1; i < messageSize; i++)
+            {
+                expected[i - 1] = i % 255;
+            }
 
             for (int i = 0; i < expectedCount; i++)
             {
@@ -151,12 +163,9 @@ namespace Mirror.SimpleWeb.Tests.Server
 
                 Assert.That(data.Array[data.Offset + 0], Is.EqualTo(i), "Data should match: first bytes should be send index");
 
-                for (int j = 1; j < messageSize; j++)
-                {
-                    // js sends i%255 for each byte
-                    Assert.That(data.Array[data.Offset + j], Is.EqualTo(j % 255), "Data should match");
-                }
+                CollectionAssert.AreEqual(expected, new ArraySegment<byte>(data.Array, data.Offset + 1, data.Count - 1), "Data should match");
             }
+            UnityEngine.Debug.Log(stopwatch.ElapsedMilliseconds);
         }
 
         [UnityTest]
