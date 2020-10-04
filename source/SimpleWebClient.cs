@@ -8,19 +8,25 @@ namespace Mirror.SimpleWeb
         event Action onConnect;
         event Action onDisconnect;
         event Action<ArraySegment<byte>> onData;
-        event Action onError;
+        event Action<Exception> onError;
 
         bool IsConnected { get; }
         void Connect(string address);
         void Disconnect();
         void Send(ArraySegment<byte> segment);
+        void ProcessMessageQueue(MonoBehaviour behaviour);
+    }
+
+    public class WebSocketClientBase
+    {
+        // todo move ProcessMessageQueue to this class
     }
 
     public static class SimpleWebClient
     {
         static IWebSocketClient instance;
 
-        public static IWebSocketClient Create(int maxMessageSize)
+        public static IWebSocketClient Create(int maxMessageSize, int clientMaxMessagesPerTick)
         {
             if (instance != null)
             {
@@ -29,9 +35,9 @@ namespace Mirror.SimpleWeb
             }
 
 #if UNITY_WEBGL && !UNITY_EDITOR
-            instance = new WebSocketClientWebGl(maxMessageSize);
+            instance = new WebSocketClientWebGl(maxMessageSize, clientMaxMessagesPerTick);
 #else
-            instance = new WebSocketClientStandAlone(maxMessageSize);
+            instance = new WebSocketClientStandAlone(maxMessageSize, clientMaxMessagesPerTick);
 #endif
             return instance;
         }

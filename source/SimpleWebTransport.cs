@@ -32,6 +32,9 @@ namespace Mirror.SimpleWeb
         [Tooltip("Caps the number of messages the server will process per tick. Allows LateUpdate to finish to let the reset of unity contiue incase more messages arrive before they are processed")]
         public int serverMaxMessagesPerTick = 10000;
 
+        [Tooltip("Caps the number of messages the client will process per tick. Allows LateUpdate to finish to let the reset of unity contiue incase more messages arrive before they are processed")]
+        public int clientMaxMessagesPerTick = 1000;
+
         [Header("Ssl Settings")]
         public bool sslEnabled;
         [Tooltip("Path to json file that contains path to cert and its password\n\nUse Json file so that cert password is not included in client builds\n\nSee cert.example.Json")]
@@ -54,8 +57,6 @@ namespace Mirror.SimpleWeb
         }
 
         IWebSocketClient client;
-        readonly Queue<ArraySegment<byte>> clientDataQueue = new Queue<ArraySegment<byte>>();
-
         SimpleWebServer server;
 
         public override bool Available()
@@ -91,7 +92,7 @@ namespace Mirror.SimpleWeb
         public void ProcessMessages()
         {
             server?.ProcessMessageQueue(this);
-            ClientUpdate();
+            client?.ProcessMessageQueue(this);
         }
 
         #region Client
@@ -101,7 +102,7 @@ namespace Mirror.SimpleWeb
             return client != null && client.IsConnected;
         }
 
-        public override void ClientConnect(string address)
+        public override void ClientConnect(string hostname)
         {
             // connecting or connected
             if (client != null)
@@ -113,25 +114,21 @@ namespace Mirror.SimpleWeb
             UriBuilder builder = new UriBuilder
             {
                 Scheme = GetScheme(),
-                Host = address,
+                Host = hostname,
                 Port = port
             };
 
-            client = SimpleWebClient.Create(maxMessageSize);
+            client = SimpleWebClient.Create(maxMessageSize, clientMaxMessagesPerTick);
             if (client == null) { return; }
 
             client.onConnect += OnClientConnected.Invoke;
             client.onDisconnect += OnClientDisconnected.Invoke;
-            client.onData += (ArraySegment<byte> data) => clientDataQueue.Enqueue(data);
-            client.onError += () =>
+            client.onData += (ArraySegment<byte> data) => OnClientDataReceived.Invoke(data, Channels.DefaultReliable);
+            client.onError += (Exception e) =>
             {
                 ClientDisconnect();
-                OnClientError.Invoke(new Exception("SimpleWebClient Error"));
+                OnClientError.Invoke(e);
             };
-
-
-            // make sure queue is cleared in case of previous client
-            clientDataQueue.Clear();
 
             // TODO can this just be builder.ToString()
             client.Connect(builder.Uri.ToString());
@@ -162,15 +159,6 @@ namespace Mirror.SimpleWeb
 
             client.Send(segment);
             return true;
-        }
-
-        public void ClientUpdate()
-        {
-            while (enabled && clientDataQueue.Count > 0)
-            {
-                ArraySegment<byte> data = clientDataQueue.Dequeue();
-                OnClientDataReceived.Invoke(data, Channels.DefaultReliable);
-            }
         }
         #endregion
 

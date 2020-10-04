@@ -136,11 +136,7 @@ namespace Mirror.SimpleWeb
             conn.connId = GetNextId();
             connections.TryAdd(conn.connId, conn);
 
-            receiveQueue.Enqueue(new Message
-            {
-                connId = conn.connId,
-                type = EventType.Connected
-            });
+            receiveQueue.Enqueue(new Message(conn.connId, EventType.Connected));
 
             Thread sendThread = new Thread(() => SendLoop(conn));
 
@@ -172,12 +168,7 @@ namespace Mirror.SimpleWeb
             catch (ThreadAbortException) { Log.Info($"ReceiveLoop {conn} ThreadAbort"); return; }
             catch (InvalidDataException e)
             {
-                receiveQueue.Enqueue(new Message
-                {
-                    connId = conn.connId,
-                    type = EventType.Error,
-                    exception = e
-                });
+                receiveQueue.Enqueue(new Message(conn.connId, e));
             }
             catch (Exception e) { Debug.LogException(e); }
             finally
@@ -232,12 +223,7 @@ namespace Mirror.SimpleWeb
             {
                 ArraySegment<byte> data = new ArraySegment<byte>(buffer, offset, length);
 
-                receiveQueue.Enqueue(new Message
-                {
-                    connId = conn.connId,
-                    type = EventType.Data,
-                    data = data,
-                });
+                receiveQueue.Enqueue(new Message(conn.connId, data));
             }
             else if (opcode == 8)
             {
@@ -289,7 +275,7 @@ namespace Mirror.SimpleWeb
             // only send disconnect message if closed by the call
             if (closed)
             {
-                receiveQueue.Enqueue(new Message { connId = conn.connId, type = EventType.Disconnected });
+                receiveQueue.Enqueue(new Message(conn.connId, EventType.Disconnected));
                 connections.TryRemove(conn.connId, out Connection _);
             }
         }

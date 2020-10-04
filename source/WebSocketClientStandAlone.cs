@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace Mirror.SimpleWeb
 {
-    internal class WebSocketClientStandAlone : IWebSocketClient
+    internal class WebSocketClientStandAlone : WebSocketClientBase, IWebSocketClient
     {
         const int HeaderLength = 4;
 
@@ -26,27 +26,29 @@ namespace Mirror.SimpleWeb
         readonly ClientHandshake handshake;
         readonly RNGCryptoServiceProvider random;
         readonly int maxMessageSize;
+        readonly int maxMessagesPerTick;
 
         private Connection conn;
         private State state;
 
-#if UNITY_WEBGL && !UNITY_EDITOR
-        internal WebSocketClientStandAlone(int maxMessageSize) => throw new NotSupportedException();
-#else
-        internal WebSocketClientStandAlone(int maxMessageSize)
+        internal WebSocketClientStandAlone(int maxMessageSize, int maxMessagesPerTick)
         {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            throw new NotSupportedException();
+#else
             this.maxMessageSize = maxMessageSize;
+            this.maxMessagesPerTick = maxMessagesPerTick;
             sslHelper = new ClientSslHelper();
             handshake = new ClientHandshake();
-        }
 #endif
+        }
 
         public bool IsConnected { get; private set; }
 
         public event Action onConnect;
         public event Action onDisconnect;
         public event Action<ArraySegment<byte>> onData;
-        public event Action onError;
+        public event Action<Exception> onError;
 
         public void Connect(string address)
         {
@@ -84,11 +86,7 @@ namespace Mirror.SimpleWeb
 
                 state = State.Connected;
 
-                receiveQueue.Enqueue(new Message
-                {
-                    connId = conn.connId,
-                    type = EventType.Connected
-                });
+                receiveQueue.Enqueue(new Message(EventType.Connected));
 
                 Thread sendThread = new Thread(() => SendLoop(conn));
 
@@ -125,12 +123,7 @@ namespace Mirror.SimpleWeb
             catch (ThreadAbortException) { Log.Info($"ReceiveLoop {conn} ThreadAbort"); return; }
             catch (InvalidDataException e)
             {
-                receiveQueue.Enqueue(new Message
-                {
-                    connId = conn.connId,
-                    type = EventType.Error,
-                    exception = e
-                });
+                receiveQueue.Enqueue(new Message(e));
             }
             catch (Exception e) { Debug.LogException(e); }
             finally
@@ -148,7 +141,7 @@ namespace Mirror.SimpleWeb
             ReadHelper.ReadResult readResult = ReadHelper.SafeRead(stream, headerBuffer, 0, HeaderLength, checkLength: true);
             if ((readResult & ReadHelper.ReadResult.Fail) > 0)
             {
-                Log.Info($"ReceiveLoop {conn.connId} read failed: {readResult}");
+                Log.Info($"ReceiveLoop read failed: {readResult}");
                 CheckForInterupt();
                 // will go to finally block below
                 return false;
@@ -183,12 +176,7 @@ namespace Mirror.SimpleWeb
             {
                 ArraySegment<byte> data = new ArraySegment<byte>(buffer, offset, length);
 
-                receiveQueue.Enqueue(new Message
-                {
-                    connId = conn.connId,
-                    type = EventType.Data,
-                    data = data,
-                });
+                receiveQueue.Enqueue(new Message(data));
             }
             else if (opcode == 8)
             {
@@ -241,7 +229,7 @@ namespace Mirror.SimpleWeb
             // only send disconnect message if closed by the call
             if (closed)
             {
-                receiveQueue.Enqueue(new Message { connId = conn.connId, type = EventType.Disconnected });
+                receiveQueue.Enqueue(new Message(EventType.Disconnected));
             }
         }
 
@@ -303,6 +291,38 @@ namespace Mirror.SimpleWeb
 
             conn.sendQueue.Enqueue(copy);
             conn.sendPending.Set();
+        }
+
+        public void ProcessMessageQueue(MonoBehaviour behaviour)
+        {
+            int processedCount = 0;
+            // check enabled every time incase behaviour was disabled after data
+            while (
+                behaviour.enabled &&
+                processedCount < maxMessagesPerTick &&
+                // Dequeue last
+                receiveQueue.Count > 0
+                )
+            {
+                processedCount++;
+
+                Message next = receiveQueue.Dequeue();
+                switch (next.type)
+                {
+                    case EventType.Connected:
+                        onConnect?.Invoke();
+                        break;
+                    case EventType.Data:
+                        onData?.Invoke(next.data);
+                        break;
+                    case EventType.Disconnected:
+                        onDisconnect?.Invoke();
+                        break;
+                    case EventType.Error:
+                        onError?.Invoke(next.exception);
+                        break;
+                }
+            }
         }
     }
 }
