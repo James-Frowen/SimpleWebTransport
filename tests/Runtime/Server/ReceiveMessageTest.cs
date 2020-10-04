@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using NUnit.Framework;
@@ -133,13 +132,10 @@ namespace Mirror.SimpleWeb.Tests.Server
             // dont worry about result, run will timeout by itself
             _ = RunNode.RunAsync("SendManyLargeMessages.js");
 
-            Stopwatch stopwatch = Stopwatch.StartNew();
             yield return WaitForConnect;
 
-            UnityEngine.Debug.Log(stopwatch.ElapsedMilliseconds);
             // wait for messages
             yield return new WaitForSeconds(2f);
-            UnityEngine.Debug.Log(stopwatch.ElapsedMilliseconds);
             const int expectedCount = 100;
             const int messageSize = 16384;
 
@@ -165,7 +161,6 @@ namespace Mirror.SimpleWeb.Tests.Server
 
                 CollectionAssert.AreEqual(expected, new ArraySegment<byte>(data.Array, data.Offset + 1, data.Count - 1), "Data should match");
             }
-            UnityEngine.Debug.Log(stopwatch.ElapsedMilliseconds);
         }
 
         [UnityTest]
