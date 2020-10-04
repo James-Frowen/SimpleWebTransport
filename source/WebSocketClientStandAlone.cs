@@ -40,10 +40,16 @@ namespace Mirror.SimpleWeb
             this.maxMessagesPerTick = maxMessagesPerTick;
             sslHelper = new ClientSslHelper();
             handshake = new ClientHandshake();
+            random = new RNGCryptoServiceProvider();
 #endif
         }
+        ~WebSocketClientStandAlone()
+        {
+            random?.Dispose();
+        }
 
-        public bool IsConnected { get; private set; }
+
+        public bool IsConnected => state == State.Connected;
 
         public event Action onConnect;
         public event Action onDisconnect;
@@ -123,12 +129,13 @@ namespace Mirror.SimpleWeb
             catch (ThreadAbortException) { Log.Info($"ReceiveLoop {conn} ThreadAbort"); return; }
             catch (InvalidDataException e)
             {
+                Log.Error($"Invalid data: {e.Message}");
                 receiveQueue.Enqueue(new Message(e));
             }
             catch (Exception e) { Debug.LogException(e); }
             finally
             {
-                CloseConnection(conn);
+                CloseConnection();
             }
         }
 
@@ -181,7 +188,7 @@ namespace Mirror.SimpleWeb
             else if (opcode == 8)
             {
                 Log.Info($"Close: {buffer[offset + 0] << 8 | buffer[offset + 1]} message:{Encoding.UTF8.GetString(buffer, offset + 2, length - 2)}");
-                CloseConnection(conn);
+                CloseConnection();
             }
         }
 
@@ -219,15 +226,15 @@ namespace Mirror.SimpleWeb
             {
                 Debug.LogException(e);
 
-                CloseConnection(conn);
+                CloseConnection();
             }
         }
 
-        void CloseConnection(Connection conn)
+        void CloseConnection()
         {
-            bool closed = conn.Close();
+            bool? closed = conn?.Close();
             // only send disconnect message if closed by the call
-            if (closed)
+            if (closed.GetValueOrDefault())
             {
                 receiveQueue.Enqueue(new Message(EventType.Disconnected));
             }
@@ -266,7 +273,7 @@ namespace Mirror.SimpleWeb
             }
 
             // mask
-            buffer[1] |= 0b1000_000;
+            buffer[1] |= 0b1000_0000;
             random.GetBytes(maskBuffer);
             Array.Copy(maskBuffer, 0, buffer, sendLength, 4);
             sendLength += 4;
@@ -275,12 +282,13 @@ namespace Mirror.SimpleWeb
             MessageProcessor.ToggleMask(buffer, sendLength, msgLength, buffer, sendLength - 4);
             sendLength += msgLength;
 
+            Log.Verbose("Send To Server");
             stream.Write(buffer, 0, sendLength);
         }
 
         public void Disconnect()
         {
-            conn?.Close();
+            CloseConnection();
         }
 
         public void Send(ArraySegment<byte> source)

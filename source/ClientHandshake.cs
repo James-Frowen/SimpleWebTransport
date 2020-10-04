@@ -24,7 +24,6 @@ namespace Mirror.SimpleWeb
                 new System.Random().NextBytes(keyBuffer);
 
                 string key = Convert.ToBase64String(keyBuffer);
-                Debug.Log(key);
                 string keySum = key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
                 byte[] keySumBytes = Encoding.UTF8.GetBytes(keySum);
                 byte[] keySumHash = SHA1.Create().ComputeHash(keySumBytes);

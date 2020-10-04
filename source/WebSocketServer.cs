@@ -168,6 +168,7 @@ namespace Mirror.SimpleWeb
             catch (ThreadAbortException) { Log.Info($"ReceiveLoop {conn} ThreadAbort"); return; }
             catch (InvalidDataException e)
             {
+                Log.Error($"Invalid data from {conn}: {e.Message}");
                 receiveQueue.Enqueue(new Message(conn.connId, e));
             }
             catch (Exception e) { Debug.LogException(e); }
