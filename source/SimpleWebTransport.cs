@@ -43,7 +43,7 @@ namespace Mirror.SimpleWeb
 
         [Header("Debug")]
         [Tooltip("Log functions uses Conditional(\"DEBUG\") so are only included in Editor and Development builds")]
-        public bool enableLogs;
+        public Log.Levels logLevels = Log.Levels.none;
 
         private void OnValidate()
         {
@@ -53,7 +53,7 @@ namespace Mirror.SimpleWeb
                 maxMessageSize = ushort.MaxValue;
             }
 
-            Log.enabled = enableLogs;
+            Log.level = logLevels;
         }
 
         IWebSocketClient client;
@@ -70,7 +70,7 @@ namespace Mirror.SimpleWeb
 
         private void Awake()
         {
-            Log.enabled = enableLogs;
+            Log.level = logLevels;
         }
         public override void Shutdown()
         {
@@ -122,7 +122,13 @@ namespace Mirror.SimpleWeb
             if (client == null) { return; }
 
             client.onConnect += OnClientConnected.Invoke;
-            client.onDisconnect += OnClientDisconnected.Invoke;
+            client.onDisconnect += () =>
+            {
+                OnClientDisconnected.Invoke();
+                // clear client here after disconnect event has been sent
+                // there should be no more messages after disconnect
+                client = null;
+            };
             client.onData += (ArraySegment<byte> data) => OnClientDataReceived.Invoke(data, Channels.DefaultReliable);
             client.onError += (Exception e) =>
             {
@@ -136,8 +142,8 @@ namespace Mirror.SimpleWeb
 
         public override void ClientDisconnect()
         {
+            // dont set client null here of messages wont be processed
             client?.Disconnect();
-            client = null;
 
             // CloseExisting makes sure to clear the JS instance since there can only be one
             SimpleWebClient.CloseExisting();
