@@ -46,13 +46,6 @@ namespace Mirror.SimpleWeb
             SimpleWebJSLib.Disconnect();
         }
 
-        private void OnDisconnect()
-        {
-            instance.onDisconnect?.Invoke();
-            IsConnected = false;
-            SimpleWebClient.RemoveInstance();
-        }
-
         public void Send(ArraySegment<byte> segment)
         {
             if (segment.Count > maxMessageSize)
@@ -75,6 +68,8 @@ namespace Mirror.SimpleWeb
         static void CloseCallBack()
         {
             instance.receiveQueue.Enqueue(new Message(EventType.Disconnected));
+            instance.IsConnected = false;
+            SimpleWebClient.RemoveInstance();
         }
 
         [MonoPInvokeCallback(typeof(Action<IntPtr, int>))]
