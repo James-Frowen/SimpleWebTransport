@@ -104,6 +104,7 @@ namespace Mirror.SimpleWeb.Tests
                             RedirectStandardOutput = true,
                             RedirectStandardError = true,
                             UseShellExecute = false, // needs to be false for redirect,
+                            CreateNoWindow = true, // dont want new window
                         };
 
                         process.Start();
