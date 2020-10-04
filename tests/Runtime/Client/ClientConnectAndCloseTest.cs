@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -13,7 +13,7 @@ namespace Mirror.SimpleWeb.Tests.Client
         [UnityTest]
         public IEnumerator CanConnectToServer()
         {
-            transport.ClientConnect("ws://localhost:7776/");
+            transport.ClientConnect("localhost");
 
             // wait for connect
             yield return new WaitForSeconds(1);
