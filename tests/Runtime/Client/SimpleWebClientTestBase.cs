@@ -85,11 +85,11 @@ namespace Mirror.SimpleWeb.Tests.Client
 
             SimpleWebTransport transport = go.AddComponent<SimpleWebTransport>();
             transport.port = 7776;
-            transport.enableLogs = true;
+            transport.logLevels = Log.Levels.info;
             transport.receiveTimeout = timeout;
             transport.sendTimeout = timeout;
 
-            Log.enabled = true;
+            Log.level = Log.Levels.info;
             return transport;
         }
     }

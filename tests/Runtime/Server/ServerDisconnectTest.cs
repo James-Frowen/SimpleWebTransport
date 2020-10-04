@@ -12,7 +12,7 @@ namespace Mirror.SimpleWeb.Tests.Server
         protected override bool StartServer => true;
 
         [UnityTest]
-        public IEnumerator SendFullArray()
+        public IEnumerator CanKickConnection()
         {
             Task<RunNode.Result> task = RunNode.RunAsync("Disconnect.js");
 
