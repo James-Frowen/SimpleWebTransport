@@ -104,7 +104,7 @@ jobs:
           projectKey: MirrorNetworking_SimpleWebTransport
           projectName: SimpleWebTransport
           sonarOrganisation: mirrornetworking
-          INPUT_SOLUTION: ./SimpleWebTransport.csproj
+          solution: ./SimpleWebTransport.csproj
           beginArguments: >-
               /d:sonar.verbose="true" 
               /d:sonar.cs.nunit.reportsPaths=Tests/editmode-results.xml,Tests/playimode-results.xml 
