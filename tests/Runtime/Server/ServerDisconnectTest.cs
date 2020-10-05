@@ -7,12 +7,12 @@ using UnityEngine.TestTools;
 namespace Mirror.SimpleWeb.Tests.Server
 {
     [Category("SimpleWebTransport")]
-    public class DisconnectTest : SimpleWebTestBase
+    public class DisconnectTest : SimpleWebServerTestBase
     {
         protected override bool StartServer => true;
 
         [UnityTest]
-        public IEnumerator SendFullArray()
+        public IEnumerator CanKickConnection()
         {
             Task<RunNode.Result> task = RunNode.RunAsync("Disconnect.js");
 

@@ -9,7 +9,11 @@ using UnityEngine;
 
 namespace Mirror.SimpleWeb
 {
-    internal class Handshake
+    /// <summary>
+    /// Handles Handshakes from new clients on the server
+    /// <para>The server handshake has buffers to reduce allocations when clients connect</para>
+    /// </summary>
+    internal class ServerHandshake
     {
         private const int ResponseLength = 129;
         private const int KeyLength = 24;
@@ -23,13 +27,13 @@ namespace Mirror.SimpleWeb
         readonly byte[] endOfHeader;
         readonly SHA1 sha1 = SHA1.Create();
 
-        public Handshake()
+        public ServerHandshake()
         {
             Encoding.UTF8.GetBytes(HandshakeGUID, 0, HandshakeGUID.Length, keyBuffer, KeyLength);
             // header should always end with \r\n\r\n
             endOfHeader = new byte[4] { (byte)'\r', (byte)'\n', (byte)'\r', (byte)'\n' };
         }
-        ~Handshake()
+        ~ServerHandshake()
         {
             sha1.Dispose();
         }

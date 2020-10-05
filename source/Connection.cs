@@ -39,6 +39,8 @@ namespace Mirror.SimpleWeb
             // check hasClosed first to stop ThreadInterruptedException on lock
             if (hasClosed) { return false; }
 
+            Log.Info($"Connection Close: {ToString()}");
+
             lock (lockObj)
             {
                 // check hasClosed again inside lock to make sure no other object has called this
@@ -49,7 +51,7 @@ namespace Mirror.SimpleWeb
                 receiveThread.Interrupt();
                 sendThread?.Interrupt();
 
-                stream.Dispose();
+                stream?.Dispose();
                 stream = null;
                 client.Dispose();
                 client = null;

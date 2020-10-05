@@ -38,11 +38,18 @@ namespace Mirror.SimpleWeb
             Active = false;
         }
 
-        public void SendAll(List<int> connectionIds, ArraySegment<byte> segment)
+        public void SendAll(List<int> connectionIds, ArraySegment<byte> source)
         {
+            // make copy of array before for each, data sent to each client is the same
+
+            // todo remove allocation
+            byte[] buffer = new byte[source.Count];
+            Array.Copy(source.Array, source.Offset, buffer, 0, source.Count);
+            ArraySegment<byte> copy = new ArraySegment<byte>(buffer);
+
             foreach (int id in connectionIds)
             {
-                server.Send(id, segment);
+                server.Send(id, copy);
             }
         }
 

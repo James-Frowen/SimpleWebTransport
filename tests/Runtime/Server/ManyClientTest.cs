@@ -10,7 +10,7 @@ using UnityEngine.TestTools;
 namespace Mirror.SimpleWeb.Tests.Server
 {
     [Category("SimpleWebTransport")]
-    public class ManyClientTest : SimpleWebTestBase
+    public class ManyClientTest : SimpleWebServerTestBase
     {
         protected override bool StartServer => true;
 

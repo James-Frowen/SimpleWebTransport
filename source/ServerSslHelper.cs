@@ -5,7 +5,6 @@ using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
-using UnityEngine;
 
 namespace Mirror.SimpleWeb
 {
@@ -16,12 +15,12 @@ namespace Mirror.SimpleWeb
         public string certPassword;
         public SslProtocols sslProtocols;
     }
-    internal class SslHelper
+    internal class ServerSslHelper
     {
         readonly SslConfig config;
         readonly X509Certificate2 certificate;
 
-        public SslHelper(SslConfig sslConfig)
+        public ServerSslHelper(SslConfig sslConfig)
         {
             config = sslConfig;
             if (config.enabled)
@@ -53,7 +52,6 @@ namespace Mirror.SimpleWeb
 
         Stream CreateStream(NetworkStream stream)
         {
-            // dont need RemoteCertificateValidationCallback for server stream
             SslStream sslStream = new SslStream(stream, true, acceptClient);
             sslStream.AuthenticateAsServer(certificate, false, config.sslProtocols, false);
 
@@ -64,15 +62,6 @@ namespace Mirror.SimpleWeb
         {
             // always accept client
             return true;
-        }
-
-        bool ValidateServerCertificate(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
-        {
-            if (sslPolicyErrors == SslPolicyErrors.None)
-                return true;
-
-            Debug.LogErrorFormat("Certificate error: {0}", sslPolicyErrors);
-            return false;
         }
     }
 }

@@ -8,12 +8,6 @@ namespace Mirror.SimpleWeb
 {
     public class SimpleWebTransport : Transport
     {
-#if UNITY_WEBGL && !UNITY_EDITOR
-        readonly bool isWebGL = true;
-#else
-        readonly bool isWebGL = false;
-#endif
-
         public const string NormalScheme = "ws";
         public const string SecureScheme = "wss";
 
@@ -38,6 +32,9 @@ namespace Mirror.SimpleWeb
         [Tooltip("Caps the number of messages the server will process per tick. Allows LateUpdate to finish to let the reset of unity contiue incase more messages arrive before they are processed")]
         public int serverMaxMessagesPerTick = 10000;
 
+        [Tooltip("Caps the number of messages the client will process per tick. Allows LateUpdate to finish to let the reset of unity contiue incase more messages arrive before they are processed")]
+        public int clientMaxMessagesPerTick = 1000;
+
         [Header("Ssl Settings")]
         public bool sslEnabled;
         [Tooltip("Path to json file that contains path to cert and its password\n\nUse Json file so that cert password is not included in client builds\n\nSee cert.example.Json")]
@@ -46,7 +43,7 @@ namespace Mirror.SimpleWeb
 
         [Header("Debug")]
         [Tooltip("Log functions uses Conditional(\"DEBUG\") so are only included in Editor and Development builds")]
-        public bool enableLogs;
+        public Log.Levels logLevels = Log.Levels.none;
 
         private void OnValidate()
         {
@@ -56,17 +53,15 @@ namespace Mirror.SimpleWeb
                 maxMessageSize = ushort.MaxValue;
             }
 
-            Log.enabled = enableLogs;
+            Log.level = logLevels;
         }
 
-        SimpleWebClient client;
-        readonly Queue<ArraySegment<byte>> clientDataQueue = new Queue<ArraySegment<byte>>();
-
+        IWebSocketClient client;
         SimpleWebServer server;
 
         public override bool Available()
         {
-            return isWebGL;
+            return true;
         }
         public override int GetMaxPacketSize(int channelId = 0)
         {
@@ -75,7 +70,7 @@ namespace Mirror.SimpleWeb
 
         private void Awake()
         {
-            Log.enabled = enableLogs;
+            Log.level = logLevels;
         }
         public override void Shutdown()
         {
@@ -97,7 +92,7 @@ namespace Mirror.SimpleWeb
         public void ProcessMessages()
         {
             server?.ProcessMessageQueue(this);
-            ClientUpdate();
+            client?.ProcessMessageQueue(this);
         }
 
         #region Client
@@ -107,41 +102,39 @@ namespace Mirror.SimpleWeb
             return client != null && client.IsConnected;
         }
 
-        public override void ClientConnect(string address)
+        public override void ClientConnect(string hostname)
         {
-            if (!isWebGL)
-            {
-                Debug.LogError("SimpleWebTransport client is only available on WebGL");
-            }
-
             // connecting or connected
             if (client != null)
             {
                 Debug.LogError("Already Connected");
+                return;
             }
 
             UriBuilder builder = new UriBuilder
             {
                 Scheme = GetScheme(),
-                Host = address,
+                Host = hostname,
                 Port = port
             };
 
-            client = SimpleWebClient.Create();
+            client = SimpleWebClient.Create(maxMessageSize, clientMaxMessagesPerTick);
             if (client == null) { return; }
 
             client.onConnect += OnClientConnected.Invoke;
-            client.onDisconnect += OnClientDisconnected.Invoke;
-            client.onData += (ArraySegment<byte> data) => clientDataQueue.Enqueue(data);
-            client.onError += () =>
+            client.onDisconnect += () =>
+            {
+                OnClientDisconnected.Invoke();
+                // clear client here after disconnect event has been sent
+                // there should be no more messages after disconnect
+                client = null;
+            };
+            client.onData += (ArraySegment<byte> data) => OnClientDataReceived.Invoke(data, Channels.DefaultReliable);
+            client.onError += (Exception e) =>
             {
                 ClientDisconnect();
-                OnClientError.Invoke(new Exception("SimpleWebClient Error"));
+                OnClientError.Invoke(e);
             };
-
-
-            // make sure queue is cleared in case of previous client
-            clientDataQueue.Clear();
 
             // TODO can this just be builder.ToString()
             client.Connect(builder.Uri.ToString());
@@ -149,16 +142,18 @@ namespace Mirror.SimpleWeb
 
         public override void ClientDisconnect()
         {
-            // CloseExisting will call disconnect on instance if it exists
+            // dont set client null here of messages wont be processed
+            client?.Disconnect();
+
+            // CloseExisting makes sure to clear the JS instance since there can only be one
             SimpleWebClient.CloseExisting();
-            client = null;
         }
 
         public override bool ClientSend(int channelId, ArraySegment<byte> segment)
         {
             if (!ClientConnected())
             {
-                Debug.LogError("Already Connected");
+                Debug.LogError("Not Connected");
                 return false;
             }
 
@@ -171,15 +166,6 @@ namespace Mirror.SimpleWeb
             client.Send(segment);
             return true;
         }
-
-        public void ClientUpdate()
-        {
-            while (enabled && clientDataQueue.Count > 0)
-            {
-                ArraySegment<byte> data = clientDataQueue.Dequeue();
-                OnClientDataReceived.Invoke(data, Channels.DefaultReliable);
-            }
-        }
         #endregion
 
         #region Server
@@ -190,11 +176,6 @@ namespace Mirror.SimpleWeb
 
         public override void ServerStart()
         {
-            if (isWebGL)
-            {
-                Debug.LogError("SimpleWebTransport server is only available on standalone");
-            }
-
             if (ServerActive())
             {
                 Debug.LogError("SimpleWebServer Already Started");

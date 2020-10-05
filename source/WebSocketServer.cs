@@ -12,6 +12,8 @@ namespace Mirror.SimpleWeb
 {
     public class WebSocketServer
     {
+        const int HeaderLength = 4;
+
         public readonly ConcurrentQueue<Message> receiveQueue = new ConcurrentQueue<Message>();
 
         readonly bool noDelay;
@@ -22,8 +24,8 @@ namespace Mirror.SimpleWeb
 
         TcpListener listener;
         Thread acceptThread;
-        readonly Handshake handShake = new Handshake();
-        readonly SslHelper sslHelper;
+        readonly ServerHandshake handShake = new ServerHandshake();
+        readonly ServerSslHelper sslHelper;
         readonly ConcurrentDictionary<int, Connection> connections = new ConcurrentDictionary<int, Connection>();
 
         int _previousId = 0;
@@ -41,7 +43,7 @@ namespace Mirror.SimpleWeb
             this.receiveTimeout = receiveTimeout;
             this.maxMessageSize = maxMessageSize;
             this.sslConfig = sslConfig;
-            sslHelper = new SslHelper(this.sslConfig);
+            sslHelper = new ServerSslHelper(this.sslConfig);
         }
 
         public void Listen(short port)
@@ -134,11 +136,7 @@ namespace Mirror.SimpleWeb
             conn.connId = GetNextId();
             connections.TryAdd(conn.connId, conn);
 
-            receiveQueue.Enqueue(new Message
-            {
-                connId = conn.connId,
-                type = EventType.Connected
-            });
+            receiveQueue.Enqueue(new Message(conn.connId, EventType.Connected));
 
             Thread sendThread = new Thread(() => SendLoop(conn));
 
@@ -156,12 +154,11 @@ namespace Mirror.SimpleWeb
                 TcpClient client = conn.client;
                 Stream stream = conn.stream;
                 //byte[] buffer = conn.receiveBuffer;
-                const int HeaderLength = 4;
                 byte[] headerBuffer = new byte[HeaderLength];
 
                 while (client.Connected)
                 {
-                    bool success = ReadOneMessage(conn, stream, HeaderLength, headerBuffer);
+                    bool success = ReadOneMessage(conn, stream, headerBuffer);
                     if (!success)
                         break;
                 }
@@ -171,12 +168,8 @@ namespace Mirror.SimpleWeb
             catch (ThreadAbortException) { Log.Info($"ReceiveLoop {conn} ThreadAbort"); return; }
             catch (InvalidDataException e)
             {
-                receiveQueue.Enqueue(new Message
-                {
-                    connId = conn.connId,
-                    type = EventType.Error,
-                    exception = e
-                });
+                Log.Error($"Invalid data from {conn}: {e.Message}");
+                receiveQueue.Enqueue(new Message(conn.connId, e));
             }
             catch (Exception e) { Debug.LogException(e); }
             finally
@@ -185,7 +178,7 @@ namespace Mirror.SimpleWeb
             }
         }
 
-        private bool ReadOneMessage(Connection conn, Stream stream, int HeaderLength, byte[] headerBuffer)
+        private bool ReadOneMessage(Connection conn, Stream stream, byte[] headerBuffer)
         {
             // header is at most 4 bytes + mask
             // 1 for bit fields
@@ -200,7 +193,7 @@ namespace Mirror.SimpleWeb
                 return false;
             }
 
-            MessageProcessor.Result header = MessageProcessor.ProcessHeader(headerBuffer, maxMessageSize);
+            MessageProcessor.Result header = MessageProcessor.ProcessHeader(headerBuffer, maxMessageSize, true);
 
             // todo remove allocation
             // mask + msg
@@ -213,7 +206,7 @@ namespace Mirror.SimpleWeb
 
             ReadHelper.SafeRead(stream, buffer, HeaderLength, header.readLength);
 
-            MessageProcessor.DecodeMessage(buffer, header.maskOffset, header.msgLength);
+            MessageProcessor.ToggleMask(buffer, header.offset + 4, header.msgLength, buffer, header.offset);
 
             HandleMessage(header.opcode, conn, buffer, header.msgOffset, header.msgLength);
             return true;
@@ -231,12 +224,7 @@ namespace Mirror.SimpleWeb
             {
                 ArraySegment<byte> data = new ArraySegment<byte>(buffer, offset, length);
 
-                receiveQueue.Enqueue(new Message
-                {
-                    connId = conn.connId,
-                    type = EventType.Data,
-                    data = data,
-                });
+                receiveQueue.Enqueue(new Message(conn.connId, data));
             }
             else if (opcode == 8)
             {
@@ -288,7 +276,7 @@ namespace Mirror.SimpleWeb
             // only send disconnect message if closed by the call
             if (closed)
             {
-                receiveQueue.Enqueue(new Message { connId = conn.connId, type = EventType.Disconnected });
+                receiveQueue.Enqueue(new Message(conn.connId, EventType.Disconnected));
                 connections.TryRemove(conn.connId, out Connection _);
             }
         }
@@ -333,12 +321,7 @@ namespace Mirror.SimpleWeb
         {
             if (connections.TryGetValue(id, out Connection conn))
             {
-                // todo remove allocation
-                byte[] buffer = new byte[segment.Count];
-
-                Array.Copy(segment.Array, segment.Offset, buffer, 0, segment.Count);
-
-                conn.sendQueue.Enqueue(new ArraySegment<byte>(buffer));
+                conn.sendQueue.Enqueue(segment);
                 conn.sendPending.Set();
             }
             else

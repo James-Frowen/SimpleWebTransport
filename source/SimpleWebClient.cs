@@ -1,15 +1,32 @@
 using System;
-using System.Runtime.InteropServices;
-using AOT;
 using UnityEngine;
 
 namespace Mirror.SimpleWeb
 {
-    public class SimpleWebClient
+    public interface IWebSocketClient
     {
-        static SimpleWebClient instance;
+        event Action onConnect;
+        event Action onDisconnect;
+        event Action<ArraySegment<byte>> onData;
+        event Action<Exception> onError;
 
-        public static SimpleWebClient Create()
+        bool IsConnected { get; }
+        void Connect(string address);
+        void Disconnect();
+        void Send(ArraySegment<byte> segment);
+        void ProcessMessageQueue(MonoBehaviour behaviour);
+    }
+
+    public class WebSocketClientBase
+    {
+        // todo move ProcessMessageQueue to this class
+    }
+
+    public static class SimpleWebClient
+    {
+        static IWebSocketClient instance;
+
+        public static IWebSocketClient Create(int maxMessageSize, int clientMaxMessagesPerTick)
         {
             if (instance != null)
             {
@@ -17,7 +34,11 @@ namespace Mirror.SimpleWeb
                 return null;
             }
 
-            instance = new SimpleWebClient();
+#if UNITY_WEBGL && !UNITY_EDITOR
+            instance = new WebSocketClientWebGl(maxMessageSize, clientMaxMessagesPerTick);
+#else
+            instance = new WebSocketClientStandAlone(maxMessageSize, clientMaxMessagesPerTick);
+#endif
             return instance;
         }
 
@@ -27,74 +48,12 @@ namespace Mirror.SimpleWeb
             instance = null;
         }
 
-        // dont let others create new because only 1 instance can exist at once,
-        // this is because callbacks sent to JS must be static
-        private SimpleWebClient() { }
-
-        public bool CheckJsConnected() => SimpleWebJSLib.IsConnected();
-        public bool IsConnected { get; private set; }
-
-        public event Action onConnect;
-        public event Action onDisconnect;
-        public event Action<ArraySegment<byte>> onData;
-        public event Action onError;
-
-        public void Connect(string address)
+        /// <summary>
+        /// Called by IWebSocketClient on disconnect
+        /// </summary>
+        internal static void RemoveInstance()
         {
-            SimpleWebJSLib.Connect(address, OpenCallback, CloseCallBack, MessageCallback, ErrorCallback);
-            IsConnected = true;
-        }
-
-        public void Disconnect()
-        {
-            SimpleWebJSLib.Disconnect();
-            IsConnected = false;
-        }
-
-        public void Send(ArraySegment<byte> segment)
-        {
-            SimpleWebJSLib.Send(segment.Array, 0, segment.Count);
-        }
-
-        [MonoPInvokeCallback(typeof(Action))]
-        static void OpenCallback()
-        {
-            instance.onConnect?.Invoke();
-        }
-
-        [MonoPInvokeCallback(typeof(Action))]
-        static void CloseCallBack()
-        {
-            instance.onDisconnect?.Invoke();
-        }
-
-        [MonoPInvokeCallback(typeof(Action<IntPtr, int>))]
-        static void MessageCallback(IntPtr bufferPtr, int count)
-        {
-            try
-            {
-                byte[] buffer = new byte[count];
-                Marshal.Copy(bufferPtr, buffer, 0, count);
-
-                instance.onData?.Invoke(new ArraySegment<byte>(buffer, 0, count));
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"onData {e.GetType()}: {e.Message}\n{e.StackTrace}");
-                instance.onError?.Invoke();
-            }
-        }
-
-        [MonoPInvokeCallback(typeof(Action))]
-        static void ErrorCallback()
-        {
-            instance.onError?.Invoke();
-
-            SimpleWebJSLib.Disconnect();
-            instance.IsConnected = false;
-
-            // clean up after disconnect
-            CloseExisting();
+            instance = null;
         }
     }
 }

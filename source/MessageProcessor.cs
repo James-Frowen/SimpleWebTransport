@@ -8,23 +8,24 @@ namespace Mirror.SimpleWeb
         public struct Result
         {
             public int opcode;
-
-            public int maskOffset;
+            public bool hasMask;
+            public int offset;
             public int msgLength;
 
             /// <summary>
             /// how much more data there is to read
             /// </summary>
-            public int readLength => msgLength + maskOffset;
+            public int readLength => msgLength + offset;
 
             /// <summary>
             /// when message starts
             /// </summary>
-            public int msgOffset => maskOffset + 4;
+            public int msgOffset => hasMask ? offset + 4 : offset;
         }
 
 
-        public static Result ProcessHeader(byte[] buffer, int maxLength)
+        /// <exception cref="InvalidDataException"></exception>
+        public static Result ProcessHeader(byte[] buffer, int maxLength, bool expectMask)
         {
             bool finished = (buffer[0] & 0b1000_0000) != 0; // has full message been sent
             bool hasMask = (buffer[1] & 0b1000_0000) != 0; // must be true, "All messages from the client to the server have this bit set"
@@ -33,7 +34,7 @@ namespace Mirror.SimpleWeb
             byte lenByte = (byte)(buffer[1] & 0b0111_1111); // first length byte
 
             ThrowIfNotFinished(finished);
-            ThrowIfNoMask(hasMask);
+            ThrowIfMaskNotExpected(hasMask, expectMask);
             ThrowIfBadOpCode(opcode);
 
             // offset is 2 or 4
@@ -45,66 +46,19 @@ namespace Mirror.SimpleWeb
             return new Result
             {
                 opcode = opcode,
-                maskOffset = maskOffset,
+                offset = maskOffset,
+                hasMask = hasMask,
                 msgLength = msglen,
             };
         }
 
-
-        public static void DecodeMessage(byte[] buffer, int maskOffset, int messageLength)
+        public static void ToggleMask(byte[] messageBuffer, int messageOffset, int messageLength, byte[] maskBuffer, int maskOffset)
         {
-            int offset = maskOffset + 4;
-
             for (int i = 0; i < messageLength; i++)
             {
-                byte maskByte = buffer[maskOffset + i % 4];
-                buffer[offset + i] = (byte)(buffer[offset + i] ^ maskByte);
+                byte maskByte = maskBuffer[maskOffset + i % 4];
+                messageBuffer[messageOffset + i] = (byte)(messageBuffer[messageOffset + i] ^ maskByte);
             }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="conn"></param>
-        /// <param name="buffer"></param>
-        /// <param name="length"></param>
-        /// <returns>bytes processed</returns>
-        /// <exception cref="InvalidDataException"></exception>
-        [System.Obsolete("Old", true)]
-        public static Result ProcessMessage(byte[] buffer, int offset, int length)
-        {
-            bool finished = (buffer[offset + 0] & 0b1000_0000) != 0; // has full message been sent
-            bool hasMask = (buffer[offset + 1] & 0b1000_0000) != 0; // must be true, "All messages from the client to the server have this bit set"
-
-            int opcode = buffer[offset + 0] & 0b0000_1111; // expecting 1 - text message
-            byte lenByte = (byte)(buffer[offset + 1] & 0b0111_1111); // first length byte
-
-            ThrowIfNotFinished(finished);
-            ThrowIfNoMask(hasMask);
-            ThrowIfBadOpCode(opcode);
-
-            int msglen;
-            (msglen, offset) = GetMessageLength(buffer, offset, lenByte);
-
-            ThrowIfLengthZero(msglen);
-            ThrowIfMsgLengthTooLong(msglen, length);
-
-            int maskOffset = offset;
-            offset += 4;
-
-            for (int i = 0; i < msglen; i++)
-            {
-                byte maskByte = buffer[maskOffset + i % 4];
-                buffer[offset + i] = (byte)(buffer[offset + i] ^ maskByte);
-            }
-
-
-            return new Result
-            {
-                opcode = opcode,
-                maskOffset = offset,
-                msgLength = msglen,
-            };
         }
 
         /// <exception cref="InvalidDataException"></exception>
@@ -139,9 +93,9 @@ namespace Mirror.SimpleWeb
         }
 
         /// <exception cref="InvalidDataException"></exception>
-        static void ThrowIfNoMask(bool hasMask)
+        static void ThrowIfMaskNotExpected(bool hasMask, bool expectMask)
         {
-            if (!hasMask)
+            if (hasMask != expectMask)
             {
                 throw new InvalidDataException("Message from client should have mask set to true");
             }
