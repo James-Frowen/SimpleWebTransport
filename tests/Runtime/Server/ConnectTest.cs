@@ -62,7 +62,7 @@ namespace Mirror.SimpleWeb.Tests.Server
         public IEnumerator ShouldTimeoutClientAfterClientProcessIsKilled()
         {
             // kill js early so it doesn't send close message
-            Task<RunNode.Result> task = RunNode.RunAsync("Connect.js", 1000);
+            Task<RunNode.Result> task = RunNode.RunAsync("Connect.js", 2000);
             while (!task.IsCompleted)
             {
                 yield return null;
