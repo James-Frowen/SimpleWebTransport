@@ -104,13 +104,13 @@ jobs:
           projectKey: MirrorNetworking_SimpleWebTransport
           projectName: SimpleWebTransport
           sonarOrganisation: mirrornetworking
+          INPUT_SOLUTION: ./SimpleWebTransport.csproj
           beginArguments: >-
               /d:sonar.verbose="true" 
               /d:sonar.cs.nunit.reportsPaths=Tests/editmode-results.xml,Tests/playimode-results.xml 
               /d:sonar.cs.opencover.reportsPaths=Tests/workspace-opencov/EditMode/TestCoverageResults_0000.xml,Tests/workspace-opencov/PlayMode/TestCoverageResults_0000.xml
-              /d:sonar.coverage.exclusions=Assets/Mirror/**/*
-          # files ignored in code coverage:
-          # Assets/Mirror/**/* - has tests in its own repo
+              /d:sonar.exclusions=Assets/Mirror/**/*
+              /d:sonar.inclusions=Assets/SimpleWebTransport/source/**/*
         env:
           FrameworkPathOverride: /opt/Unity/Editor/Data/MonoBleedingEdge/
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
