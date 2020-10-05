@@ -33,12 +33,12 @@ namespace Mirror.SimpleWeb
 
         private void onDisconnect(int connId)
         {
-            Debug.Log($"onDisconnect:{connId}");
+            Debug.LogWarning($"onDisconnect:{connId}");
         }
 
         private void onError(int connId, Exception e)
         {
-            Debug.Log($"onError:{connId}");
+            Debug.LogError($"onError:{connId}, {e}");
         }
 
 
