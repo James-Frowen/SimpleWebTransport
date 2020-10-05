@@ -135,7 +135,7 @@ namespace Mirror.SimpleWeb.Tests.Server
             yield return WaitForConnect;
 
             // wait for messages
-            yield return new WaitForSeconds(2f);
+            yield return new WaitForSeconds(5f);
             const int expectedCount = 100;
             const int messageSize = 16384;
 
