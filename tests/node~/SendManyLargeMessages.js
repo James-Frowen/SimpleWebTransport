@@ -15,11 +15,17 @@ webSocket.addEventListener('open', function (event) {
     for (let i = 0; i < view.length; i++) {
         view[i] = i % 255;
     }
-    // send 100 message as fast as possible
+    // send 100 message 20ms apart
     for (let i = 0; i < 100; i++) {
-        view[0] = i;
-        webSocket.send(buffer);
+
+        setTimeout(() => {
+            view[0] = i;
+            webSocket.send(buffer);
+        }, i * 20);
     }
+    setTimeout(() => {
+        webSocket.close
+    }, (100 * 20) + 1000);
 });
 
 webSocket.addEventListener('close', function (event) {

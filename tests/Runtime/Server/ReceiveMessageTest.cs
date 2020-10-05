@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -130,7 +131,7 @@ namespace Mirror.SimpleWeb.Tests.Server
         public IEnumerator ReceiveManyLargeArrays()
         {
             // dont worry about result, run will timeout by itself
-            _ = RunNode.RunAsync("SendManyLargeMessages.js");
+            Task<RunNode.Result> task = RunNode.RunAsync("SendManyLargeMessages.js", 10000);
 
             yield return WaitForConnect;
 
@@ -138,6 +139,13 @@ namespace Mirror.SimpleWeb.Tests.Server
             yield return new WaitForSeconds(5f);
             const int expectedCount = 100;
             const int messageSize = 16384;
+
+            yield return new WaitUntil(() => task.IsCompleted);
+            RunNode.Result result = task.Result;
+
+            result.AssetTimeout(false);
+            result.AssetOutput();
+            result.AssetErrors();
 
             Assert.That(onData, Has.Count.EqualTo(expectedCount), $"Should have {expectedCount} message");
 
@@ -172,7 +180,7 @@ namespace Mirror.SimpleWeb.Tests.Server
             yield return WaitForConnect;
 
             // wait for message
-            yield return new WaitForSeconds(0.5f);
+            yield return new WaitForSeconds(2f);
 
             Assert.That(onData, Has.Count.EqualTo(0), $"Should have 0 message");
 
