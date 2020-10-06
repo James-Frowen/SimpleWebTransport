@@ -46,7 +46,7 @@ namespace Mirror.SimpleWeb
             sslHelper = new ServerSslHelper(this.sslConfig);
         }
 
-        public void Listen(short port)
+        public void Listen(int port)
         {
             listener = TcpListener.Create(port);
             listener.Server.NoDelay = noDelay;

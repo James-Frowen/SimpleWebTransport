@@ -6,12 +6,12 @@ namespace Mirror.SimpleWeb
 {
     public class SimpleWebServer
     {
-        readonly short port;
+        readonly ushort port;
         readonly int maxMessagesPerTick;
 
         readonly WebSocketServer server;
 
-        public SimpleWebServer(short port, int maxMessagesPerTick, bool noDelay, int sendTimeout, int receiveTimeout, int maxMessageSize, SslConfig sslConfig)
+        public SimpleWebServer(ushort port, int maxMessagesPerTick, bool noDelay, int sendTimeout, int receiveTimeout, int maxMessageSize, SslConfig sslConfig)
         {
             this.port = port;
             this.maxMessagesPerTick = maxMessagesPerTick;
