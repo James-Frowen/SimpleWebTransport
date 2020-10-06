@@ -84,7 +84,7 @@ namespace Mirror.SimpleWeb.Tests
                 MessageProcessor.ProcessHeader(buffer, 10 * 1024, expectMask: mask);
             });
 
-            Assert.That(expection.Message, Is.EqualTo("Message from client should have mask set to true"));
+            Assert.That(expection.Message, Is.EqualTo($"Message expected mask to be {mask} but was {!mask}"));
         }
 
         [Test]
