@@ -12,7 +12,7 @@ namespace Mirror.SimpleWeb
         public const string SecureScheme = "wss";
 
         [Tooltip("Port to use for server and client")]
-        public short port = 7778;
+        public ushort port = 7778;
 
 
         [Tooltip("Protect against allocation attacks by keeping the max message size small. Otherwise an attacker might send multiple fake packets with 2GB headers, causing the server to run out of memory after allocating multiple large packets.")]
