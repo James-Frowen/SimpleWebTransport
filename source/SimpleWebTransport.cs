@@ -99,7 +99,8 @@ namespace Mirror.SimpleWeb
         string GetScheme() => sslEnabled ? SecureScheme : NormalScheme;
         public override bool ClientConnected()
         {
-            return client != null && client.IsConnected;
+            // not null and not NotConnected (we want to return true if connecting or disconnecting) 
+            return client != null && client.ConnectionState != ClientState.NotConnected;
         }
 
         public override void ClientConnect(string hostname)

@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
 using System.Security.Cryptography;
@@ -13,31 +12,19 @@ namespace Mirror.SimpleWeb
     {
         const int HeaderLength = 4;
 
-        public enum State
-        {
-            NotConnected = 0,
-            Connecting = 1,
-            Connected = 2,
-            Disconnecting = 3,
-        }
-
-        public readonly Queue<Message> receiveQueue = new Queue<Message>();
         readonly ClientSslHelper sslHelper;
         readonly ClientHandshake handshake;
         readonly RNGCryptoServiceProvider random;
         readonly int maxMessageSize;
-        readonly int maxMessagesPerTick;
 
         private Connection conn;
-        private State state;
 
-        internal WebSocketClientStandAlone(int maxMessageSize, int maxMessagesPerTick)
+        internal WebSocketClientStandAlone(int maxMessageSize, int maxMessagesPerTick) : base(maxMessagesPerTick)
         {
 #if UNITY_WEBGL && !UNITY_EDITOR
             throw new NotSupportedException();
 #else
             this.maxMessageSize = maxMessageSize;
-            this.maxMessagesPerTick = maxMessagesPerTick;
             sslHelper = new ClientSslHelper();
             handshake = new ClientHandshake();
             random = new RNGCryptoServiceProvider();
@@ -48,17 +35,9 @@ namespace Mirror.SimpleWeb
             random?.Dispose();
         }
 
-
-        public bool IsConnected => state == State.Connected;
-
-        public event Action onConnect;
-        public event Action onDisconnect;
-        public event Action<ArraySegment<byte>> onData;
-        public event Action<Exception> onError;
-
-        public void Connect(string address)
+        public override void Connect(string address)
         {
-            state = State.Connecting;
+            state = ClientState.Connecting;
             Thread receiveThread = new Thread(() => ConnectAndReceiveLoop(address));
             receiveThread.IsBackground = true;
             receiveThread.Start();
@@ -90,7 +69,7 @@ namespace Mirror.SimpleWeb
 
                 Log.Info("HandShake Successful");
 
-                state = State.Connected;
+                state = ClientState.Connected;
 
                 receiveQueue.Enqueue(new Message(EventType.Connected));
 
@@ -287,12 +266,12 @@ namespace Mirror.SimpleWeb
             stream.Write(buffer, 0, sendLength);
         }
 
-        public void Disconnect()
+        public override void Disconnect()
         {
             CloseConnection();
         }
 
-        public void Send(ArraySegment<byte> source)
+        public override void Send(ArraySegment<byte> source)
         {
             byte[] buffer = new byte[source.Count];
             Array.Copy(source.Array, source.Offset, buffer, 0, source.Count);
@@ -300,38 +279,6 @@ namespace Mirror.SimpleWeb
 
             conn.sendQueue.Enqueue(copy);
             conn.sendPending.Set();
-        }
-
-        public void ProcessMessageQueue(MonoBehaviour behaviour)
-        {
-            int processedCount = 0;
-            // check enabled every time incase behaviour was disabled after data
-            while (
-                behaviour.enabled &&
-                processedCount < maxMessagesPerTick &&
-                // Dequeue last
-                receiveQueue.Count > 0
-                )
-            {
-                processedCount++;
-
-                Message next = receiveQueue.Dequeue();
-                switch (next.type)
-                {
-                    case EventType.Connected:
-                        onConnect?.Invoke();
-                        break;
-                    case EventType.Data:
-                        onData?.Invoke(next.data);
-                        break;
-                    case EventType.Disconnected:
-                        onDisconnect?.Invoke();
-                        break;
-                    case EventType.Error:
-                        onError?.Invoke(next.exception);
-                        break;
-                }
-            }
         }
     }
 }

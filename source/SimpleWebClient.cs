@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Mirror.SimpleWeb
@@ -10,16 +11,72 @@ namespace Mirror.SimpleWeb
         event Action<ArraySegment<byte>> onData;
         event Action<Exception> onError;
 
-        bool IsConnected { get; }
+        ClientState ConnectionState { get; }
         void Connect(string address);
         void Disconnect();
         void Send(ArraySegment<byte> segment);
         void ProcessMessageQueue(MonoBehaviour behaviour);
     }
 
-    public class WebSocketClientBase
+    public enum ClientState
     {
-        // todo move ProcessMessageQueue to this class
+        NotConnected = 0,
+        Connecting = 1,
+        Connected = 2,
+        Disconnecting = 3,
+    }
+    public abstract class WebSocketClientBase : IWebSocketClient
+    {
+        readonly int maxMessagesPerTick;
+        protected readonly Queue<Message> receiveQueue = new Queue<Message>();
+        protected ClientState state;
+
+        protected WebSocketClientBase(int maxMessagesPerTick)
+        {
+            this.maxMessagesPerTick = maxMessagesPerTick;
+        }
+        public ClientState ConnectionState => state;
+
+        public event Action onConnect;
+        public event Action onDisconnect;
+        public event Action<ArraySegment<byte>> onData;
+        public event Action<Exception> onError;
+
+        public void ProcessMessageQueue(MonoBehaviour behaviour)
+        {
+            int processedCount = 0;
+            // check enabled every time incase behaviour was disabled after data
+            while (
+                behaviour.enabled &&
+                processedCount < maxMessagesPerTick &&
+                // Dequeue last
+                receiveQueue.Count > 0
+                )
+            {
+                processedCount++;
+
+                Message next = receiveQueue.Dequeue();
+                switch (next.type)
+                {
+                    case EventType.Connected:
+                        onConnect?.Invoke();
+                        break;
+                    case EventType.Data:
+                        onData?.Invoke(next.data);
+                        break;
+                    case EventType.Disconnected:
+                        onDisconnect?.Invoke();
+                        break;
+                    case EventType.Error:
+                        onError?.Invoke(next.exception);
+                        break;
+                }
+            }
+        }
+
+        public abstract void Connect(string address);
+        public abstract void Disconnect();
+        public abstract void Send(ArraySegment<byte> segment);
     }
 
     public static class SimpleWebClient
