@@ -9,13 +9,25 @@ namespace Mirror.SimpleWeb
         {
             public int opcode;
             public bool hasMask;
+            /// <summary>
+            /// offset after length in header (2 or 4 based on length + segment offset)
+            /// </summary>
             public int offset;
             public int msgLength;
 
             /// <summary>
             /// how much more data there is to read
             /// </summary>
-            public int readLength => msgLength + offset;
+            /// <remarks>
+            /// 4 bytes have already been read for header.
+            /// header could be 2 or 4 bytes long so add (offset - 4) at account for part of mask/msg already being read
+            /// </remarks>
+            public int readLength => /*header*/(offset - 4) + /*mask*/(hasMask ? 4 : 0) + /*msg*/msgLength;
+
+            /// <summary>
+            /// when message starts
+            /// </summary>
+            public int maskOffset => hasMask ? offset : throw new InvalidDataException("this header has no mask");
 
             /// <summary>
             /// when message starts
@@ -38,7 +50,7 @@ namespace Mirror.SimpleWeb
             ThrowIfBadOpCode(opcode);
 
             // offset is 2 or 4
-            (int msglen, int maskOffset) = GetMessageLength(buffer, 0, lenByte);
+            (int msglen, int offsetAfterLength) = GetMessageLength(buffer, 0, lenByte);
 
             ThrowIfLengthZero(msglen);
             ThrowIfMsgLengthTooLong(msglen, maxLength);
@@ -46,7 +58,7 @@ namespace Mirror.SimpleWeb
             return new Result
             {
                 opcode = opcode,
-                offset = maskOffset,
+                offset = offsetAfterLength,
                 hasMask = hasMask,
                 msgLength = msglen,
             };
@@ -62,7 +74,7 @@ namespace Mirror.SimpleWeb
         }
 
         /// <exception cref="InvalidDataException"></exception>
-        static (int length, int maskOffset) GetMessageLength(byte[] buffer, int offset, byte lenByte)
+        static (int length, int offsetAfterLength) GetMessageLength(byte[] buffer, int offset, byte lenByte)
         {
             if (lenByte == 126)
             {
