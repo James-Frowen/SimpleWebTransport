@@ -1,3 +1,8 @@
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=MirrorNetworking_SimpleWebTransport&metric=coverage)](https://sonarcloud.io/dashboard?id=MirrorNetworking_SimpleWebTransport) 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=MirrorNetworking_SimpleWebTransport&metric=alert_status)](https://sonarcloud.io/dashboard?id=MirrorNetworking_SimpleWebTransport)
+[![Discord](https://img.shields.io/discord/343440455738064897.svg)](https://discordapp.com/invite/N9QVxbM)
+[![release](https://img.shields.io/github/release/MirrorNetworking/SimpleWebTransport.svg)](https://github.com/MirrorNetworking/SimpleWebTransport/releases/latest)
+
 # Simple Web Transport
 
 WebGl Transport for [Mirror](https://github.com/vis2k/Mirror)
