@@ -109,7 +109,7 @@ namespace Mirror.SimpleWeb
         {
             if (hasMask != expectMask)
             {
-                throw new InvalidDataException("Message from client should have mask set to true");
+                throw new InvalidDataException($"Message expected mask to be {expectMask} but was {hasMask}");
             }
         }
 
