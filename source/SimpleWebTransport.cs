@@ -106,7 +106,7 @@ namespace Mirror.SimpleWeb
         public override void ClientConnect(string hostname)
         {
             // connecting or connected
-            if (client != null)
+            if (ClientConnected())
             {
                 Debug.LogError("Already Connected");
                 return;
