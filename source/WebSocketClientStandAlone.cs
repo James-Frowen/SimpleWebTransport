@@ -10,6 +10,9 @@ namespace Mirror.SimpleWeb
 {
     internal class WebSocketClientStandAlone : WebSocketClientBase, IWebSocketClient
     {
+        object lockObject = new object();
+        bool hasClosed;
+
         const int HeaderLength = 4;
 
         readonly ClientSslHelper sslHelper;
@@ -48,7 +51,15 @@ namespace Mirror.SimpleWeb
             {
                 TcpClient client = new TcpClient();
                 Uri uri = new Uri(address);
-                client.Connect(uri.Host, uri.Port);
+                try
+                {
+                    client.Connect(uri.Host, uri.Port);
+                }
+                catch (SocketException)
+                {
+                    client.Dispose();
+                    throw;
+                }
 
                 conn = new Connection(client);
                 conn.receiveThread = Thread.CurrentThread;
@@ -84,6 +95,11 @@ namespace Mirror.SimpleWeb
             catch (ThreadInterruptedException) { Log.Info("acceptLoop ThreadInterrupted"); return; }
             catch (ThreadAbortException) { Log.Info("acceptLoop ThreadAbort"); return; }
             catch (Exception e) { Debug.LogException(e); }
+            finally
+            {
+                // close here incase connect fails
+                CloseConnection();
+            }
         }
 
         void ReceiveLoop(Connection conn)
@@ -212,10 +228,17 @@ namespace Mirror.SimpleWeb
 
         void CloseConnection()
         {
-            bool? closed = conn?.Close();
-            // only send disconnect message if closed by the call
-            if (closed.GetValueOrDefault())
+            conn?.Close();
+
+            if (hasClosed) { return; }
+
+            // lock so that hasClosed can be safely set
+            lock (lockObject)
             {
+                hasClosed = true;
+
+                state = ClientState.NotConnected;
+                // make sure Disconnected event is only called once
                 receiveQueue.Enqueue(new Message(EventType.Disconnected));
             }
         }
