@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using UnityEngine;
 
 namespace Mirror.SimpleWeb
@@ -28,7 +28,7 @@ namespace Mirror.SimpleWeb
     public abstract class WebSocketClientBase : IWebSocketClient
     {
         readonly int maxMessagesPerTick;
-        protected readonly Queue<Message> receiveQueue = new Queue<Message>();
+        protected readonly ConcurrentQueue<Message> receiveQueue = new ConcurrentQueue<Message>();
         protected ClientState state;
 
         protected WebSocketClientBase(int maxMessagesPerTick)
@@ -50,12 +50,11 @@ namespace Mirror.SimpleWeb
                 behaviour.enabled &&
                 processedCount < maxMessagesPerTick &&
                 // Dequeue last
-                receiveQueue.Count > 0
+                receiveQueue.TryDequeue(out Message next)
                 )
             {
                 processedCount++;
 
-                Message next = receiveQueue.Dequeue();
                 switch (next.type)
                 {
                     case EventType.Connected:
