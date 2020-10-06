@@ -208,6 +208,7 @@ namespace Mirror.SimpleWeb
 
             MessageProcessor.ToggleMask(buffer, header.offset + 4, header.msgLength, buffer, header.offset);
 
+            Log.DumpBuffer($"Message From Client {conn}", buffer, 0, buffer.Length);
             HandleMessage(header.opcode, conn, buffer, header.msgOffset, header.msgLength);
             return true;
         }
@@ -314,6 +315,7 @@ namespace Mirror.SimpleWeb
             Array.Copy(msg.Array, msg.Offset, buffer, sendLength, msgLength);
             sendLength += msgLength;
 
+            Log.DumpBuffer("Send To Client", buffer, 0, sendLength);
             stream.Write(buffer, 0, sendLength);
         }
 

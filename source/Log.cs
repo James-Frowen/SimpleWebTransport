@@ -1,3 +1,4 @@
+using System;
 using Conditional = System.Diagnostics.ConditionalAttribute;
 using Debug = UnityEngine.Debug;
 
@@ -21,7 +22,7 @@ namespace Mirror.SimpleWeb
             if (level < Levels.verbose)
                 return;
 
-            Debug.Log($"INFO: <color=blue>{msg}</color>");
+            Debug.Log($"Verbose: <color=blue>{msg}</color>");
         }
 
         [Conditional("DEBUG")]
@@ -31,9 +32,29 @@ namespace Mirror.SimpleWeb
                 return;
 
             if (showColor)
-                Info(msg);
+                Verbose(msg);
             else
-                Debug.Log($"INFO: {msg}");
+                Debug.Log($"Verbose: {msg}");
+        }
+
+        [Conditional("DEBUG")]
+        public static void DumpBuffer(byte[] buffer, int offset, int length)
+        {
+            if (level < Levels.verbose)
+                return;
+
+            string text = BitConverter.ToString(buffer, offset, length);
+            Verbose(text);
+        }
+
+        [Conditional("DEBUG")]
+        public static void DumpBuffer(string label, byte[] buffer, int offset, int length)
+        {
+            if (level < Levels.verbose)
+                return;
+
+            string text = BitConverter.ToString(buffer, offset, length);
+            Verbose($"{label}: {text}");
         }
 
         [Conditional("DEBUG")]
@@ -74,7 +95,7 @@ namespace Mirror.SimpleWeb
                 return;
 
             if (showColor)
-                Info(msg);
+                Error(msg);
             else
                 Debug.Log($"ERROR: {msg}");
         }

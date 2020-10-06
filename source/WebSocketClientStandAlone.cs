@@ -167,6 +167,7 @@ namespace Mirror.SimpleWeb
 
             ReadHelper.SafeRead(stream, buffer, HeaderLength, header.readLength);
 
+            Log.DumpBuffer("Message From Server", buffer, 0, buffer.Length);
             HandleMessage(header.opcode, conn, buffer, header.msgOffset, header.msgLength);
             return true;
         }
@@ -282,7 +283,7 @@ namespace Mirror.SimpleWeb
             MessageProcessor.ToggleMask(buffer, sendLength, msgLength, buffer, sendLength - 4);
             sendLength += msgLength;
 
-            Log.Verbose("Send To Server");
+            Log.DumpBuffer("Send To Server", buffer, 0, sendLength);
             stream.Write(buffer, 0, sendLength);
         }
 
