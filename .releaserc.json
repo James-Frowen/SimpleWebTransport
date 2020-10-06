@@ -33,6 +33,10 @@
                     {
                         "type": "feature",
                         "release": "minor"
+                    },
+                    {
+                        "type": "refactor",
+                        "release": "patch"
                     }
                 ]
             }
