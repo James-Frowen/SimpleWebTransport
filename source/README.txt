@@ -2,6 +2,9 @@ SimpleWebTransport is a Transport that implements websocket for Webgl builds of
 mirror. This transport can also work on standalone builds and has support for 
 encryption with websocket secure.
 
+How to use:
+  Replace your existing Transport with SimpleWebTransport on your NetworkManager
+
 Requirements:
   Unity 2018.4 LTS
   Mirror v18.0.0
