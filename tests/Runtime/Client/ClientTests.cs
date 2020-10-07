@@ -102,29 +102,18 @@ namespace Mirror.SimpleWeb.Tests.Client
             {
                 ArraySegment<byte> segment = new ArraySegment<byte>(msg);
                 server.ServerSend(new List<int> { 1 }, 0, segment);
-                yield return new WaitForSeconds(0.05f);
+                yield return null;
             }
 
             // wait for message
-            yield return new WaitForSeconds(1);
+            yield return new WaitForSeconds(2);
 
-            Assert.That(onData, Has.Count.EqualTo(messages.Count), "should have 1 message");
+            Assert.That(onData, Has.Count.EqualTo(messages.Count), $"should have {messages.Count} message");
             for (int i = 0; i < messages.Count; i++)
             {
                 CollectionAssert.AreEqual(messages[i], onData[i], "data should match");
             }
         }
-        List<byte[]> createRandomMessages(int count = 20)
-        {
-            List<byte[]> messages = new List<byte[]>();
-            for (int i = 0; i < count; i++)
-            {
-                byte[] bytes = Enumerable.Range(UnityEngine.Random.Range(0, 2), UnityEngine.Random.Range(2, 5)).Select(x => (byte)x).ToArray();
-                messages.Add(bytes);
-            }
-            return messages;
-        }
-
 
         [UnityTest]
         public IEnumerator CanSendMulitpleMessage()
@@ -138,17 +127,29 @@ namespace Mirror.SimpleWeb.Tests.Client
             {
                 ArraySegment<byte> segment = new ArraySegment<byte>(msg);
                 transport.ClientSend(0, segment);
-                yield return new WaitForSeconds(0.05f);
+                yield return null;
             }
-            // wait for message
-            yield return new WaitForSeconds(0.25f);
 
-            Assert.That(server_onData, Has.Count.EqualTo(messages.Count), "should have 1 message");
+            // wait for message
+            yield return new WaitForSeconds(2f);
+
+            Assert.That(server_onData, Has.Count.EqualTo(messages.Count), $"should have {messages.Count} message");
             Assert.That(server_onData[0].connId, Is.EqualTo(1), "should be connection id");
             for (int i = 0; i < messages.Count; i++)
             {
                 CollectionAssert.AreEqual(messages[i], server_onData[i].data, "data should match");
             }
+        }
+
+        List<byte[]> createRandomMessages(int count = 20)
+        {
+            List<byte[]> messages = new List<byte[]>();
+            for (int i = 0; i < count; i++)
+            {
+                byte[] bytes = Enumerable.Range(UnityEngine.Random.Range(0, 2), UnityEngine.Random.Range(2, 5)).Select(x => (byte)x).ToArray();
+                messages.Add(bytes);
+            }
+            return messages;
         }
 
 
