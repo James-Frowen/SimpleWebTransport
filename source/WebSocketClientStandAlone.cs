@@ -282,10 +282,13 @@ namespace Mirror.SimpleWeb
             sendLength += 4;
 
             Array.Copy(msg.Array, msg.Offset, buffer, sendLength, msgLength);
+
+            // dump before mask on
+            Log.DumpBuffer("Send To Server", buffer, 0, sendLength + msgLength);
+
             MessageProcessor.ToggleMask(buffer, sendLength, msgLength, buffer, sendLength - 4);
             sendLength += msgLength;
 
-            Log.DumpBuffer("Send To Server", buffer, 0, sendLength);
             stream.Write(buffer, 0, sendLength);
         }
 

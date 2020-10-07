@@ -208,7 +208,9 @@ namespace Mirror.SimpleWeb
 
             MessageProcessor.ToggleMask(buffer, header.offset + 4, header.msgLength, buffer, header.offset);
 
+            // dump after mask off
             Log.DumpBuffer($"Message From Client {conn}", buffer, 0, buffer.Length);
+
             HandleMessage(header.opcode, conn, buffer, header.msgOffset, header.msgLength);
             return true;
         }
