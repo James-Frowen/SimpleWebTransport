@@ -136,7 +136,7 @@ jobs:
   
       - name: Package
         run: |
-          unity-packer pack SimpleWebTransport.unitypackage source Assets/SimpleWebTransport LICENSE Assets/SimpleWebTransport/LICENSE README.md Assets/SimpleWebTransport/README.md
+          unity-packer pack SimpleWebTransport.unitypackage source Assets/SimpleWebTransport LICENSE Assets/SimpleWebTransport/LICENSE
 
       - uses: actions/upload-artifact@v1
         with:
