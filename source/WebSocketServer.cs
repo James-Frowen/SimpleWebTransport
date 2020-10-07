@@ -239,6 +239,8 @@ namespace Mirror.SimpleWeb
 
         void SendLoop(Connection conn)
         {
+            // create write buffer for this thread
+            byte[] writeBuffer = new byte[HeaderLength + maxMessageSize];
             try
             {
                 TcpClient client = conn.client;
@@ -259,7 +261,7 @@ namespace Mirror.SimpleWeb
                         // check if connected before sending message
                         if (!client.Connected) { Log.Info($"SendLoop {conn} not connected"); return; }
 
-                        SendMessageToClient(stream, msg);
+                        SendMessageToClient(stream, writeBuffer, msg);
                     }
                 }
             }
@@ -284,11 +286,15 @@ namespace Mirror.SimpleWeb
             }
         }
 
-        static void SendMessageToClient(Stream stream, ArraySegment<byte> msg)
+        /// <summary>
+        /// writes header and msg into buffer then sends to stream
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <param name="buffer">buffer to write to</param>
+        /// <param name="msg">msg to send</param>
+        static void SendMessageToClient(Stream stream, byte[] buffer, ArraySegment<byte> msg)
         {
             int msgLength = msg.Count;
-            // todo remove allocation
-            byte[] buffer = new byte[4 + msgLength];
             int sendLength = 0;
 
             byte finished = 128;
