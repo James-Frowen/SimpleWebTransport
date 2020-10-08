@@ -15,14 +15,14 @@ namespace Mirror.SimpleWeb.Tests.Server
         protected override bool StartServer => true;
 
         [UnityTest]
-        public IEnumerator SendFullArray()
+        public IEnumerator SendOne()
         {
             Task<RunNode.Result> task = RunNode.RunAsync("ReceiveMessages.js");
 
             yield return WaitForConnect;
 
             byte[] bytes = new byte[] { 1, 2, 3, 4, 5 };
-            ArraySegment<byte> segment = new ArraySegment<byte>(bytes, 0, 5);
+            ArraySegment<byte> segment = new ArraySegment<byte>(bytes);
 
             transport.ServerSend(new List<int> { 1 }, Channels.DefaultReliable, segment);
 
@@ -36,6 +36,43 @@ namespace Mirror.SimpleWeb.Tests.Server
             result.AssetTimeout(false);
             result.AssetOutput(
                 "length: 5 msg: 01 02 03 04 05"
+                );
+            result.AssetErrors();
+        }
+
+        [UnityTest]
+        [TestCase(50, ExpectedResult = default)]
+        [TestCase(100, ExpectedResult = default)]
+        [TestCase(124, ExpectedResult = default)]
+        [TestCase(125, ExpectedResult = default)]
+        [TestCase(126, ExpectedResult = default)]
+        [TestCase(127, ExpectedResult = default)]
+        [TestCase(128, ExpectedResult = default)]
+        [TestCase(129, ExpectedResult = default)]
+        [TestCase(250, ExpectedResult = default)]
+        [TestCase(1000, ExpectedResult = default)]
+        [TestCase(5000, ExpectedResult = default)]
+        public IEnumerator SendDifferentSizes(int msgSize)
+        {
+            Task<RunNode.Result> task = RunNode.RunAsync("ReceiveMessages.js");
+
+            yield return WaitForConnect;
+
+            byte[] bytes = Enumerable.Range(1, msgSize).Select(x => (byte)x).ToArray();
+            ArraySegment<byte> segment = new ArraySegment<byte>(bytes);
+
+            transport.ServerSend(new List<int> { 1 }, Channels.DefaultReliable, segment);
+
+            yield return new WaitForSeconds(0.5f);
+            transport.ServerDisconnect(1);
+
+            yield return new WaitUntil(() => task.IsCompleted);
+
+            RunNode.Result result = task.Result;
+
+            result.AssetTimeout(false);
+            result.AssetOutput(
+                $"length: {msgSize} msg: {BitConverter.ToString(bytes).Replace('-', ' ')}"
                 );
             result.AssetErrors();
         }
