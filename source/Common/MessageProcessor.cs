@@ -1,4 +1,3 @@
-#define SIMPLE_WEB_INFO_LOG
 using System.IO;
 
 namespace Mirror.SimpleWeb

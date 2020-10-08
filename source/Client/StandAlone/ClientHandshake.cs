@@ -1,5 +1,3 @@
-#define SIMPLE_WEB_INFO_LOG
-
 using System;
 using System.IO;
 using System.Security.Cryptography;
