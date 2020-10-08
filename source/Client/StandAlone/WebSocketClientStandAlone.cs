@@ -14,6 +14,7 @@ namespace Mirror.SimpleWeb
         bool hasClosed;
 
         const int HeaderLength = 4;
+        const int MaskLength = 4;
 
         readonly ClientSslHelper sslHelper;
         readonly ClientHandshake handshake;
@@ -45,6 +46,7 @@ namespace Mirror.SimpleWeb
             receiveThread.IsBackground = true;
             receiveThread.Start();
         }
+
         void ConnectAndReceiveLoop(string address)
         {
             try
@@ -84,7 +86,11 @@ namespace Mirror.SimpleWeb
 
                 receiveQueue.Enqueue(new Message(EventType.Connected));
 
-                Thread sendThread = new Thread(() => SendLoop(conn));
+                Thread sendThread = new Thread(() =>
+                {
+                    int bufferSize = HeaderLength + MaskLength + maxMessageSize;
+                    SendLoop.Loop(conn, bufferSize, true, _ => CloseConnection());
+                });
 
                 conn.sendThread = sendThread;
                 sendThread.IsBackground = true;
@@ -185,44 +191,6 @@ namespace Mirror.SimpleWeb
             }
         }
 
-
-        void SendLoop(Connection conn)
-        {
-            // todo remove duplicate code (this and WebSocketServer)
-            try
-            {
-                TcpClient client = conn.client;
-                Stream stream = conn.stream;
-
-                // null check incase disconnect while send thread is starting
-                if (client == null)
-                    return;
-
-                while (client.Connected)
-                {
-                    // wait for message
-                    conn.sendPending.WaitOne();
-                    conn.sendPending.Reset();
-
-                    while (conn.sendQueue.TryDequeue(out ArraySegment<byte> msg))
-                    {
-                        // check if connected before sending message
-                        if (!client.Connected) { Log.Info($"SendLoop {conn} not connected"); return; }
-
-                        SendMessageToServer(stream, msg);
-                    }
-                }
-            }
-            catch (ThreadInterruptedException) { Log.Info($"SendLoop {conn} ThreadInterrupted"); return; }
-            catch (ThreadAbortException) { Log.Info($"SendLoop {conn} ThreadAbort"); return; }
-            catch (Exception e)
-            {
-                Debug.LogException(e);
-
-                CloseConnection();
-            }
-        }
-
         void CloseConnection()
         {
             conn?.Close();
@@ -238,55 +206,6 @@ namespace Mirror.SimpleWeb
                 // make sure Disconnected event is only called once
                 receiveQueue.Enqueue(new Message(EventType.Disconnected));
             }
-        }
-
-        byte[] maskBuffer = new byte[4];
-        void SendMessageToServer(Stream stream, ArraySegment<byte> msg)
-        {
-            int msgLength = msg.Count;
-            // todo remove allocation
-            // header 2/4 + mask + msg
-            byte[] buffer = new byte[4 + 4 + msgLength];
-            int sendLength = 0;
-
-            byte finished = 128;
-            byte byteOpCode = 2;
-
-            buffer[0] = (byte)(finished | byteOpCode);
-            sendLength++;
-
-            if (msgLength < 125)
-            {
-                buffer[1] = (byte)msgLength;
-                sendLength++;
-            }
-            else if (msgLength < ushort.MaxValue)
-            {
-                buffer[1] = 126;
-                buffer[2] = (byte)(msgLength >> 8);
-                buffer[3] = (byte)msgLength;
-                sendLength += 3;
-            }
-            else
-            {
-                throw new InvalidDataException($"Trying to send a message larger than {ushort.MaxValue} bytes");
-            }
-
-            // mask
-            buffer[1] |= 0b1000_0000;
-            random.GetBytes(maskBuffer);
-            Array.Copy(maskBuffer, 0, buffer, sendLength, 4);
-            sendLength += 4;
-
-            Array.Copy(msg.Array, msg.Offset, buffer, sendLength, msgLength);
-
-            // dump before mask on
-            Log.DumpBuffer("Send To Server", buffer, 0, sendLength + msgLength);
-
-            MessageProcessor.ToggleMask(buffer, sendLength, msgLength, buffer, sendLength - 4);
-            sendLength += msgLength;
-
-            stream.Write(buffer, 0, sendLength);
         }
 
         public override void Disconnect()

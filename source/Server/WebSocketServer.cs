@@ -138,7 +138,11 @@ namespace Mirror.SimpleWeb
 
             receiveQueue.Enqueue(new Message(conn.connId, EventType.Connected));
 
-            Thread sendThread = new Thread(() => SendLoop(conn));
+            Thread sendThread = new Thread(() =>
+            {
+                int bufferSize = HeaderLength + maxMessageSize;
+                SendLoop.Loop(conn, bufferSize, false, CloseConnection);
+            });
 
             conn.sendThread = sendThread;
             sendThread.IsBackground = true;
@@ -236,45 +240,6 @@ namespace Mirror.SimpleWeb
             }
         }
 
-
-        void SendLoop(Connection conn)
-        {
-            // create write buffer for this thread
-            byte[] writeBuffer = new byte[HeaderLength + maxMessageSize];
-            try
-            {
-                TcpClient client = conn.client;
-                Stream stream = conn.stream;
-
-                // null check incase disconnect while send thread is starting
-                if (client == null)
-                    return;
-
-                while (client.Connected)
-                {
-                    // wait for message
-                    conn.sendPending.WaitOne();
-                    conn.sendPending.Reset();
-
-                    while (conn.sendQueue.TryDequeue(out ArraySegment<byte> msg))
-                    {
-                        // check if connected before sending message
-                        if (!client.Connected) { Log.Info($"SendLoop {conn} not connected"); return; }
-
-                        SendMessageToClient(stream, writeBuffer, msg);
-                    }
-                }
-            }
-            catch (ThreadInterruptedException) { Log.Info($"SendLoop {conn} ThreadInterrupted"); return; }
-            catch (ThreadAbortException) { Log.Info($"SendLoop {conn} ThreadAbort"); return; }
-            catch (Exception e)
-            {
-                Debug.LogException(e);
-
-                CloseConnection(conn);
-            }
-        }
-
         void CloseConnection(Connection conn)
         {
             bool closed = conn.Close();
@@ -284,47 +249,6 @@ namespace Mirror.SimpleWeb
                 receiveQueue.Enqueue(new Message(conn.connId, EventType.Disconnected));
                 connections.TryRemove(conn.connId, out Connection _);
             }
-        }
-
-        /// <summary>
-        /// writes header and msg into buffer then sends to stream
-        /// </summary>
-        /// <param name="stream"></param>
-        /// <param name="buffer">buffer to write to</param>
-        /// <param name="msg">msg to send</param>
-        static void SendMessageToClient(Stream stream, byte[] buffer, ArraySegment<byte> msg)
-        {
-            int msgLength = msg.Count;
-            int sendLength = 0;
-
-            byte finished = 128;
-            byte byteOpCode = 2;
-
-            buffer[0] = (byte)(finished | byteOpCode);
-            sendLength++;
-
-            if (msgLength < 125)
-            {
-                buffer[1] = (byte)msgLength;
-                sendLength++;
-            }
-            else if (msgLength < ushort.MaxValue)
-            {
-                buffer[1] = 126;
-                buffer[2] = (byte)(msgLength >> 8);
-                buffer[3] = (byte)msgLength;
-                sendLength += 3;
-            }
-            else
-            {
-                throw new InvalidDataException($"Trying to send a message larger than {ushort.MaxValue} bytes");
-            }
-
-            Array.Copy(msg.Array, msg.Offset, buffer, sendLength, msgLength);
-            sendLength += msgLength;
-
-            Log.DumpBuffer("Send To Client", buffer, 0, sendLength);
-            stream.Write(buffer, 0, sendLength);
         }
 
         public void Send(int id, ArraySegment<byte> segment)
