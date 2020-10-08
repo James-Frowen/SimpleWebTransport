@@ -10,7 +10,7 @@ namespace Mirror.SimpleWeb.Tests
         [Test]
         public void ExampleIsValid()
         {
-            SslConfigLoader.Cert result = SslConfigLoader.LoadCertJson("./Assets/SimpleWebTransport/source/.cert.example.Json");
+            SslConfigLoader.Cert result = SslConfigLoader.LoadCertJson(Path.Combine(TransportDir, ".cert.example.Json"));
 
             Assert.That(result.path, Is.EqualTo("./certs/MirrorLocal.pfx"));
             Assert.That(result.password, Is.EqualTo(""));
@@ -56,21 +56,36 @@ namespace Mirror.SimpleWeb.Tests
         {
             get
             {
-                if (string.IsNullOrEmpty(_testDir))
-                {
-                    string[] guidsFound = AssetDatabase.FindAssets($"t:Script " + nameof(SslConfigLoaderTest));
-                    if (guidsFound.Length == 1 && !string.IsNullOrEmpty(guidsFound[0]))
-                    {
-                        string script = AssetDatabase.GUIDToAssetPath(guidsFound[0]);
-                        string dir = Path.GetDirectoryName(script);
-                        _testDir = dir;
-                    }
-                    else
-                    {
-                        UnityEngine.Debug.LogError("Could not find path of TestDir");
-                    }
-                }
+                findDir(ref _testDir, nameof(SslConfigLoaderTest));
                 return _testDir;
+            }
+        }
+
+        static string _transportDir;
+        static string TransportDir
+        {
+            get
+            {
+                findDir(ref _transportDir, nameof(SimpleWebTransport));
+                return _transportDir;
+            }
+        }
+
+        private static void findDir(ref string field, string file)
+        {
+            if (string.IsNullOrEmpty(field))
+            {
+                string[] guidsFound = AssetDatabase.FindAssets($"t:Script " + file);
+                if (guidsFound.Length == 1 && !string.IsNullOrEmpty(guidsFound[0]))
+                {
+                    string script = AssetDatabase.GUIDToAssetPath(guidsFound[0]);
+                    string dir = Path.GetDirectoryName(script);
+                    field = dir;
+                }
+                else
+                {
+                    UnityEngine.Debug.LogError("Could not find path of dir");
+                }
             }
         }
     }
