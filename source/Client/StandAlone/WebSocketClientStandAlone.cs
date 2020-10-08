@@ -13,9 +13,6 @@ namespace Mirror.SimpleWeb
         object lockObject = new object();
         bool hasClosed;
 
-        const int HeaderLength = 4;
-        const int MaskLength = 4;
-
         readonly ClientSslHelper sslHelper;
         readonly ClientHandshake handshake;
         readonly RNGCryptoServiceProvider random;
@@ -88,7 +85,7 @@ namespace Mirror.SimpleWeb
 
                 Thread sendThread = new Thread(() =>
                 {
-                    int bufferSize = HeaderLength + MaskLength + maxMessageSize;
+                    int bufferSize = Constants.HeaderSize + Constants.MaskSize + maxMessageSize;
                     SendLoop.Loop(conn, bufferSize, true, _ => CloseConnection());
                 });
 
@@ -116,7 +113,7 @@ namespace Mirror.SimpleWeb
                 TcpClient client = conn.client;
                 Stream stream = conn.stream;
                 //byte[] buffer = conn.receiveBuffer;
-                byte[] headerBuffer = new byte[HeaderLength];
+                byte[] headerBuffer = new byte[Constants.HeaderSize];
 
                 while (client.Connected)
                 {
@@ -146,7 +143,7 @@ namespace Mirror.SimpleWeb
             // 1 for bit fields
             // 1+ for length (length can be be 1, 3, or 9 and we refuse 9)
             // 4 for mask (we can read this later
-            ReadHelper.ReadResult readResult = ReadHelper.SafeRead(stream, headerBuffer, 0, HeaderLength, checkLength: true);
+            ReadHelper.ReadResult readResult = ReadHelper.SafeRead(stream, headerBuffer, 0, Constants.HeaderSize, checkLength: true);
             if ((readResult & ReadHelper.ReadResult.Fail) > 0)
             {
                 Log.Info($"ReceiveLoop read failed: {readResult}");
@@ -159,11 +156,11 @@ namespace Mirror.SimpleWeb
 
             // todo remove allocation
             // msg
-            byte[] buffer = new byte[HeaderLength + header.readLength];
+            byte[] buffer = new byte[Constants.HeaderSize + header.readLength];
             // copy header as it might contain mask
-            Buffer.BlockCopy(headerBuffer, 0, buffer, 0, HeaderLength);
+            Buffer.BlockCopy(headerBuffer, 0, buffer, 0, Constants.HeaderSize);
 
-            ReadHelper.SafeRead(stream, buffer, HeaderLength, header.readLength);
+            ReadHelper.SafeRead(stream, buffer, Constants.HeaderSize, header.readLength);
 
             Log.DumpBuffer("Message From Server", buffer, 0, buffer.Length);
             HandleMessage(header.opcode, conn, buffer, header.msgOffset, header.msgLength);

@@ -11,8 +11,6 @@ namespace Mirror.SimpleWeb
 {
     public class WebSocketServer
     {
-        const int HeaderLength = 4;
-
         public readonly ConcurrentQueue<Message> receiveQueue = new ConcurrentQueue<Message>();
 
         readonly bool noDelay;
@@ -139,7 +137,7 @@ namespace Mirror.SimpleWeb
 
             Thread sendThread = new Thread(() =>
             {
-                int bufferSize = HeaderLength + maxMessageSize;
+                int bufferSize = Constants.HeaderSize + maxMessageSize;
                 SendLoop.Loop(conn, bufferSize, false, CloseConnection);
             });
 
@@ -157,7 +155,7 @@ namespace Mirror.SimpleWeb
                 TcpClient client = conn.client;
                 Stream stream = conn.stream;
                 //byte[] buffer = conn.receiveBuffer;
-                byte[] headerBuffer = new byte[HeaderLength];
+                byte[] headerBuffer = new byte[Constants.HeaderSize];
 
                 while (client.Connected)
                 {
@@ -187,7 +185,7 @@ namespace Mirror.SimpleWeb
             // 1 for bit fields
             // 1+ for length (length can be be 1, 3, or 9 and we refuse 9)
             // 4 for mask (we can read this later
-            ReadHelper.ReadResult readResult = ReadHelper.SafeRead(stream, headerBuffer, 0, HeaderLength, checkLength: true);
+            ReadHelper.ReadResult readResult = ReadHelper.SafeRead(stream, headerBuffer, 0, Constants.HeaderSize, checkLength: true);
             if ((readResult & ReadHelper.ReadResult.Fail) > 0)
             {
                 Log.Info($"ReceiveLoop {conn.connId} read failed: {readResult}");
@@ -200,16 +198,16 @@ namespace Mirror.SimpleWeb
 
             // todo remove allocation
             // mask + msg
-            byte[] buffer = new byte[HeaderLength + header.readLength];
-            for (int i = 0; i < HeaderLength; i++)
+            byte[] buffer = new byte[Constants.HeaderSize + header.readLength];
+            for (int i = 0; i < Constants.HeaderSize; i++)
             {
                 // copy header as it might contain mask
                 buffer[i] = headerBuffer[i];
             }
 
-            ReadHelper.SafeRead(stream, buffer, HeaderLength, header.readLength);
+            ReadHelper.SafeRead(stream, buffer, Constants.HeaderSize, header.readLength);
 
-            MessageProcessor.ToggleMask(buffer, header.offset + 4, header.msgLength, buffer, header.offset);
+            MessageProcessor.ToggleMask(buffer, header.offset + Constants.MaskSize, header.msgLength, buffer, header.offset);
 
             // dump after mask off
             Log.DumpBuffer($"Message From Client {conn}", buffer, 0, buffer.Length);

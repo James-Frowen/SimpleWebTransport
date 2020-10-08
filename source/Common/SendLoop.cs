@@ -84,12 +84,12 @@ namespace Mirror.SimpleWeb
             buffer[0] = (byte)(finished | byteOpCode);
             sendLength++;
 
-            if (msgLength < 125)
+            if (msgLength <= Constants.BytePayloadLength)
             {
                 buffer[1] = (byte)msgLength;
                 sendLength++;
             }
-            else if (msgLength < ushort.MaxValue)
+            else if (msgLength <= ushort.MaxValue)
             {
                 buffer[1] = 126;
                 buffer[2] = (byte)(msgLength >> 8);
