@@ -85,7 +85,7 @@ namespace Mirror.SimpleWeb
             if (level < Levels.error)
                 return;
 
-            Debug.Log($"ERROR: <color=red>{msg}</color>");
+            Debug.LogError($"ERROR: <color=red>{msg}</color>");
         }
 
         [Conditional("DEBUG")]
@@ -97,7 +97,7 @@ namespace Mirror.SimpleWeb
             if (showColor)
                 Error(msg);
             else
-                Debug.Log($"ERROR: {msg}");
+                Debug.LogError($"ERROR: {msg}");
         }
     }
 }
