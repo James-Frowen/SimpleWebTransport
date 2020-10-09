@@ -18,3 +18,8 @@ WebGl Transport for [Mirror](https://github.com/vis2k/Mirror)
 ## Bugs?
 
 Please report any bugs or issues [Here](https://github.com/MirrorNetworking/SimpleWebTransport/issues)
+
+
+# [How to create and setup an SSL Cert](./HowToCreateSSLCert.md)
+ 
+[See this page](./HowToCreateSSLCert.md)
