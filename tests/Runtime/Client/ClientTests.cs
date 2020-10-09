@@ -61,7 +61,7 @@ namespace Mirror.SimpleWeb.Tests.Client
             yield return new WaitForSeconds(1);
 
             byte[] bytes = Enumerable.Range(10, 10).Select(x => (byte)x).ToArray();
-            ArraySegment<byte> segment = new ArraySegment<byte>(bytes, 0, 10);
+            ArraySegment<byte> segment = new ArraySegment<byte>(bytes);
             server.ServerSend(new List<int> { 1 }, 0, segment);
 
             // wait for message
@@ -79,7 +79,7 @@ namespace Mirror.SimpleWeb.Tests.Client
             yield return new WaitForSeconds(1);
 
             byte[] bytes = Enumerable.Range(10, 10).Select(x => (byte)x).ToArray();
-            ArraySegment<byte> segment = new ArraySegment<byte>(bytes, 0, 10);
+            ArraySegment<byte> segment = new ArraySegment<byte>(bytes);
             transport.ClientSend(0, segment);
 
             // wait for message
@@ -91,11 +91,11 @@ namespace Mirror.SimpleWeb.Tests.Client
         }
 
         [UnityTest]
-        public IEnumerator CanRecieveMulitpleMessage()
+        public IEnumerator CanRecieveMulitpleMessages()
         {
             transport.ClientConnect("localhost");
             // wait for connect
-            yield return new WaitForSeconds(1);
+            yield return WaitForConnect;
 
             List<byte[]> messages = createRandomMessages();
             foreach (byte[] msg in messages)
@@ -106,7 +106,8 @@ namespace Mirror.SimpleWeb.Tests.Client
             }
 
             // wait for message
-            yield return new WaitForSeconds(2);
+            yield return new WaitForSeconds(1f);
+
 
             Assert.That(onData, Has.Count.EqualTo(messages.Count), $"should have {messages.Count} message");
             for (int i = 0; i < messages.Count; i++)
@@ -116,7 +117,7 @@ namespace Mirror.SimpleWeb.Tests.Client
         }
 
         [UnityTest]
-        public IEnumerator CanSendMulitpleMessage()
+        public IEnumerator CanSendMulitpleMessages()
         {
             transport.ClientConnect("localhost");
             // wait for connect
@@ -131,7 +132,7 @@ namespace Mirror.SimpleWeb.Tests.Client
             }
 
             // wait for message
-            yield return new WaitForSeconds(2f);
+            yield return new WaitForSeconds(1f);
 
             Assert.That(server_onData, Has.Count.EqualTo(messages.Count), $"should have {messages.Count} message");
             Assert.That(server_onData[0].connId, Is.EqualTo(1), "should be connection id");
@@ -146,12 +147,61 @@ namespace Mirror.SimpleWeb.Tests.Client
             List<byte[]> messages = new List<byte[]>();
             for (int i = 0; i < count; i++)
             {
-                byte[] bytes = Enumerable.Range(UnityEngine.Random.Range(0, 2), UnityEngine.Random.Range(2, 5)).Select(x => (byte)x).ToArray();
+                int start = UnityEngine.Random.Range(0, 255);
+                int length = UnityEngine.Random.Range(2, 50);
+                byte[] bytes = Enumerable.Range(start, length).Select(x => (byte)x).ToArray();
                 messages.Add(bytes);
             }
             return messages;
         }
 
+
+        [UnityTest]
+        [TestCase(1, ExpectedResult = default)]
+        [TestCase(2, ExpectedResult = default)]
+        [TestCase(3, ExpectedResult = default)]
+        [TestCase(4, ExpectedResult = default)]
+        public IEnumerator CanRecieveShortMessage(int messageSize)
+        {
+            transport.ClientConnect("localhost");
+            // wait for connect
+            yield return new WaitForSeconds(1);
+
+            byte[] bytes = new byte[messageSize];
+            new System.Random().NextBytes(bytes);
+            ArraySegment<byte> segment = new ArraySegment<byte>(bytes);
+            server.ServerSend(new List<int> { 1 }, 0, segment);
+
+            // wait for message
+            yield return new WaitForSeconds(1);
+
+            Assert.That(onData, Has.Count.EqualTo(1), "should have 1 message");
+            CollectionAssert.AreEqual(onData[0], bytes, "data should match");
+        }
+
+        [UnityTest]
+        [TestCase(1, ExpectedResult = default)]
+        [TestCase(2, ExpectedResult = default)]
+        [TestCase(3, ExpectedResult = default)]
+        [TestCase(4, ExpectedResult = default)]
+        public IEnumerator CanSendShortMessage(int messageSize)
+        {
+            transport.ClientConnect("localhost");
+            // wait for connect
+            yield return new WaitForSeconds(1);
+
+            byte[] bytes = new byte[messageSize];
+            new System.Random().NextBytes(bytes);
+            ArraySegment<byte> segment = new ArraySegment<byte>(bytes);
+            transport.ClientSend(0, segment);
+
+            // wait for message
+            yield return new WaitForSeconds(1);
+
+            Assert.That(server_onData, Has.Count.EqualTo(1), "should have 1 message");
+            Assert.That(server_onData[0].connId, Is.EqualTo(1), "should be connection id");
+            CollectionAssert.AreEqual(bytes, server_onData[0].data, "data should match");
+        }
 
         [UnityTest]
         public IEnumerator CanPingAndStayConnectedForTime()

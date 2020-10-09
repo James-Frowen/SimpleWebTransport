@@ -49,6 +49,9 @@ namespace Mirror.SimpleWeb
             try
             {
                 TcpClient client = new TcpClient();
+                client.NoDelay = true;
+                client.ReceiveTimeout = 20000;
+                client.SendTimeout = 5000;
                 Uri uri = new Uri(address);
                 try
                 {
@@ -142,8 +145,10 @@ namespace Mirror.SimpleWeb
             // header is at most 4 bytes + mask
             // 1 for bit fields
             // 1+ for length (length can be be 1, 3, or 9 and we refuse 9)
-            // 4 for mask (we can read this later
-            ReadHelper.ReadResult readResult = ReadHelper.SafeRead(stream, headerBuffer, 0, Constants.HeaderSize, checkLength: true);
+
+            // client header could only be 2 bytes, and message might be 1 byte, so min is 3 bytes not the default 4 for the server
+            // todo: clean up read header logic
+            ReadHelper.ReadResult readResult = ReadHelper.SafeRead(stream, headerBuffer, 0, Constants.HeaderSize - 2, checkLength: true);
             if ((readResult & ReadHelper.ReadResult.Fail) > 0)
             {
                 Log.Info($"ReceiveLoop read failed: {readResult}");
@@ -151,20 +156,65 @@ namespace Mirror.SimpleWeb
                 // will go to finally block below
                 return false;
             }
+            byte payloadLength = MessageProcessor.GetBytePayloadLength(headerBuffer);
+
+            // payloadLength 1 or 2 is a specail case because it mean message is less than 4 bytes
+            // todo clean up this logic
+            if (payloadLength > 2)
+            {
+                // read rest of header
+                readResult = ReadHelper.SafeRead(stream, headerBuffer, 2, 2, checkLength: true);
+                if ((readResult & ReadHelper.ReadResult.Fail) > 0)
+                {
+                    Log.Info($"ReceiveLoop read failed: {readResult}");
+                    CheckForInterupt();
+                    // will go to finally block below
+                    return false;
+                }
+            }
 
             MessageProcessor.Result header = MessageProcessor.ProcessHeader(headerBuffer, maxMessageSize, false);
 
             // todo remove allocation
             // msg
             byte[] buffer = new byte[Constants.HeaderSize + header.readLength];
-            // copy header as it might contain mask
-            Buffer.BlockCopy(headerBuffer, 0, buffer, 0, Constants.HeaderSize);
 
-            ReadHelper.SafeRead(stream, buffer, Constants.HeaderSize, header.readLength);
+
+            if (payloadLength == 0)
+            {
+                Log.Info($"ReceiveLoop Receive a message with no length");
+                return false;
+            }
+            else if (payloadLength <= 2)
+            {
+                // payloadLength 1 or 2 is a specail case because it mean message is less than 4 bytes
+                // todo clean up this logic
+
+                // read message
+                readResult = ReadHelper.SafeRead(stream, headerBuffer, 2, payloadLength, checkLength: true);
+                if ((readResult & ReadHelper.ReadResult.Fail) > 0)
+                {
+                    Log.Info($"ReceiveLoop read failed: {readResult}");
+                    CheckForInterupt();
+                    // will go to finally block below
+                    return false;
+                }
+
+                // copy header as it might contain mask
+                Buffer.BlockCopy(headerBuffer, 0, buffer, 0, 2 + payloadLength);
+            }
+            else
+            {
+                // copy header as it might contain mask
+                Buffer.BlockCopy(headerBuffer, 0, buffer, 0, Constants.HeaderSize);
+
+                ReadHelper.SafeRead(stream, buffer, Constants.HeaderSize, header.readLength);
+            }
 
             Log.DumpBuffer("Message From Server", buffer, 0, buffer.Length);
             HandleMessage(header.opcode, conn, buffer, header.msgOffset, header.msgLength);
             return true;
+
         }
 
         static void CheckForInterupt()

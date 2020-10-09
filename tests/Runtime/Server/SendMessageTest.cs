@@ -41,6 +41,7 @@ namespace Mirror.SimpleWeb.Tests.Server
         }
 
         [UnityTest]
+        [TestCase(1, ExpectedResult = default)]
         [TestCase(50, ExpectedResult = default)]
         [TestCase(100, ExpectedResult = default)]
         [TestCase(124, ExpectedResult = default)]

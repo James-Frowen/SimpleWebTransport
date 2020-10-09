@@ -34,6 +34,12 @@ namespace Mirror.SimpleWeb
             public int msgOffset => hasMask ? offset + Constants.MaskSize : offset;
         }
 
+        public static byte GetBytePayloadLength(byte[] buffer)
+        {
+            byte lenByte = (byte)(buffer[1] & 0b0111_1111); // first length byte
+
+            return lenByte;
+        }
 
         /// <exception cref="InvalidDataException"></exception>
         public static Result ProcessHeader(byte[] buffer, int maxLength, bool expectMask)
