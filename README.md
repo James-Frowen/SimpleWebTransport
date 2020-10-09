@@ -21,5 +21,7 @@ Please report any bugs or issues [Here](https://github.com/MirrorNetworking/Simp
 
 
 # How to create and setup an SSL Cert
- 
+
+If you host your webgl build on a https domain you will need to use wss which will require a ssl cert.
+
 [See this page](./HowToCreateSSLCert.md)

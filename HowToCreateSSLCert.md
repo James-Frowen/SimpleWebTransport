@@ -1,5 +1,7 @@
 # How to create and setup an SSL Cert
 
+If you host your webgl build on a https domain you will need to use wss which will require a ssl cert.
+
 ## pre-setup
 
 - You need a domain name
