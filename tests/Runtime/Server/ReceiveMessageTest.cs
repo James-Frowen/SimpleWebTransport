@@ -174,6 +174,8 @@ namespace Mirror.SimpleWeb.Tests.Server
         [UnityTest]
         public IEnumerator ReceiveTooLargeArrays()
         {
+            ExpectInvalidDataError();
+
             // dont worry about result, run will timeout by itself
             _ = RunNode.RunAsync("SendTooLargeMessages.js");
 

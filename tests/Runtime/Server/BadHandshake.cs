@@ -22,10 +22,11 @@ namespace Mirror.SimpleWeb.Tests.Server
             client?.Dispose();
         }
 
-
         [UnityTest]
         public IEnumerator ClosesConnectionIfBadData()
         {
+            ExpectHandshakeFailedError();
+
             Task<TcpClient> createTask = CreateBadClient();
             while (!createTask.IsCompleted) { yield return null; }
             client = createTask.Result;
@@ -47,6 +48,9 @@ namespace Mirror.SimpleWeb.Tests.Server
         [UnityTest]
         public IEnumerator ClosesConnectionIfNoHandShakeInTimeout()
         {
+            ExpectTimeoutError();
+            ExpectHandshakeFailedError();
+
             Task<TcpClient> createTask = CreateBadClient();
             while (!createTask.IsCompleted) { yield return null; }
             client = createTask.Result;
@@ -67,6 +71,9 @@ namespace Mirror.SimpleWeb.Tests.Server
         [UnityTest]
         public IEnumerator OtherClientsCanConnectWhileWaitingForBadClient()
         {
+            ExpectTimeoutError();
+            ExpectHandshakeFailedError();
+
             // connect bad client
             Task<TcpClient> createTask = CreateBadClient();
             while (!createTask.IsCompleted) { yield return null; }

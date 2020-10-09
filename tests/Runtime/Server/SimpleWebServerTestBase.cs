@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.TestTools;
 
 namespace Mirror.SimpleWeb.Tests.Server
 {
@@ -121,6 +123,21 @@ namespace Mirror.SimpleWeb.Tests.Server
                 client.GetStream().Write(buffer, 0, 10);
             }
             catch (IOException) { }
+        }
+
+        protected void ExpectHandshakeFailedError()
+        {
+            LogAssert.Expect(LogType.Error, new Regex("ERROR: <color=red>Handshake Failed.*"));
+        }
+
+        protected void ExpectTimeoutError()
+        {
+            LogAssert.Expect(LogType.Error, new Regex(@"ERROR: SafeRead IOException[.\s]*", RegexOptions.Multiline));
+        }
+
+        protected void ExpectInvalidDataError()
+        {
+            LogAssert.Expect(LogType.Error, new Regex(@"ERROR: <color=red>Invalid data from \[Conn:1"));
         }
     }
 }

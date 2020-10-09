@@ -35,9 +35,12 @@ namespace Mirror.SimpleWeb.Tests.Server
                 Assert.That(connId == connectIndex, "Clients should be connected in order with the next index");
                 connectIndex++;
             });
-            const int goodClientCount = 10;
-            for (int i = 0; i < goodClientCount; i++)
+            const int clientCount = 10;
+            for (int i = 0; i < clientCount; i++)
             {
+                ExpectTimeoutError();
+                ExpectHandshakeFailedError();
+
                 // alternate between good and bad clients
                 Task<TcpClient> createTask = CreateBadClient();
                 while (!createTask.IsCompleted) { yield return null; }
@@ -45,15 +48,15 @@ namespace Mirror.SimpleWeb.Tests.Server
                 Assert.That(client.Connected, Is.True, "Client should have connected");
                 badClients.Add(client);
             }
-            Task<RunNode.Result> task = RunNode.RunAsync("ConnectAndCloseMany.js", arg0: goodClientCount.ToString());
+            Task<RunNode.Result> task = RunNode.RunAsync("ConnectAndCloseMany.js", arg0: clientCount.ToString());
 
             // wait for timeout so bad clients disconnect
             yield return new WaitForSeconds(timeout / 1000);
             // wait extra second for stuff to process
             yield return new WaitForSeconds(2);
 
-            Assert.That(onConnect, Has.Count.EqualTo(goodClientCount), "Connect should not be called");
-            Assert.That(onDisconnect, Has.Count.EqualTo(goodClientCount), "Disconnect should not be called");
+            Assert.That(onConnect, Has.Count.EqualTo(clientCount), "Connect should not be called");
+            Assert.That(onDisconnect, Has.Count.EqualTo(clientCount), "Disconnect should not be called");
             Assert.That(onData, Has.Count.EqualTo(0), "Data should not be called");
 
             Assert.That(task.IsCompleted, Is.True, "Take should have been completed");
@@ -62,7 +65,7 @@ namespace Mirror.SimpleWeb.Tests.Server
             result.AssetTimeout(false);
             result.AssetErrors();
             List<string> expected = new List<string>();
-            for (int i = 0; i < goodClientCount; i++)
+            for (int i = 0; i < clientCount; i++)
             {
                 expected.Add($"{i}: Connection opened");
                 expected.Add($"{i}: Closed after 2000ms");
