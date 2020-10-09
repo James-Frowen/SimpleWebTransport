@@ -14,9 +14,9 @@ namespace Mirror.SimpleWeb.Tests.Server
         protected override bool StartServer => false;
 
         [SetUp]
-        public override void Setup()
+        public override void SetUp()
         {
-            base.Setup();
+            base.SetUp();
 
             transport.sslEnabled = true;
             transport.sslCertJson = "./Assets/SimpleWebTransport/source/.cert.example.Json";

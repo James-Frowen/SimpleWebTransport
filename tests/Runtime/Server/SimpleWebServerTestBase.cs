@@ -27,7 +27,7 @@ namespace Mirror.SimpleWeb.Tests.Server
         List<GameObject> toCleanup = new List<GameObject>();
 
         [SetUp]
-        public virtual void Setup()
+        public virtual void SetUp()
         {
             transport = CreateRelayTransport();
 
