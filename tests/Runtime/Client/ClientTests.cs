@@ -173,5 +173,34 @@ namespace Mirror.SimpleWeb.Tests.Client
             Assert.That(server_onDisconnect, Has.Count.EqualTo(1), "server Disconnect should be called once");
         }
 
+        [UnityTest]
+        public IEnumerator ErrorWhenMessageTooBig()
+        {
+            transport.ClientConnect("localhost");
+            // wait for connect
+            yield return new WaitForSeconds(1);
+
+            ArraySegment<byte> segment = new ArraySegment<byte>(new byte[70_000]);
+
+            LogAssert.Expect(LogType.Error, "Message greater than max size");
+            bool result = transport.ClientSend(Channels.DefaultReliable, segment);
+
+            Assert.IsFalse(result);
+        }
+
+        [UnityTest]
+        public IEnumerator ErrorWhenMessageTooSmall()
+        {
+            transport.ClientConnect("localhost");
+            // wait for connect
+            yield return new WaitForSeconds(1);
+
+            ArraySegment<byte> segment = new ArraySegment<byte>();
+
+            LogAssert.Expect(LogType.Error, "Message count was zero");
+            bool result = transport.ClientSend(Channels.DefaultReliable, segment);
+
+            Assert.IsFalse(result);
+        }
     }
 }

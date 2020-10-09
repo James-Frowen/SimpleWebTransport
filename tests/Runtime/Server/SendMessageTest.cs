@@ -112,5 +112,31 @@ namespace Mirror.SimpleWeb.Tests.Server
             result.AssetOutput(expected.ToArray());
             result.AssetErrors();
         }
+
+        [UnityTest]
+        public IEnumerator ErrorWhenMessageTooBig()
+        {
+            yield return null;
+
+            ArraySegment<byte> segment = new ArraySegment<byte>(new byte[70_000]);
+
+            LogAssert.Expect(LogType.Error, "Message greater than max size");
+            bool result = transport.ServerSend(new List<int> { 1 }, Channels.DefaultReliable, segment);
+
+            Assert.IsFalse(result);
+        }
+
+        [UnityTest]
+        public IEnumerator ErrorWhenMessageTooSmall()
+        {
+            yield return null;
+
+            ArraySegment<byte> segment = new ArraySegment<byte>();
+
+            LogAssert.Expect(LogType.Error, "Message count was zero");
+            bool result = transport.ServerSend(new List<int> { 1 }, Channels.DefaultReliable, segment);
+
+            Assert.IsFalse(result);
+        }
     }
 }
