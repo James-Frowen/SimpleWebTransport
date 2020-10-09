@@ -32,6 +32,8 @@ namespace Mirror.SimpleWeb.Tests.Client
         [SetUp]
         public virtual void SetUp()
         {
+            Debug.Log($"SetUp {TestContext.CurrentContext.Test.Name}");
+
             transport = CreateRelayTransport();
 
             onConnect = 0;
@@ -66,6 +68,8 @@ namespace Mirror.SimpleWeb.Tests.Client
         [TearDown]
         public virtual void TearDown()
         {
+            Debug.Log($"TearDown {TestContext.CurrentContext.Test.Name}");
+
             foreach (GameObject obj in toCleanup)
             {
                 if (obj != null)
