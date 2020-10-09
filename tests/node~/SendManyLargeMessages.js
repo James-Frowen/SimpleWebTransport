@@ -24,7 +24,7 @@ webSocket.addEventListener('open', function (event) {
         }, i * 20);
     }
     setTimeout(() => {
-        webSocket.close
+        webSocket.close();
     }, (100 * 20) + 1000);
 });
 
