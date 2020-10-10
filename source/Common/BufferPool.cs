@@ -1,28 +1,73 @@
 using System;
 using System.Collections.Concurrent;
+using System.Threading;
 using UnityEngine;
 
 namespace Mirror.SimpleWeb
 {
-    internal interface IBufferOwner
+    public interface IBufferOwner
     {
         void Return(ArrayBuffer buffer);
     }
 
-    public struct ArrayBuffer : IDisposable
+    public class ArrayBuffer
     {
-        public readonly byte[] array;
-        private readonly IBufferOwner owner;
+        readonly IBufferOwner owner;
 
-        internal ArrayBuffer(IBufferOwner owner, int size)
+        readonly byte[] array;
+        public int Length { get; private set; }
+
+        /// <summary>
+        /// How many times release needs to be called before buffer is returned to pool
+        /// <para>This allows the buffer to be used in multiple places at the same time</para>
+        /// </summary>
+        /// <remarks>
+        /// This value is normally 0, but can be changed to require release to be called multiple times
+        /// </remarks>
+        public int releasesRequired;
+
+        public ArrayBuffer(IBufferOwner owner, int size)
         {
             this.owner = owner;
             array = new byte[size];
         }
 
-        public void Dispose()
+        public void Release()
         {
-            owner.Return(this);
+            Interlocked.Decrement(ref releasesRequired);
+            if (releasesRequired <= 0)
+            {
+                Length = 0;
+                owner.Return(this);
+            }
+        }
+
+
+        public void CopyTo(byte[] target, int offset)
+        {
+            if (Length > target.Length) throw new ArgumentException($"{nameof(Length)} was greater than {nameof(target)}.length", nameof(target));
+
+            //todo check if Buffer.BlockCopy is faster
+            Array.Copy(array, 0, target, offset, Length);
+        }
+
+        public void CopyFrom(ArraySegment<byte> segment)
+        {
+            CopyFrom(segment.Array, segment.Offset, segment.Count);
+        }
+        public void CopyFrom(byte[] source, int offset, int length)
+        {
+            if (length > array.Length) throw new ArgumentException($"{nameof(length)} was greater than {nameof(array)}.length", nameof(length));
+
+            Length = length;
+            //todo check if Buffer.BlockCopy is faster
+            Array.Copy(source, offset, array, 0, length);
+        }
+
+        [System.Diagnostics.Conditional("UNITY_ASSERTIONS")]
+        internal void Validate(int arraySize)
+        {
+            Debug.Assert(array.Length == arraySize, "Buffer that was returned had an array of the wrong size");
         }
     }
 
@@ -41,9 +86,10 @@ namespace Mirror.SimpleWeb
         {
             return buffers.TryDequeue(out ArrayBuffer buffer) ? buffer : new ArrayBuffer(this, arraySize);
         }
+
         public void Return(ArrayBuffer buffer)
         {
-            Debug.Assert(buffer.array.Length == arraySize, "Buffer that was returned had an array of the wrong size");
+            buffer.Validate(arraySize);
             buffers.Enqueue(buffer);
         }
     }
