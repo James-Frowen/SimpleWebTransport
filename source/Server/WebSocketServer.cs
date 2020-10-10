@@ -257,7 +257,7 @@ namespace Mirror.SimpleWeb
             }
             else
             {
-                Debug.LogError($"Cant send message to {id} because connection was not found in dictionary");
+                Log.Warn($"Cant send message to {id} because connection was not found in dictionary. Maybe it disconnected.");
             }
         }
 
