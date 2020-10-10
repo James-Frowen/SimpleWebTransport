@@ -79,7 +79,6 @@ namespace Mirror.SimpleWeb
                 {
                     while (true)
                     {
-                        // TODO check this is blocking?
                         TcpClient client = listener.AcceptTcpClient();
                         client.SendTimeout = sendTimeout;
                         client.ReceiveTimeout = receiveTimeout;
