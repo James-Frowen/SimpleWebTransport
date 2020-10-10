@@ -110,7 +110,7 @@ namespace Mirror.SimpleWeb
 
                 Array.Copy(buffer, offset, copy, 0, length);
 
-                ArraySegment<byte> data = new ArraySegment<byte>(buffer);
+                ArraySegment<byte> data = new ArraySegment<byte>(copy);
 
                 queue.Enqueue(new Message(conn.connId, data));
             }
