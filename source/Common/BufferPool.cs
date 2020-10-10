@@ -45,7 +45,7 @@ namespace Mirror.SimpleWeb
 
         public void CopyTo(byte[] target, int offset)
         {
-            if (Length > target.Length) throw new ArgumentException($"{nameof(Length)} was greater than {nameof(target)}.length", nameof(target));
+            if (Length > (target.Length + offset)) throw new ArgumentException($"{nameof(Length)} was greater than {nameof(target)}.length", nameof(target));
 
             //todo check if Buffer.BlockCopy is faster
             Array.Copy(array, 0, target, offset, Length);
