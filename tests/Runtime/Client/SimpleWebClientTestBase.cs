@@ -34,7 +34,7 @@ namespace Mirror.SimpleWeb.Tests.Client
         {
             Debug.Log($"SetUp {TestContext.CurrentContext.Test.Name}");
 
-            transport = CreateRelayTransport();
+            transport = CreateTransport();
 
             onConnect = 0;
             onDisconnect = 0;
@@ -47,7 +47,7 @@ namespace Mirror.SimpleWeb.Tests.Client
             transport.OnClientError.AddListener((exception) => onError.Add(exception));
 
 
-            server = CreateRelayTransport();
+            server = CreateTransport();
 
             server_onConnect.Clear();
             server_onDisconnect.Clear();
@@ -84,7 +84,7 @@ namespace Mirror.SimpleWeb.Tests.Client
             }
         }
 
-        protected SimpleWebTransport CreateRelayTransport()
+        protected SimpleWebTransport CreateTransport()
         {
             GameObject go = new GameObject();
             toCleanup.Add(go);

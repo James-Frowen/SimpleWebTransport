@@ -13,7 +13,7 @@ namespace Mirror.SimpleWeb.Tests.Server
         [UnityTest]
         public IEnumerator ServerCanStartAndStopWithoutErrors()
         {
-            SimpleWebTransport transport = CreateRelayTransport();
+            SimpleWebTransport transport = CreateTransport();
 
             transport.ServerStart();
             Assert.That(transport.ServerActive(), Is.True);
@@ -32,7 +32,7 @@ namespace Mirror.SimpleWeb.Tests.Server
         {
             // use {} block for local variable scope
             {
-                SimpleWebTransport transport = CreateRelayTransport();
+                SimpleWebTransport transport = CreateTransport();
 
                 transport.ServerStart();
                 Assert.That(transport.ServerActive(), Is.True);
@@ -44,7 +44,7 @@ namespace Mirror.SimpleWeb.Tests.Server
             }
 
             {
-                SimpleWebTransport transport = CreateRelayTransport();
+                SimpleWebTransport transport = CreateTransport();
 
                 transport.ServerStart();
                 Assert.That(transport.ServerActive(), Is.True);
