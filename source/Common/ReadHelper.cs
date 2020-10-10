@@ -3,8 +3,49 @@ using System.IO;
 
 namespace Mirror.SimpleWeb
 {
+    public class ReadHelperException : Exception
+    {
+        public ReadHelperException(string message) : base(message) { }
+    }
+
     public static class ReadHelper
     {
+        /// <exception cref="ReadHelperException"></exception>
+        /// <exception cref="IOException"></exception>
+        public static void Read(Stream stream, byte[] outBuffer, int outOffset, int length)
+        {
+            int received = 0;
+            try
+            {
+                received = stream.Read(outBuffer, outOffset, length);
+            }
+            catch (AggregateException ae)
+            {
+                // if interupt is called we dont care about Exceptions
+                Utils.CheckForInterupt();
+
+                ae.Handle(e =>
+                {
+                    // rethrow
+                    return false;
+                });
+            }
+
+            if (received == -1)
+            {
+                throw new ReadHelperException("returned -1");
+            }
+
+            if (received == 0)
+            {
+                throw new ReadHelperException("returned 0");
+            }
+            if (received != length)
+            {
+                throw new ReadHelperException("returned not equal to length");
+            }
+        }
+
         public enum ReadResult
         {
             Success = 1,
@@ -12,9 +53,15 @@ namespace Mirror.SimpleWeb
             ReadZero = 4,
             ReadLessThanLength = 8,
             Error = 16,
-            Fail = ReadMinusOne | ReadZero | ReadLessThanLength | Error
+            StreamDisposed = 32,
+            Fail = ReadMinusOne | ReadZero | ReadLessThanLength | Error | StreamDisposed
+
         }
-        public static ReadResult SafeRead(Stream stream, byte[] outBuffer, int outOffset, int length, bool checkLength = false)
+
+        /// <summary>
+        /// Reads and returns results. This should never throw an exception
+        /// </summary>
+        public static ReadResult SafeRead(Stream stream, byte[] outBuffer, int outOffset, int length)
         {
             try
             {
@@ -29,7 +76,7 @@ namespace Mirror.SimpleWeb
                 {
                     return ReadResult.ReadZero;
                 }
-                if (checkLength && received != length)
+                if (received != length)
                 {
                     return ReadResult.ReadLessThanLength;
                 }
@@ -41,6 +88,8 @@ namespace Mirror.SimpleWeb
                 // if interupt is called we dont care about Exceptions
                 Utils.CheckForInterupt();
 
+                ReadResult result = ReadResult.Error;
+
                 ae.Handle(e =>
                 {
                     if (e is IOException io)
@@ -49,10 +98,16 @@ namespace Mirror.SimpleWeb
                         Log.Info($"SafeRead IOException\n{io.Message}", false);
                         return true;
                     }
+                    if (e is ObjectDisposedException)
+                    {
+                        result = ReadResult.StreamDisposed;
+                        return true;
+                    }
 
                     return false;
                 });
-                return ReadResult.Error;
+
+                return result;
             }
             catch (IOException e)
             {

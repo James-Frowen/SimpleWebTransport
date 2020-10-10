@@ -41,6 +41,42 @@ namespace Mirror.SimpleWeb
             return lenByte;
         }
 
+        public static bool NeedToReadShortLength(byte[] buffer)
+        {
+            byte lenByte = (byte)(buffer[1] & 0b0111_1111); // first length byte
+
+            return lenByte >= Constants.UshortPayloadLength;
+        }
+
+        public static int GetOpcode(byte[] buffer)
+        {
+            return buffer[0] & 0b0000_1111;
+        }
+
+        public static int GetPayloadLength(byte[] buffer)
+        {
+            byte lenByte = (byte)(buffer[1] & 0b0111_1111); // first length byte
+            return GetMessageLength(buffer, 0, lenByte);
+        }
+
+        public static void ValidateHeader(byte[] buffer, int maxLength, bool expectMask)
+        {
+            bool finished = (buffer[0] & 0b1000_0000) != 0; // has full message been sent
+            bool hasMask = (buffer[1] & 0b1000_0000) != 0; // must be true, "All messages from the client to the server have this bit set"
+
+            int opcode = buffer[0] & 0b0000_1111; // expecting 1 - text message
+            byte lenByte = (byte)(buffer[1] & 0b0111_1111); // first length byte
+
+            ThrowIfNotFinished(finished);
+            ThrowIfMaskNotExpected(hasMask, expectMask);
+            ThrowIfBadOpCode(opcode);
+
+            int msglen = GetMessageLength(buffer, 0, lenByte);
+
+            ThrowIfLengthZero(msglen);
+            ThrowIfMsgLengthTooLong(msglen, maxLength);
+        }
+
         /// <exception cref="InvalidDataException"></exception>
         public static Result ProcessHeader(byte[] buffer, int maxLength, bool expectMask)
         {
@@ -55,7 +91,7 @@ namespace Mirror.SimpleWeb
             ThrowIfBadOpCode(opcode);
 
             // offset is 2 or 4
-            (int msglen, int offsetAfterLength) = GetMessageLength(buffer, 0, lenByte);
+            (int msglen, int offsetAfterLength) = GetMessageLengthOld(buffer, 0, lenByte);
 
             ThrowIfLengthZero(msglen);
             ThrowIfMsgLengthTooLong(msglen, maxLength);
@@ -79,7 +115,29 @@ namespace Mirror.SimpleWeb
         }
 
         /// <exception cref="InvalidDataException"></exception>
-        static (int length, int offsetAfterLength) GetMessageLength(byte[] buffer, int offset, byte lenByte)
+        static int GetMessageLength(byte[] buffer, int offset, byte lenByte)
+        {
+            if (lenByte == Constants.UshortPayloadLength)
+            {
+                // header is 4 bytes long
+                ushort value = 0;
+                value |= (ushort)(buffer[offset + 2] << 8);
+                value |= buffer[offset + 3];
+
+                return value;
+            }
+            else if (lenByte == Constants.UlongPayloadLength)
+            {
+                throw new InvalidDataException("Max length is longer than allowed in a single message");
+            }
+            else // is less than 126
+            {
+                // header is 2 bytes long
+                return lenByte;
+            }
+        }
+        /// <exception cref="InvalidDataException"></exception>
+        static (int length, int offsetAfterLength) GetMessageLengthOld(byte[] buffer, int offset, byte lenByte)
         {
             if (lenByte == Constants.UshortPayloadLength)
             {

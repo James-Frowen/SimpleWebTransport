@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Concurrent;
-using System.IO;
 using System.Linq;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading;
 using Debug = UnityEngine.Debug;
 
@@ -145,90 +143,7 @@ namespace Mirror.SimpleWeb
             sendThread.IsBackground = true;
             sendThread.Start();
 
-            ReceiveLoop(conn);
-        }
-
-        void ReceiveLoop(Connection conn)
-        {
-            try
-            {
-                TcpClient client = conn.client;
-                Stream stream = conn.stream;
-                //byte[] buffer = conn.receiveBuffer;
-                byte[] headerBuffer = new byte[Constants.HeaderSize];
-
-                while (client.Connected)
-                {
-                    bool success = ReadOneMessage(conn, stream, headerBuffer);
-                    if (!success)
-                        break;
-                }
-            }
-            catch (ObjectDisposedException) { Log.Info($"ReceiveLoop {conn} Stream closed"); return; }
-            catch (ThreadInterruptedException) { Log.Info($"ReceiveLoop {conn} ThreadInterrupted"); return; }
-            catch (ThreadAbortException) { Log.Info($"ReceiveLoop {conn} ThreadAbort"); return; }
-            catch (InvalidDataException e)
-            {
-                Log.Error($"Invalid data from {conn}: {e.Message}");
-                receiveQueue.Enqueue(new Message(conn.connId, e));
-            }
-            catch (Exception e) { Debug.LogException(e); }
-            finally
-            {
-                CloseConnection(conn);
-            }
-        }
-
-        private bool ReadOneMessage(Connection conn, Stream stream, byte[] headerBuffer)
-        {
-            // header is at most 4 bytes + mask
-            // 1 for bit fields
-            // 1+ for length (length can be be 1, 3, or 9 and we refuse 9)
-            // 4 for mask (we can read this later
-            ReadHelper.ReadResult readResult = ReadHelper.SafeRead(stream, headerBuffer, 0, Constants.HeaderSize, checkLength: true);
-            if ((readResult & ReadHelper.ReadResult.Fail) > 0)
-            {
-                Log.Info($"ReceiveLoop {conn.connId} read failed: {readResult}");
-                Utils.CheckForInterupt();
-                // will go to finally block below
-                return false;
-            }
-
-            MessageProcessor.Result header = MessageProcessor.ProcessHeader(headerBuffer, maxMessageSize, true);
-
-            // todo remove allocation
-            // mask + msg
-            byte[] buffer = new byte[Constants.HeaderSize + header.readLength];
-            for (int i = 0; i < Constants.HeaderSize; i++)
-            {
-                // copy header as it might contain mask
-                buffer[i] = headerBuffer[i];
-            }
-
-            ReadHelper.SafeRead(stream, buffer, Constants.HeaderSize, header.readLength);
-
-            MessageProcessor.ToggleMask(buffer, header.offset + Constants.MaskSize, header.msgLength, buffer, header.offset);
-
-            // dump after mask off
-            Log.DumpBuffer($"Message From Client {conn}", buffer, 0, buffer.Length);
-
-            HandleMessage(header.opcode, conn, buffer, header.msgOffset, header.msgLength);
-            return true;
-        }
-
-        void HandleMessage(int opcode, Connection conn, byte[] buffer, int offset, int length)
-        {
-            if (opcode == 2)
-            {
-                ArraySegment<byte> data = new ArraySegment<byte>(buffer, offset, length);
-
-                receiveQueue.Enqueue(new Message(conn.connId, data));
-            }
-            else if (opcode == 8)
-            {
-                Log.Info($"Close: {buffer[offset + 0] << 8 | buffer[offset + 1]} message:{Encoding.UTF8.GetString(buffer, offset + 2, length - 2)}");
-                CloseConnection(conn);
-            }
+            ReceiveLoop.Loop(conn, maxMessageSize, true, receiveQueue, CloseConnection);
         }
 
         void CloseConnection(Connection conn)
