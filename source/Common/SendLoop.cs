@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace Mirror.SimpleWeb
 {
-    internal class SendLoop
+    internal static class SendLoop
     {
         public static void Loop(Connection conn, int bufferSize, bool setMask, Action<Connection> closeCallback)
         {
