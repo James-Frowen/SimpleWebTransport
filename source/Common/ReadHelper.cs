@@ -10,9 +10,10 @@ namespace Mirror.SimpleWeb
 
     public static class ReadHelper
     {
+        /// <returns>outOffset + length</returns>
         /// <exception cref="ReadHelperException"></exception>
         /// <exception cref="IOException"></exception>
-        public static void Read(Stream stream, byte[] outBuffer, int outOffset, int length)
+        public static int Read(Stream stream, byte[] outBuffer, int outOffset, int length)
         {
             int received = 0;
             try
@@ -44,6 +45,8 @@ namespace Mirror.SimpleWeb
             {
                 throw new ReadHelperException("returned not equal to length");
             }
+
+            return outOffset + received;
         }
 
         public enum ReadResult

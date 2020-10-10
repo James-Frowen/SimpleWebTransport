@@ -130,6 +130,7 @@ namespace Mirror.SimpleWeb
 
         public override void Send(ArraySegment<byte> source)
         {
+            // todo remove allocation
             byte[] buffer = new byte[source.Count];
             Array.Copy(source.Array, source.Offset, buffer, 0, source.Count);
             ArraySegment<byte> copy = new ArraySegment<byte>(buffer);
