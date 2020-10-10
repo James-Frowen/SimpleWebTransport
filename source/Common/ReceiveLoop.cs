@@ -60,6 +60,7 @@ namespace Mirror.SimpleWeb
 
         static bool ReadOneMessage(ConcurrentQueue<Message> queue, Action<Connection> closeCallback, Connection conn, Stream stream, byte[] buffer, int maxMessageSize, bool expectMask)
         {
+            Log.Verbose($"Message From {conn}");
             int offset = 0;
             // read 2
             offset = ReadHelper.Read(stream, buffer, offset, Constants.HeaderMinSize);
@@ -69,6 +70,7 @@ namespace Mirror.SimpleWeb
             {
                 offset = ReadHelper.Read(stream, buffer, offset, Constants.ShortLength);
             }
+
 
             MessageProcessor.ValidateHeader(buffer, maxMessageSize, expectMask);
 
@@ -80,6 +82,8 @@ namespace Mirror.SimpleWeb
             int opcode = MessageProcessor.GetOpcode(buffer);
             int payloadLength = MessageProcessor.GetPayloadLength(buffer);
 
+            Log.Verbose($"Header ln:{payloadLength} op:{opcode} mask:{expectMask}");
+
             offset = ReadHelper.Read(stream, buffer, offset, payloadLength);
 
             int msgOffset = offset - payloadLength;
@@ -90,7 +94,8 @@ namespace Mirror.SimpleWeb
             }
 
             // dump after mask off
-            Log.DumpBuffer($"Message From Client {conn}", buffer, 0, payloadLength);
+            Log.DumpBuffer($"Raw Header", buffer, 0, msgOffset);
+            Log.DumpBuffer($"Message", buffer, msgOffset, payloadLength);
 
             HandleMessage(queue, closeCallback, opcode, conn, buffer, msgOffset, payloadLength);
             return true;
