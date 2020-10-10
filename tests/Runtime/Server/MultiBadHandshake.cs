@@ -38,7 +38,6 @@ namespace Mirror.SimpleWeb.Tests.Server
             const int clientCount = 10;
             for (int i = 0; i < clientCount; i++)
             {
-                ExpectTimeoutError();
                 ExpectHandshakeFailedError();
 
                 // alternate between good and bad clients

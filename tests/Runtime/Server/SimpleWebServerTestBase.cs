@@ -134,11 +134,6 @@ namespace Mirror.SimpleWeb.Tests.Server
             LogAssert.Expect(LogType.Error, new Regex("ERROR: <color=red>Handshake Failed.*"));
         }
 
-        protected void ExpectTimeoutError()
-        {
-            LogAssert.Expect(LogType.Error, new Regex(@"ERROR: SafeRead IOException[.\s]*", RegexOptions.Multiline));
-        }
-
         protected void ExpectInvalidDataError()
         {
             LogAssert.Expect(LogType.Error, new Regex(@"ERROR: <color=red>Invalid data from \[Conn:1"));

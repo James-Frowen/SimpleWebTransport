@@ -48,7 +48,6 @@ namespace Mirror.SimpleWeb.Tests.Server
         [UnityTest]
         public IEnumerator ClosesConnectionIfNoHandShakeInTimeout()
         {
-            ExpectTimeoutError();
             ExpectHandshakeFailedError();
 
             Task<TcpClient> createTask = CreateBadClient();
@@ -71,7 +70,6 @@ namespace Mirror.SimpleWeb.Tests.Server
         [UnityTest]
         public IEnumerator OtherClientsCanConnectWhileWaitingForBadClient()
         {
-            ExpectTimeoutError();
             ExpectHandshakeFailedError();
 
             // connect bad client
