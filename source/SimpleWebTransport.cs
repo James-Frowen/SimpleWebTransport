@@ -136,8 +136,7 @@ namespace Mirror.SimpleWeb
                 OnClientError.Invoke(e);
             };
 
-            // TODO can this just be builder.ToString()
-            client.Connect(builder.Uri.ToString());
+            client.Connect(builder.ToString());
         }
 
         public override void ClientDisconnect()
