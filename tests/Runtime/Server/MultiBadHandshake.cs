@@ -49,10 +49,8 @@ namespace Mirror.SimpleWeb.Tests.Server
             }
             Task<RunNode.Result> task = RunNode.RunAsync("ConnectAndCloseMany.js", arg0: clientCount.ToString());
 
-            // wait for timeout so bad clients disconnect
-            yield return new WaitForSeconds(timeout / 1000);
-            // wait extra second for stuff to process
-            yield return new WaitForSeconds(2);
+            // wait for timeout + extra so bad clients disconnect
+            yield return new WaitForSeconds(2 * timeout / 1000);
 
             Assert.That(onConnect, Has.Count.EqualTo(clientCount), "Connect should not be called");
             Assert.That(onDisconnect, Has.Count.EqualTo(clientCount), "Disconnect should not be called");
