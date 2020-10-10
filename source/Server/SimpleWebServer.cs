@@ -10,13 +10,15 @@ namespace Mirror.SimpleWeb
         readonly int maxMessagesPerTick;
 
         readonly WebSocketServer server;
+        readonly BufferPool bufferPool;
 
         public SimpleWebServer(ushort port, int maxMessagesPerTick, bool noDelay, int sendTimeout, int receiveTimeout, int maxMessageSize, SslConfig sslConfig)
         {
             this.port = port;
             this.maxMessagesPerTick = maxMessagesPerTick;
+            bufferPool = new BufferPool(5, 20, maxMessageSize);
 
-            server = new WebSocketServer(noDelay, sendTimeout, receiveTimeout, maxMessageSize, sslConfig);
+            server = new WebSocketServer(noDelay, sendTimeout, receiveTimeout, maxMessageSize, sslConfig, bufferPool);
         }
 
         public bool Active { get; private set; }
@@ -40,16 +42,14 @@ namespace Mirror.SimpleWeb
 
         public void SendAll(List<int> connectionIds, ArraySegment<byte> source)
         {
+            ArrayBuffer buffer = bufferPool.Take(source.Count);
+            buffer.CopyFrom(source);
+            buffer.releasesRequired = connectionIds.Count;
+
             // make copy of array before for each, data sent to each client is the same
-
-            // todo remove allocation
-            byte[] buffer = new byte[source.Count];
-            Array.Copy(source.Array, source.Offset, buffer, 0, source.Count);
-            ArraySegment<byte> copy = new ArraySegment<byte>(buffer);
-
             foreach (int id in connectionIds)
             {
-                server.Send(id, copy);
+                server.Send(id, buffer);
             }
         }
 

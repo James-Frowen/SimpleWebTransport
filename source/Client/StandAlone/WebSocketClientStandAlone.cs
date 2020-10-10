@@ -14,16 +14,14 @@ namespace Mirror.SimpleWeb
         readonly ClientSslHelper sslHelper;
         readonly ClientHandshake handshake;
         readonly RNGCryptoServiceProvider random;
-        readonly int maxMessageSize;
 
         private Connection conn;
 
-        internal WebSocketClientStandAlone(int maxMessageSize, int maxMessagesPerTick) : base(maxMessagesPerTick)
+        internal WebSocketClientStandAlone(int maxMessageSize, int maxMessagesPerTick) : base(maxMessageSize, maxMessagesPerTick)
         {
 #if UNITY_WEBGL && !UNITY_EDITOR
             throw new NotSupportedException();
 #else
-            this.maxMessageSize = maxMessageSize;
             sslHelper = new ClientSslHelper();
             handshake = new ClientHandshake();
             random = new RNGCryptoServiceProvider();
@@ -130,12 +128,10 @@ namespace Mirror.SimpleWeb
 
         public override void Send(ArraySegment<byte> source)
         {
-            // todo remove allocation
-            byte[] buffer = new byte[source.Count];
-            Array.Copy(source.Array, source.Offset, buffer, 0, source.Count);
-            ArraySegment<byte> copy = new ArraySegment<byte>(buffer);
+            ArrayBuffer buffer = bufferPool.Take(source.Count);
+            buffer.CopyFrom(source);
 
-            conn.sendQueue.Enqueue(copy);
+            conn.sendQueue.Enqueue(buffer);
             conn.sendPending.Set();
         }
     }
