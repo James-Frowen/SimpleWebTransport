@@ -35,6 +35,7 @@ namespace Mirror.SimpleWeb
 
         protected SimpleWebClient(int maxMessageSize, int maxMessagesPerTick)
         {
+            this.maxMessageSize = maxMessageSize;
             this.maxMessagesPerTick = maxMessagesPerTick;
             bufferPool = new BufferPool(5, 20, maxMessageSize);
         }
