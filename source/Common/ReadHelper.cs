@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Threading;
 
 namespace Mirror.SimpleWeb
 {
@@ -40,7 +39,7 @@ namespace Mirror.SimpleWeb
             catch (AggregateException ae)
             {
                 // if interupt is called we dont care about Exceptions
-                CheckForInterupt();
+                Utils.CheckForInterupt();
 
                 ae.Handle(e =>
                 {
@@ -58,18 +57,12 @@ namespace Mirror.SimpleWeb
             catch (IOException e)
             {
                 // if interupt is called we dont care about Exceptions
-                CheckForInterupt();
+                Utils.CheckForInterupt();
 
                 // this is only info as SafeRead is allowed to fail
                 Log.Info($"SafeRead IOException\n{e.Message}", false);
                 return ReadResult.Error;
             }
-        }
-
-        static void CheckForInterupt()
-        {
-            // sleep in order to check for ThreadInterruptedException
-            Thread.Sleep(1);
         }
 
         public static int? SafeReadTillMatch(Stream stream, byte[] outBuffer, int outOffset, byte[] endOfHeader)

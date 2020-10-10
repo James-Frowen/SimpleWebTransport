@@ -102,7 +102,7 @@ namespace Mirror.SimpleWeb
                 catch (SocketException)
                 {
                     // check for Interrupted/Abort
-                    CheckForInterupt();
+                    Utils.CheckForInterupt();
                     throw;
                 }
             }
@@ -189,7 +189,7 @@ namespace Mirror.SimpleWeb
             if ((readResult & ReadHelper.ReadResult.Fail) > 0)
             {
                 Log.Info($"ReceiveLoop {conn.connId} read failed: {readResult}");
-                CheckForInterupt();
+                Utils.CheckForInterupt();
                 // will go to finally block below
                 return false;
             }
@@ -214,12 +214,6 @@ namespace Mirror.SimpleWeb
 
             HandleMessage(header.opcode, conn, buffer, header.msgOffset, header.msgLength);
             return true;
-        }
-
-        static void CheckForInterupt()
-        {
-            // sleep in order to check for ThreadInterruptedException
-            Thread.Sleep(1);
         }
 
         void HandleMessage(int opcode, Connection conn, byte[] buffer, int offset, int length)
