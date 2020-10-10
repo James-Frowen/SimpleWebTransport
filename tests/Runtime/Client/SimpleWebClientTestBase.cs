@@ -9,6 +9,7 @@ namespace Mirror.SimpleWeb.Tests.Client
     public abstract class SimpleWebClientTestBase
     {
         protected const int timeout = 4000;
+        const Log.Levels LogLevel = Log.Levels.info;
 
         protected abstract bool StartServer { get; }
 
@@ -91,11 +92,11 @@ namespace Mirror.SimpleWeb.Tests.Client
 
             SimpleWebTransport transport = go.AddComponent<SimpleWebTransport>();
             transport.port = 7776;
-            transport.logLevels = Log.Levels.info;
+            transport.logLevels = LogLevel;
             transport.receiveTimeout = timeout;
             transport.sendTimeout = timeout;
 
-            Log.level = Log.Levels.info;
+            Log.level = LogLevel;
             return transport;
         }
     }
