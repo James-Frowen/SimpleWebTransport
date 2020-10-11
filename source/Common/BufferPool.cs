@@ -95,17 +95,22 @@ namespace Mirror.SimpleWeb
     }
 
     /// <summary>
-    /// Collection of different sized buffers 
+    /// Collection of different sized buffers
     /// </summary>
     /// <remarks>
-    /// Problem:
-    /// * need cached byte[] so that new ones arn't created each time.
-    /// * arrays sent are multiple different sizes
-    /// * some message might be bit so need buffers to cover that size
-    /// * most messages will be small compared to max message size
-    /// Solution:
-    /// * create multiple groups of buffers covering the range of allowed sizes
-    /// * split range using math.log so that there are more size groups for small buffers
+    /// <para>
+    /// Problem: <br/>
+    ///     * Need to cached byte[] so that new ones arn't created each time <br/>
+    ///     * Arrays sent are multiple different sizes <br/>
+    ///     * Some message might be big so need buffers to cover that size <br/>
+    ///     * Most messages will be small compared to max message size <br/>
+    /// </para>
+    /// <br/>
+    /// <para>
+    /// Solution: <br/>
+    ///     * Create multiple groups of buffers covering the range of allowed sizes <br/>
+    ///     * Split range exponentially (using math.log) so that there are more groups for small buffers <br/>
+    /// </para>
     /// </remarks>
     public class BufferPool
     {
