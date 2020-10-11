@@ -76,7 +76,7 @@ namespace Mirror.SimpleWeb.Tests.Server
             result.AssetErrors();
 
             // wait for timeout
-            yield return new WaitForSeconds(1.5f * timeout / 1000);
+            yield return new WaitForSeconds(2 * timeout / 1000);
 
             Assert.That(onConnect, Has.Count.EqualTo(1), "Connect should be called once");
             Assert.That(onDisconnect, Has.Count.EqualTo(1), "Disconnected should be called once");
@@ -86,17 +86,13 @@ namespace Mirror.SimpleWeb.Tests.Server
         public IEnumerator ShouldTimeoutClientAfterNoMessage()
         {
             // make sure doesn't timeout
-            Task<RunNode.Result> task = RunNode.RunAsync("Connect.js", timeout * 2);
+            Task<RunNode.Result> task = RunNode.RunAsync("Connect.js", timeout * 10);
 
             // wait for timeout
-            yield return new WaitForSeconds(timeout / 1000);
-            // give time to process message
-            yield return new WaitForSeconds(2);
+            yield return new WaitForSeconds(2 * timeout / 1000);
 
             Assert.That(onConnect, Has.Count.EqualTo(1), "Connect should be called once");
             Assert.That(onDisconnect, Has.Count.EqualTo(1), "Disconnected should be called once");
-
-            yield return new WaitForSeconds(0.2f);
 
             Assert.That(task.IsCompleted, Is.True, "Connect.js should have stopped after connection was closed by timeout");
             RunNode.Result result = task.Result;
