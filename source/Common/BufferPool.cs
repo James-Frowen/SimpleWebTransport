@@ -179,7 +179,7 @@ namespace Mirror.SimpleWeb
 
             for (int i = 0; i < bucketCount; i++)
             {
-                if (size < buckets[i].arraySize)
+                if (size <= buckets[i].arraySize)
                 {
                     return buckets[i].Take();
                 }
