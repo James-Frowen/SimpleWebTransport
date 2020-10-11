@@ -12,17 +12,17 @@ namespace Mirror.SimpleWeb
     {
         public static void Loop(Connection conn, int maxMessageSize, bool expectMask, ConcurrentQueue<Message> queue, Action<Connection> closeCallback)
         {
+            byte[] readBuffer = new byte[Constants.HeaderSize + (expectMask ? Constants.MaskSize : 0) + maxMessageSize];
             try
             {
                 try
                 {
                     TcpClient client = conn.client;
                     Stream stream = conn.stream;
-                    byte[] headerBuffer = new byte[Constants.HeaderSize];
 
                     while (client.Connected)
                     {
-                        bool success = ReadOneMessage(queue, closeCallback, conn, stream, headerBuffer, maxMessageSize, expectMask);
+                        bool success = ReadOneMessage(queue, closeCallback, conn, stream, readBuffer, maxMessageSize, expectMask);
                         if (!success)
                             break;
                     }
@@ -58,39 +58,46 @@ namespace Mirror.SimpleWeb
             }
         }
 
-        static bool ReadOneMessage(ConcurrentQueue<Message> queue, Action<Connection> closeCallback, Connection conn, Stream stream, byte[] headerBuffer, int maxMessageSize, bool expectMask)
+        static bool ReadOneMessage(ConcurrentQueue<Message> queue, Action<Connection> closeCallback, Connection conn, Stream stream, byte[] buffer, int maxMessageSize, bool expectMask)
         {
+            Log.Verbose($"Message From {conn}");
+            int offset = 0;
             // read 2
-            ReadHelper.Read(stream, headerBuffer, 0, Constants.HeaderMinSize);
+            offset = ReadHelper.Read(stream, buffer, offset, Constants.HeaderMinSize);
 
-            if (MessageProcessor.NeedToReadShortLength(headerBuffer))
+
+            if (MessageProcessor.NeedToReadShortLength(buffer))
             {
-                ReadHelper.Read(stream, headerBuffer, Constants.HeaderMinSize, Constants.ShortLength);
+                offset = ReadHelper.Read(stream, buffer, offset, Constants.ShortLength);
             }
 
-            MessageProcessor.ValidateHeader(headerBuffer, maxMessageSize, expectMask);
 
-            byte[] maskBuffer = new byte[Constants.MaskSize];
-            if (expectMask)
-            {
-                ReadHelper.Read(stream, maskBuffer, 0, Constants.MaskSize);
-            }
-
-            int opcode = MessageProcessor.GetOpcode(headerBuffer);
-            int payloadLength = MessageProcessor.GetPayloadLength(headerBuffer);
-
-            byte[] payload = new byte[payloadLength];
-            ReadHelper.Read(stream, payload, 0, payloadLength);
+            MessageProcessor.ValidateHeader(buffer, maxMessageSize, expectMask);
 
             if (expectMask)
             {
-                MessageProcessor.ToggleMask(payload, 0, payloadLength, maskBuffer, 0);
+                offset = ReadHelper.Read(stream, buffer, offset, Constants.MaskSize);
+            }
+
+            int opcode = MessageProcessor.GetOpcode(buffer);
+            int payloadLength = MessageProcessor.GetPayloadLength(buffer);
+
+            Log.Verbose($"Header ln:{payloadLength} op:{opcode} mask:{expectMask}");
+
+            offset = ReadHelper.Read(stream, buffer, offset, payloadLength);
+
+            int msgOffset = offset - payloadLength;
+            if (expectMask)
+            {
+                int maskOffset = offset - payloadLength - Constants.MaskSize;
+                MessageProcessor.ToggleMask(buffer, msgOffset, payloadLength, buffer, maskOffset);
             }
 
             // dump after mask off
-            Log.DumpBuffer($"Message From Client {conn}", payload, 0, payloadLength);
+            Log.DumpBuffer($"Raw Header", buffer, 0, msgOffset);
+            Log.DumpBuffer($"Message", buffer, msgOffset, payloadLength);
 
-            HandleMessage(queue, closeCallback, opcode, conn, payload, 0, payloadLength);
+            HandleMessage(queue, closeCallback, opcode, conn, buffer, msgOffset, payloadLength);
             return true;
         }
 
@@ -98,7 +105,12 @@ namespace Mirror.SimpleWeb
         {
             if (opcode == 2)
             {
-                ArraySegment<byte> data = new ArraySegment<byte>(buffer, offset, length);
+                // todo remove allocation
+                byte[] copy = new byte[length];
+
+                Array.Copy(buffer, offset, copy, 0, length);
+
+                ArraySegment<byte> data = new ArraySegment<byte>(copy);
 
                 queue.Enqueue(new Message(conn.connId, data));
             }

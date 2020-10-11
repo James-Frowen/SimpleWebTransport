@@ -29,12 +29,13 @@ namespace Mirror.SimpleWeb
                     conn.sendPending.WaitOne();
                     conn.sendPending.Reset();
 
-                    while (conn.sendQueue.TryDequeue(out ArraySegment<byte> msg))
+                    while (conn.sendQueue.TryDequeue(out ArrayBuffer msg))
                     {
                         // check if connected before sending message
                         if (!client.Connected) { Log.Info($"SendLoop {conn} not connected"); return; }
 
                         SendMessage(stream, writeBuffer, msg, setMask, maskHelper);
+                        msg.Release();
                     }
                 }
             }
@@ -48,9 +49,9 @@ namespace Mirror.SimpleWeb
             }
         }
 
-        static void SendMessage(Stream stream, byte[] buffer, ArraySegment<byte> msg, bool setMask, MaskHelper maskHelper)
+        static void SendMessage(Stream stream, byte[] buffer, ArrayBuffer msg, bool setMask, MaskHelper maskHelper)
         {
-            int msgLength = msg.Count;
+            int msgLength = msg.Length;
             int sendLength = WriteHeader(buffer, msgLength, setMask);
 
             if (setMask)
@@ -58,8 +59,7 @@ namespace Mirror.SimpleWeb
                 sendLength = maskHelper.WriteMask(buffer, sendLength);
             }
 
-            //todo check if Buffer.BlockCopy is faster
-            Array.Copy(msg.Array, msg.Offset, buffer, sendLength, msgLength);
+            msg.CopyTo(buffer, sendLength);
             sendLength += msgLength;
 
             // dump before mask on

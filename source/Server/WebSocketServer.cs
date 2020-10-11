@@ -21,6 +21,7 @@ namespace Mirror.SimpleWeb
         Thread acceptThread;
         readonly ServerHandshake handShake = new ServerHandshake();
         readonly ServerSslHelper sslHelper;
+        readonly BufferPool bufferPool;
         readonly ConcurrentDictionary<int, Connection> connections = new ConcurrentDictionary<int, Connection>();
 
         int _previousId = 0;
@@ -31,7 +32,7 @@ namespace Mirror.SimpleWeb
             return _previousId;
         }
 
-        public WebSocketServer(bool noDelay, int sendTimeout, int receiveTimeout, int maxMessageSize, SslConfig sslConfig)
+        public WebSocketServer(bool noDelay, int sendTimeout, int receiveTimeout, int maxMessageSize, SslConfig sslConfig, BufferPool bufferPool)
         {
             this.noDelay = noDelay;
             this.sendTimeout = sendTimeout;
@@ -39,6 +40,7 @@ namespace Mirror.SimpleWeb
             this.maxMessageSize = maxMessageSize;
             this.sslConfig = sslConfig;
             sslHelper = new ServerSslHelper(this.sslConfig);
+            this.bufferPool = bufferPool;
         }
 
         public void Listen(int port)
@@ -156,11 +158,11 @@ namespace Mirror.SimpleWeb
             }
         }
 
-        public void Send(int id, ArraySegment<byte> segment)
+        public void Send(int id, ArrayBuffer buffer)
         {
             if (connections.TryGetValue(id, out Connection conn))
             {
-                conn.sendQueue.Enqueue(segment);
+                conn.sendQueue.Enqueue(buffer);
                 conn.sendPending.Set();
             }
             else

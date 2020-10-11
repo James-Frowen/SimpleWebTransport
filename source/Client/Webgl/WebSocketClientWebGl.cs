@@ -10,12 +10,10 @@ namespace Mirror.SimpleWeb
     {
         static readonly Dictionary<int, WebSocketClientWebGl> instances = new Dictionary<int, WebSocketClientWebGl>();
 
-        readonly int maxMessageSize;
         public int index;
 
-        internal WebSocketClientWebGl(int maxMessageSize, int maxMessagesPerTick) : base(maxMessagesPerTick)
+        internal WebSocketClientWebGl(int maxMessageSize, int maxMessagesPerTick) : base(maxMessageSize, maxMessagesPerTick)
         {
-            this.maxMessageSize = maxMessageSize;
 #if !UNITY_WEBGL || UNITY_EDITOR
             throw new NotSupportedException();
 #endif

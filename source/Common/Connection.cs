@@ -21,7 +21,7 @@ namespace Mirror.SimpleWeb
         public Thread sendThread;
 
         public ManualResetEvent sendPending = new ManualResetEvent(false);
-        public ConcurrentQueue<ArraySegment<byte>> sendQueue = new ConcurrentQueue<ArraySegment<byte>>();
+        public ConcurrentQueue<ArrayBuffer> sendQueue = new ConcurrentQueue<ArrayBuffer>();
 
         public Connection(TcpClient client)
         {
@@ -54,6 +54,13 @@ namespace Mirror.SimpleWeb
                 stream = null;
                 client.Dispose();
                 client = null;
+
+                // Todo is this ok to run on the main thread?? will it have negative performance if queue is large
+                // release all buffers in send queue
+                while (sendQueue.TryDequeue(out ArrayBuffer buffer))
+                {
+                    buffer.Release();
+                }
 
                 return true;
             }

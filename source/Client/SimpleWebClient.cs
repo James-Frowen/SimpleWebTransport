@@ -26,14 +26,18 @@ namespace Mirror.SimpleWeb
 #endif
         }
 
-
         readonly int maxMessagesPerTick;
+        protected readonly int maxMessageSize;
         protected readonly ConcurrentQueue<Message> receiveQueue = new ConcurrentQueue<Message>();
+        protected readonly BufferPool bufferPool;
+
         protected ClientState state;
 
-        protected SimpleWebClient(int maxMessagesPerTick)
+        protected SimpleWebClient(int maxMessageSize, int maxMessagesPerTick)
         {
+            this.maxMessageSize = maxMessageSize;
             this.maxMessagesPerTick = maxMessagesPerTick;
+            bufferPool = new BufferPool(5, 20, maxMessageSize);
         }
         public ClientState ConnectionState => state;
 
