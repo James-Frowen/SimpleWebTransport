@@ -76,12 +76,5 @@ namespace Mirror.SimpleWeb.Tests
             // largest can be 1 greater because caclatations should round up
             Assert.That(largestGroup.arraySize, Is.EqualTo(largest).Or.EqualTo(largest + 1), "largest should be equal to larget or large + 1");
         }
-
-
-        [Test]
-        public void dfdfdfdfdfdf()
-        {
-
-        }
     }
 }
