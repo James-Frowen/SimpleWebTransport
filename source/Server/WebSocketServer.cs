@@ -144,7 +144,7 @@ namespace Mirror.SimpleWeb
             sendThread.IsBackground = true;
             sendThread.Start();
 
-            ReceiveLoop.Loop(conn, maxMessageSize, true, receiveQueue, CloseConnection);
+            ReceiveLoop.Loop(conn, maxMessageSize, true, receiveQueue, CloseConnection, bufferPool);
         }
 
         void CloseConnection(Connection conn)

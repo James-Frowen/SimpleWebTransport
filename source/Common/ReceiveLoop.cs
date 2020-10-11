@@ -10,7 +10,7 @@ namespace Mirror.SimpleWeb
 {
     internal static class ReceiveLoop
     {
-        public static void Loop(Connection conn, int maxMessageSize, bool expectMask, ConcurrentQueue<Message> queue, Action<Connection> closeCallback)
+        public static void Loop(Connection conn, int maxMessageSize, bool expectMask, ConcurrentQueue<Message> queue, Action<Connection> closeCallback, BufferPool bufferPool)
         {
             byte[] readBuffer = new byte[Constants.HeaderSize + (expectMask ? Constants.MaskSize : 0) + maxMessageSize];
             try
@@ -22,7 +22,7 @@ namespace Mirror.SimpleWeb
 
                     while (client.Connected)
                     {
-                        bool success = ReadOneMessage(queue, closeCallback, conn, stream, readBuffer, maxMessageSize, expectMask);
+                        bool success = ReadOneMessage(queue, closeCallback, conn, stream, readBuffer, maxMessageSize, expectMask, bufferPool);
                         if (!success)
                             break;
                     }
@@ -58,7 +58,7 @@ namespace Mirror.SimpleWeb
             }
         }
 
-        static bool ReadOneMessage(ConcurrentQueue<Message> queue, Action<Connection> closeCallback, Connection conn, Stream stream, byte[] buffer, int maxMessageSize, bool expectMask)
+        static bool ReadOneMessage(ConcurrentQueue<Message> queue, Action<Connection> closeCallback, Connection conn, Stream stream, byte[] buffer, int maxMessageSize, bool expectMask, BufferPool bufferPool)
         {
             Log.Verbose($"Message From {conn}");
             int offset = 0;
@@ -97,26 +97,23 @@ namespace Mirror.SimpleWeb
             Log.DumpBuffer($"Raw Header", buffer, 0, msgOffset);
             Log.DumpBuffer($"Message", buffer, msgOffset, payloadLength);
 
-            HandleMessage(queue, closeCallback, opcode, conn, buffer, msgOffset, payloadLength);
+            HandleMessage(queue, closeCallback, opcode, conn, buffer, msgOffset, payloadLength, bufferPool);
             return true;
         }
 
-        static void HandleMessage(ConcurrentQueue<Message> queue, Action<Connection> closeCallback, int opcode, Connection conn, byte[] buffer, int offset, int length)
+        static void HandleMessage(ConcurrentQueue<Message> queue, Action<Connection> closeCallback, int opcode, Connection conn, byte[] msg, int offset, int length, BufferPool bufferPool)
         {
             if (opcode == 2)
             {
-                // todo remove allocation
-                byte[] copy = new byte[length];
+                ArrayBuffer buffer = bufferPool.Take(length);
 
-                Array.Copy(buffer, offset, copy, 0, length);
+                buffer.CopyFrom(msg, offset, length);
 
-                ArraySegment<byte> data = new ArraySegment<byte>(copy);
-
-                queue.Enqueue(new Message(conn.connId, data));
+                queue.Enqueue(new Message(conn.connId, buffer));
             }
             else if (opcode == 8)
             {
-                Log.Info($"Close: {buffer[offset + 0] << 8 | buffer[offset + 1]} message:{Encoding.UTF8.GetString(buffer, offset + 2, length - 2)}");
+                Log.Info($"Close: {msg[offset + 0] << 8 | msg[offset + 1]} message:{Encoding.UTF8.GetString(msg, offset + 2, length - 2)}");
                 closeCallback.Invoke(conn);
             }
         }

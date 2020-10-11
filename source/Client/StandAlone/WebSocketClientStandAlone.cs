@@ -92,7 +92,7 @@ namespace Mirror.SimpleWeb
                 sendThread.IsBackground = true;
                 sendThread.Start();
 
-                ReceiveLoop.Loop(conn, maxMessageSize, false, receiveQueue, _ => CloseConnection());
+                ReceiveLoop.Loop(conn, maxMessageSize, false, receiveQueue, _ => CloseConnection(), bufferPool);
             }
             catch (ThreadInterruptedException) { Log.Info("acceptLoop ThreadInterrupted"); return; }
             catch (ThreadAbortException) { Log.Info("acceptLoop ThreadAbort"); return; }

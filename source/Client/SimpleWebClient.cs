@@ -65,7 +65,8 @@ namespace Mirror.SimpleWeb
                         onConnect?.Invoke();
                         break;
                     case EventType.Data:
-                        onData?.Invoke(next.data);
+                        onData?.Invoke(next.data.ToSegment());
+                        next.data.Release();
                         break;
                     case EventType.Disconnected:
                         onDisconnect?.Invoke();

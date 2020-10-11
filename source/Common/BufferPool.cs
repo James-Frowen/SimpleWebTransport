@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Threading;
 
 namespace Mirror.SimpleWeb
@@ -63,6 +64,19 @@ namespace Mirror.SimpleWeb
             Length = length;
             //todo check if Buffer.BlockCopy is faster
             Array.Copy(source, offset, array, 0, length);
+        }
+
+        public void CopyFrom(IntPtr bufferPtr, int length)
+        {
+            if (length > array.Length) throw new ArgumentException($"{nameof(length)} was greater than {nameof(array)}.length", nameof(length));
+
+            Length = length;
+            Marshal.Copy(bufferPtr, array, 0, length);
+        }
+
+        public ArraySegment<byte> ToSegment()
+        {
+            return new ArraySegment<byte>(array, 0, Length);
         }
 
         [Conditional("UNITY_ASSERTIONS")]

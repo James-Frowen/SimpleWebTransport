@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using AOT;
 using UnityEngine;
 
@@ -65,11 +64,10 @@ namespace Mirror.SimpleWeb
         {
             try
             {
-                byte[] buffer = new byte[count];
-                Marshal.Copy(bufferPtr, buffer, 0, count);
+                ArrayBuffer buffer = bufferPool.Take(count);
+                buffer.CopyFrom(bufferPtr, count);
 
-                ArraySegment<byte> segment = new ArraySegment<byte>(buffer, 0, count);
-                receiveQueue.Enqueue(new Message(segment));
+                receiveQueue.Enqueue(new Message(buffer));
             }
             catch (Exception e)
             {
