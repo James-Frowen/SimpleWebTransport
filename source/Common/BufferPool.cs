@@ -55,6 +55,7 @@ namespace Mirror.SimpleWeb
         {
             CopyFrom(segment.Array, segment.Offset, segment.Count);
         }
+
         public void CopyFrom(byte[] source, int offset, int length)
         {
             if (length > array.Length) throw new ArgumentException($"{nameof(length)} was greater than {nameof(array)}.length", nameof(length));
