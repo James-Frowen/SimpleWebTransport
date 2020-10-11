@@ -7,7 +7,7 @@ using UnityEngine.TestTools;
 namespace Mirror.SimpleWeb.Tests.Server
 {
     [Category("SimpleWebTransport")]
-    public class ConnectAndCloseTest : SimpleWebServerTestBase
+    public class ConnectAndCloseTest : SimpleWebTestBase
     {
         protected override bool StartServer => true;
 
@@ -31,7 +31,7 @@ namespace Mirror.SimpleWeb.Tests.Server
             // wait for message to be processed
             yield return new WaitForSeconds(0.2f);
 
-            Assert.That(onConnect, Has.Count.EqualTo(1), "Connect should be called once");
+            Assert.That(server.onConnect, Has.Count.EqualTo(1), "Connect should be called once");
         }
 
         [UnityTest]
@@ -54,8 +54,8 @@ namespace Mirror.SimpleWeb.Tests.Server
             // wait for message to be processed
             yield return new WaitForSeconds(0.2f);
 
-            Assert.That(onConnect, Has.Count.EqualTo(1), "Connect should be called once");
-            Assert.That(onDisconnect, Has.Count.EqualTo(1), "Disconnected should be called once");
+            Assert.That(server.onConnect, Has.Count.EqualTo(1), "Connect should be called once");
+            Assert.That(server.onDisconnect, Has.Count.EqualTo(1), "Disconnected should be called once");
         }
 
         [UnityTest]
@@ -78,8 +78,8 @@ namespace Mirror.SimpleWeb.Tests.Server
             // wait for timeout
             yield return new WaitForSeconds(2 * timeout / 1000);
 
-            Assert.That(onConnect, Has.Count.EqualTo(1), "Connect should be called once");
-            Assert.That(onDisconnect, Has.Count.EqualTo(1), "Disconnected should be called once");
+            Assert.That(server.onConnect, Has.Count.EqualTo(1), "Connect should be called once");
+            Assert.That(server.onDisconnect, Has.Count.EqualTo(1), "Disconnected should be called once");
         }
 
         [UnityTest]
@@ -91,8 +91,8 @@ namespace Mirror.SimpleWeb.Tests.Server
             // wait for timeout
             yield return new WaitForSeconds(2 * timeout / 1000);
 
-            Assert.That(onConnect, Has.Count.EqualTo(1), "Connect should be called once");
-            Assert.That(onDisconnect, Has.Count.EqualTo(1), "Disconnected should be called once");
+            Assert.That(server.onConnect, Has.Count.EqualTo(1), "Connect should be called once");
+            Assert.That(server.onDisconnect, Has.Count.EqualTo(1), "Disconnected should be called once");
 
             Assert.That(task.IsCompleted, Is.True, "Connect.js should have stopped after connection was closed by timeout");
             RunNode.Result result = task.Result;

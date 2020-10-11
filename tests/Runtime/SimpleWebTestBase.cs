@@ -9,22 +9,18 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace Mirror.SimpleWeb.Tests.Server
+namespace Mirror.SimpleWeb.Tests
 {
     [Category("SimpleWebTransport")]
-    public abstract class SimpleWebServerTestBase
+    public abstract class SimpleWebTestBase
     {
         protected const int timeout = 4000;
+        const Log.Levels LogLevel = Log.Levels.info;
 
         protected abstract bool StartServer { get; }
 
-        protected SimpleWebTransport transport;
-        protected List<int> onConnect = new List<int>();
-        protected List<int> onDisconnect = new List<int>();
-        protected List<(int connId, ArraySegment<byte> data)> onData = new List<(int connId, ArraySegment<byte> data)>();
-        protected List<(int connId, Exception exception)> onError = new List<(int connId, Exception exception)>();
-
-        protected WaitUntil WaitForConnect => new WaitUntil(() => onConnect.Count >= 1);
+        protected ServerTestInstance server;
+        protected ClientTestInstance client;
 
         List<GameObject> toCleanup = new List<GameObject>();
 
@@ -33,23 +29,15 @@ namespace Mirror.SimpleWeb.Tests.Server
         {
             Debug.Log($"SetUp {TestContext.CurrentContext.Test.Name}");
 
-            transport = CreateTransport();
-
-            onConnect.Clear();
-            onDisconnect.Clear();
-            onData.Clear();
-            onError.Clear();
-
-            transport.OnServerConnected.AddListener((connId) => onConnect.Add(connId));
-            transport.OnServerDisconnected.AddListener((connId) => onDisconnect.Add(connId));
-            transport.OnServerDataReceived.AddListener((connId, data, _) => onData.Add((connId, data)));
-            transport.OnServerError.AddListener((connId, exception) => onError.Add((connId, exception)));
+            server = CreateTransport<ServerTestInstance>();
+            client = CreateTransport<ClientTestInstance>();
 
             if (StartServer)
             {
-                transport.ServerStart();
+                server.ServerStart();
             }
         }
+
 
         [TearDown]
         public virtual void TearDown()
@@ -70,21 +58,25 @@ namespace Mirror.SimpleWeb.Tests.Server
             }
         }
 
-        protected SimpleWebTransport CreateTransport()
+        protected T CreateTransport<T>() where T : SimpleWebTransport
         {
             GameObject go = new GameObject();
             toCleanup.Add(go);
 
-            SimpleWebTransport transport = go.AddComponent<SimpleWebTransport>();
+            T transport = go.AddComponent<T>();
             transport.port = 7776;
-            transport.logLevels = Log.Levels.info;
+            transport.logLevels = LogLevel;
             transport.receiveTimeout = timeout;
             transport.sendTimeout = timeout;
 
-            Log.level = Log.Levels.info;
+            Log.level = LogLevel;
+
+            if (transport is NeedInitTestInstance needInit)
+            {
+                needInit.Init();
+            }
             return transport;
         }
-
 
         protected static Task<TcpClient> CreateBadClient()
         {

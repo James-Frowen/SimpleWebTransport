@@ -9,54 +9,54 @@ using UnityEngine.TestTools;
 namespace Mirror.SimpleWeb.Tests.Client
 {
     [Category("SimpleWebTransport")]
-    public class ClientTests : SimpleWebClientTestBase
+    public class ClientTests : SimpleWebTestBase
     {
         protected override bool StartServer => true;
 
         [UnityTest]
         public IEnumerator CanConnectAndDisconnectFromServer()
         {
-            transport.ClientConnect("localhost");
+            client.ClientConnect("localhost");
 
             // wait for connect
             yield return new WaitForSeconds(1);
 
-            Assert.That(onConnect, Is.EqualTo(1), "Connect should be called once");
-            Assert.That(server_onConnect, Has.Count.EqualTo(1), "server Connect should be called once");
+            Assert.That(client.onConnect, Is.EqualTo(1), "Connect should be called once");
+            Assert.That(server.onConnect, Has.Count.EqualTo(1), "server Connect should be called once");
 
-            transport.ClientDisconnect();
+            client.ClientDisconnect();
 
             // wait for disconnect
             yield return new WaitForSeconds(1);
 
-            Assert.That(onDisconnect, Is.EqualTo(1), "Disconnect should be called once");
-            Assert.That(server_onDisconnect, Has.Count.EqualTo(1), "server Disconnect should be called once");
+            Assert.That(client.onDisconnect, Is.EqualTo(1), "Disconnect should be called once");
+            Assert.That(server.onDisconnect, Has.Count.EqualTo(1), "server Disconnect should be called once");
         }
 
         [UnityTest]
         public IEnumerator CanConnectAndBeKickedFromServer()
         {
-            transport.ClientConnect("localhost");
+            client.ClientConnect("localhost");
 
             // wait for connect
             yield return new WaitForSeconds(1);
 
-            Assert.That(onConnect, Is.EqualTo(1), "Connect should be called once");
-            Assert.That(server_onConnect, Has.Count.EqualTo(1), "server Connect should be called once");
+            Assert.That(client.onConnect, Is.EqualTo(1), "Connect should be called once");
+            Assert.That(server.onConnect, Has.Count.EqualTo(1), "server Connect should be called once");
 
-            server.ServerDisconnect(server_onConnect[0]);
+            server.ServerDisconnect(server.onConnect[0]);
 
             // wait for disconnect
             yield return new WaitForSeconds(1);
 
-            Assert.That(onDisconnect, Is.EqualTo(1), "Disconnect should be called once");
-            Assert.That(server_onDisconnect, Has.Count.EqualTo(1), "server Disconnect should be called once");
+            Assert.That(client.onDisconnect, Is.EqualTo(1), "Disconnect should be called once");
+            Assert.That(server.onDisconnect, Has.Count.EqualTo(1), "server Disconnect should be called once");
         }
 
         [UnityTest]
         public IEnumerator CanRecieveMessage()
         {
-            transport.ClientConnect("localhost");
+            client.ClientConnect("localhost");
             // wait for connect
             yield return new WaitForSeconds(1);
 
@@ -67,35 +67,35 @@ namespace Mirror.SimpleWeb.Tests.Client
             // wait for message
             yield return new WaitForSeconds(1);
 
-            Assert.That(onData, Has.Count.EqualTo(1), "should have 1 message");
-            CollectionAssert.AreEqual(onData[0], bytes, "data should match");
+            Assert.That(client.onData, Has.Count.EqualTo(1), "should have 1 message");
+            CollectionAssert.AreEqual(client.onData[0], bytes, "data should match");
         }
 
         [UnityTest]
         public IEnumerator CanSendMessage()
         {
-            transport.ClientConnect("localhost");
+            client.ClientConnect("localhost");
             // wait for connect
             yield return new WaitForSeconds(1);
 
             byte[] bytes = Enumerable.Range(10, 10).Select(x => (byte)x).ToArray();
             ArraySegment<byte> segment = new ArraySegment<byte>(bytes);
-            transport.ClientSend(0, segment);
+            client.ClientSend(0, segment);
 
             // wait for message
             yield return new WaitForSeconds(0.25f);
 
-            Assert.That(server_onData, Has.Count.EqualTo(1), "should have 1 message");
-            Assert.That(server_onData[0].connId, Is.EqualTo(1), "should be connection id");
-            CollectionAssert.AreEqual(bytes, server_onData[0].data, "data should match");
+            Assert.That(server.onData, Has.Count.EqualTo(1), "should have 1 message");
+            Assert.That(server.onData[0].connId, Is.EqualTo(1), "should be connection id");
+            CollectionAssert.AreEqual(bytes, server.onData[0].data, "data should match");
         }
 
         [UnityTest]
         public IEnumerator CanRecieveMulitpleMessages()
         {
-            transport.ClientConnect("localhost");
+            client.ClientConnect("localhost");
             // wait for connect
-            yield return WaitForConnect;
+            yield return client.WaitForConnect;
 
             List<byte[]> messages = createRandomMessages();
             foreach (byte[] msg in messages)
@@ -109,17 +109,17 @@ namespace Mirror.SimpleWeb.Tests.Client
             yield return new WaitForSeconds(1f);
 
 
-            Assert.That(onData, Has.Count.EqualTo(messages.Count), $"should have {messages.Count} message");
+            Assert.That(client.onData, Has.Count.EqualTo(messages.Count), $"should have {messages.Count} message");
             for (int i = 0; i < messages.Count; i++)
             {
-                CollectionAssert.AreEqual(messages[i], onData[i], "data should match");
+                CollectionAssert.AreEqual(messages[i], client.onData[i], $"data[{i}] should match");
             }
         }
 
         [UnityTest]
         public IEnumerator CanSendMulitpleMessages()
         {
-            transport.ClientConnect("localhost");
+            client.ClientConnect("localhost");
             // wait for connect
             yield return new WaitForSeconds(1);
 
@@ -127,18 +127,18 @@ namespace Mirror.SimpleWeb.Tests.Client
             foreach (byte[] msg in messages)
             {
                 ArraySegment<byte> segment = new ArraySegment<byte>(msg);
-                transport.ClientSend(0, segment);
+                client.ClientSend(0, segment);
                 yield return null;
             }
 
             // wait for message
             yield return new WaitForSeconds(1f);
 
-            Assert.That(server_onData, Has.Count.EqualTo(messages.Count), $"should have {messages.Count} message");
-            Assert.That(server_onData[0].connId, Is.EqualTo(1), "should be connection id");
+            Assert.That(server.onData, Has.Count.EqualTo(messages.Count), $"should have {messages.Count} message");
+            Assert.That(server.onData[0].connId, Is.EqualTo(1), "should be connection id");
             for (int i = 0; i < messages.Count; i++)
             {
-                CollectionAssert.AreEqual(messages[i], server_onData[i].data, "data should match");
+                CollectionAssert.AreEqual(messages[i], server.onData[i].data, $"data[{i}] should match");
             }
         }
 
@@ -163,7 +163,7 @@ namespace Mirror.SimpleWeb.Tests.Client
         [TestCase(4, ExpectedResult = default)]
         public IEnumerator CanRecieveShortMessage(int messageSize)
         {
-            transport.ClientConnect("localhost");
+            client.ClientConnect("localhost");
             // wait for connect
             yield return new WaitForSeconds(1);
 
@@ -175,8 +175,8 @@ namespace Mirror.SimpleWeb.Tests.Client
             // wait for message
             yield return new WaitForSeconds(1);
 
-            Assert.That(onData, Has.Count.EqualTo(1), "should have 1 message");
-            CollectionAssert.AreEqual(onData[0], bytes, "data should match");
+            Assert.That(client.onData, Has.Count.EqualTo(1), "should have 1 message");
+            CollectionAssert.AreEqual(client.onData[0], bytes, "data should match");
         }
 
         [UnityTest]
@@ -186,54 +186,54 @@ namespace Mirror.SimpleWeb.Tests.Client
         [TestCase(4, ExpectedResult = default)]
         public IEnumerator CanSendShortMessage(int messageSize)
         {
-            transport.ClientConnect("localhost");
+            client.ClientConnect("localhost");
             // wait for connect
             yield return new WaitForSeconds(1);
 
             byte[] bytes = new byte[messageSize];
             new System.Random().NextBytes(bytes);
             ArraySegment<byte> segment = new ArraySegment<byte>(bytes);
-            transport.ClientSend(0, segment);
+            client.ClientSend(0, segment);
 
             // wait for message
             yield return new WaitForSeconds(1);
 
-            Assert.That(server_onData, Has.Count.EqualTo(1), "should have 1 message");
-            Assert.That(server_onData[0].connId, Is.EqualTo(1), "should be connection id");
-            CollectionAssert.AreEqual(bytes, server_onData[0].data, "data should match");
+            Assert.That(server.onData, Has.Count.EqualTo(1), "should have 1 message");
+            Assert.That(server.onData[0].connId, Is.EqualTo(1), "should be connection id");
+            CollectionAssert.AreEqual(bytes, server.onData[0].data, "data should match");
         }
 
         [UnityTest]
         public IEnumerator CanPingAndStayConnectedForTime()
         {
-            transport.ClientConnect("localhost");
+            client.ClientConnect("localhost");
 
             // wait for connect
             yield return new WaitForSeconds(1);
 
-            Assert.That(onConnect, Is.EqualTo(1), "Connect should be called once");
-            Assert.That(server_onConnect, Has.Count.EqualTo(1), "server Connect should be called once");
+            Assert.That(client.onConnect, Is.EqualTo(1), "Connect should be called once");
+            Assert.That(server.onConnect, Has.Count.EqualTo(1), "server Connect should be called once");
 
-            transport.ClientDisconnect();
+            client.ClientDisconnect();
 
             // wait for disconnect
             yield return new WaitForSeconds(1);
 
-            Assert.That(onDisconnect, Is.EqualTo(1), "Disconnect should be called once");
-            Assert.That(server_onDisconnect, Has.Count.EqualTo(1), "server Disconnect should be called once");
+            Assert.That(client.onDisconnect, Is.EqualTo(1), "Disconnect should be called once");
+            Assert.That(server.onDisconnect, Has.Count.EqualTo(1), "server Disconnect should be called once");
         }
 
         [UnityTest]
         public IEnumerator ErrorWhenMessageTooBig()
         {
-            transport.ClientConnect("localhost");
+            client.ClientConnect("localhost");
             // wait for connect
             yield return new WaitForSeconds(1);
 
             ArraySegment<byte> segment = new ArraySegment<byte>(new byte[70_000]);
 
             LogAssert.Expect(LogType.Error, "Message greater than max size");
-            bool result = transport.ClientSend(Channels.DefaultReliable, segment);
+            bool result = client.ClientSend(Channels.DefaultReliable, segment);
 
             Assert.IsFalse(result);
         }
@@ -241,14 +241,14 @@ namespace Mirror.SimpleWeb.Tests.Client
         [UnityTest]
         public IEnumerator ErrorWhenMessageTooSmall()
         {
-            transport.ClientConnect("localhost");
+            client.ClientConnect("localhost");
             // wait for connect
             yield return new WaitForSeconds(1);
 
             ArraySegment<byte> segment = new ArraySegment<byte>();
 
             LogAssert.Expect(LogType.Error, "Message count was zero");
-            bool result = transport.ClientSend(Channels.DefaultReliable, segment);
+            bool result = client.ClientSend(Channels.DefaultReliable, segment);
 
             Assert.IsFalse(result);
         }

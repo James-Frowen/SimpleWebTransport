@@ -6,14 +6,14 @@ using UnityEngine.TestTools;
 namespace Mirror.SimpleWeb.Tests.Server
 {
     [Category("SimpleWebTransport")]
-    public class StartAndStopTest : SimpleWebServerTestBase
+    public class StartAndStopTest : SimpleWebTestBase
     {
         protected override bool StartServer => false;
 
         [UnityTest]
         public IEnumerator ServerCanStartAndStopWithoutErrors()
         {
-            SimpleWebTransport transport = CreateTransport();
+            SimpleWebTransport transport = CreateTransport<SimpleWebTransport>();
 
             transport.ServerStart();
             Assert.That(transport.ServerActive(), Is.True);
@@ -32,7 +32,7 @@ namespace Mirror.SimpleWeb.Tests.Server
         {
             // use {} block for local variable scope
             {
-                SimpleWebTransport transport = CreateTransport();
+                SimpleWebTransport transport = CreateTransport<SimpleWebTransport>();
 
                 transport.ServerStart();
                 Assert.That(transport.ServerActive(), Is.True);
@@ -44,7 +44,7 @@ namespace Mirror.SimpleWeb.Tests.Server
             }
 
             {
-                SimpleWebTransport transport = CreateTransport();
+                SimpleWebTransport transport = CreateTransport<SimpleWebTransport>();
 
                 transport.ServerStart();
                 Assert.That(transport.ServerActive(), Is.True);

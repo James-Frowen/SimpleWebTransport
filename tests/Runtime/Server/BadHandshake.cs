@@ -8,18 +8,18 @@ using UnityEngine.TestTools;
 namespace Mirror.SimpleWeb.Tests.Server
 {
     [Category("SimpleWebTransport")]
-    public class BadHandshake : SimpleWebServerTestBase
+    public class BadHandshake : SimpleWebTestBase
     {
         protected override bool StartServer => true;
 
-        TcpClient client;
+        TcpClient tcpClient;
 
         [TearDown]
         public override void TearDown()
         {
             base.TearDown();
 
-            client?.Dispose();
+            tcpClient?.Dispose();
         }
 
         [UnityTest]
@@ -29,19 +29,19 @@ namespace Mirror.SimpleWeb.Tests.Server
 
             Task<TcpClient> createTask = CreateBadClient();
             while (!createTask.IsCompleted) { yield return null; }
-            client = createTask.Result;
-            Assert.That(client.Connected, Is.True, "Client should have connected");
+            tcpClient = createTask.Result;
+            Assert.That(tcpClient.Connected, Is.True, "Client should have connected");
 
-            WriteBadData(client);
+            WriteBadData(tcpClient);
 
             // wait for message to be processed
             yield return new WaitForSeconds(1f);
 
-            Assert.That(HasDisconnected(client), Is.True, "Client should have been disconnected");
+            Assert.That(HasDisconnected(tcpClient), Is.True, "Client should have been disconnected");
 
-            Assert.That(onConnect, Has.Count.EqualTo(0), "Connect should not be called");
-            Assert.That(onDisconnect, Has.Count.EqualTo(0), "Disconnect should not be called");
-            Assert.That(onData, Has.Count.EqualTo(0), "Data should not be called");
+            Assert.That(server.onConnect, Has.Count.EqualTo(0), "Connect should not be called");
+            Assert.That(server.onDisconnect, Has.Count.EqualTo(0), "Disconnect should not be called");
+            Assert.That(server.onData, Has.Count.EqualTo(0), "Data should not be called");
         }
 
 
@@ -52,19 +52,19 @@ namespace Mirror.SimpleWeb.Tests.Server
 
             Task<TcpClient> createTask = CreateBadClient();
             while (!createTask.IsCompleted) { yield return null; }
-            client = createTask.Result;
-            Assert.That(client.Connected, Is.True, "Client should have connected");
+            tcpClient = createTask.Result;
+            Assert.That(tcpClient.Connected, Is.True, "Client should have connected");
 
             // wait for timeout
             yield return new WaitForSeconds(timeout / 1000);
             // wait for time to process timeout
             yield return new WaitForSeconds(1);
 
-            Assert.That(HasDisconnected(client), Is.True, "Client should have been disconnected");
+            Assert.That(HasDisconnected(tcpClient), Is.True, "Client should have been disconnected");
 
-            Assert.That(onConnect, Has.Count.EqualTo(0), "Connect should not be called");
-            Assert.That(onDisconnect, Has.Count.EqualTo(0), "Disconnect should not be called");
-            Assert.That(onData, Has.Count.EqualTo(0), "Data should not be called");
+            Assert.That(server.onConnect, Has.Count.EqualTo(0), "Connect should not be called");
+            Assert.That(server.onDisconnect, Has.Count.EqualTo(0), "Disconnect should not be called");
+            Assert.That(server.onData, Has.Count.EqualTo(0), "Data should not be called");
         }
 
         [UnityTest]
@@ -75,8 +75,8 @@ namespace Mirror.SimpleWeb.Tests.Server
             // connect bad client
             Task<TcpClient> createTask = CreateBadClient();
             while (!createTask.IsCompleted) { yield return null; }
-            client = createTask.Result;
-            Assert.That(client.Connected, Is.True, "Client should have connected");
+            tcpClient = createTask.Result;
+            Assert.That(tcpClient.Connected, Is.True, "Client should have connected");
 
             // connect good client
             Task<RunNode.Result> task = RunNode.RunAsync("ConnectAndClose.js");
@@ -96,15 +96,15 @@ namespace Mirror.SimpleWeb.Tests.Server
             result.AssetErrors();
 
             // check server events
-            Assert.That(onConnect, Has.Count.EqualTo(1), "Connect should have been called once");
-            Assert.That(onDisconnect, Has.Count.EqualTo(1), "Disconnect should have been called once");
-            Assert.That(onData, Has.Count.EqualTo(0), "Data should not be called");
+            Assert.That(server.onConnect, Has.Count.EqualTo(1), "Connect should have been called once");
+            Assert.That(server.onDisconnect, Has.Count.EqualTo(1), "Disconnect should have been called once");
+            Assert.That(server.onData, Has.Count.EqualTo(0), "Data should not be called");
 
 
             // wait for timeout
             yield return new WaitForSeconds(timeout / 1000);
 
-            Assert.That(HasDisconnected(client), Is.True, "Client should have been disconnected");
+            Assert.That(HasDisconnected(tcpClient), Is.True, "Client should have been disconnected");
         }
     }
 }

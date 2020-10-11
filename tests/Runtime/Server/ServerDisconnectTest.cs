@@ -7,7 +7,7 @@ using UnityEngine.TestTools;
 namespace Mirror.SimpleWeb.Tests.Server
 {
     [Category("SimpleWebTransport")]
-    public class DisconnectTest : SimpleWebServerTestBase
+    public class DisconnectTest : SimpleWebTestBase
     {
         protected override bool StartServer => true;
 
@@ -16,9 +16,9 @@ namespace Mirror.SimpleWeb.Tests.Server
         {
             Task<RunNode.Result> task = RunNode.RunAsync("Disconnect.js");
 
-            yield return WaitForConnect;
+            yield return server.WaitForConnection;
 
-            transport.ServerDisconnect(1);
+            server.ServerDisconnect(1);
 
             yield return new WaitUntil(() => task.IsCompleted);
 

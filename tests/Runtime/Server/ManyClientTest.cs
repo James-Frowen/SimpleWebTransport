@@ -10,7 +10,7 @@ using UnityEngine.TestTools;
 namespace Mirror.SimpleWeb.Tests.Server
 {
     [Category("SimpleWebTransport")]
-    public class ManyClientTest : SimpleWebServerTestBase
+    public class ManyClientTest : SimpleWebTestBase
     {
         protected override bool StartServer => true;
 
@@ -21,7 +21,7 @@ namespace Mirror.SimpleWeb.Tests.Server
         public IEnumerator ManyConnect(int count)
         {
             int connectIndex = 1;
-            transport.OnServerConnected.AddListener((connId) =>
+            server.OnServerConnected.AddListener((connId) =>
             {
                 Assert.That(connId, Is.EqualTo(connectIndex), "Clients should be connected in order with the next index");
                 connectIndex++;
@@ -32,9 +32,9 @@ namespace Mirror.SimpleWeb.Tests.Server
             // 10 seconds should be enough time for clients to connect then close themselves
             yield return new WaitForSeconds(10);
 
-            Assert.That(onConnect, Has.Count.EqualTo(count), "All should be connectted");
-            Assert.That(onDisconnect, Has.Count.EqualTo(count), "All should be disconnected called");
-            Assert.That(onData, Has.Count.EqualTo(0), "Data should not be called");
+            Assert.That(server.onConnect, Has.Count.EqualTo(count), "All should be connectted");
+            Assert.That(server.onDisconnect, Has.Count.EqualTo(count), "All should be disconnected called");
+            Assert.That(server.onData, Has.Count.EqualTo(0), "Data should not be called");
 
 
             Assert.That(task.IsCompleted, Is.True, "Take should have been completed");
@@ -58,7 +58,7 @@ namespace Mirror.SimpleWeb.Tests.Server
         public IEnumerator ManyPings(int count)
         {
             int connectIndex = 1;
-            transport.OnServerConnected.AddListener((connId) =>
+            server.OnServerConnected.AddListener((connId) =>
             {
                 Assert.That(connId == connectIndex, "Clients should be connected in order with the next index");
                 connectIndex++;
@@ -69,14 +69,14 @@ namespace Mirror.SimpleWeb.Tests.Server
             // 4 seconds should be enough time for clients to connect then close themselves
             yield return new WaitForSeconds(4);
 
-            Assert.That(onConnect, Has.Count.EqualTo(count), "All should be connectted");
+            Assert.That(server.onConnect, Has.Count.EqualTo(count), "All should be connectted");
 
 
             // make sure all clients start connected for a while
             const int seconds = 10;
             for (float i = 0; i < seconds; i += Time.deltaTime)
             {
-                Assert.That(onDisconnect, Has.Count.EqualTo(0), "no clients should be disconnected");
+                Assert.That(server.onDisconnect, Has.Count.EqualTo(0), "no clients should be disconnected");
 
                 yield return null;
             }
@@ -84,12 +84,12 @@ namespace Mirror.SimpleWeb.Tests.Server
             for (int i = 0; i < count; i++)
             {
                 // 1 indexed
-                transport.ServerDisconnect(i + 1);
+                server.ServerDisconnect(i + 1);
             }
 
             // wait for all to disconnect
             yield return new WaitForSeconds(1);
-            Assert.That(onDisconnect, Has.Count.EqualTo(count), "no clients should be disconnected");
+            Assert.That(server.onDisconnect, Has.Count.EqualTo(count), "no clients should be disconnected");
 
             // check all tasks finished with no logs
             Assert.That(task.IsCompleted, Is.True, "Take should have been completed");
@@ -100,25 +100,41 @@ namespace Mirror.SimpleWeb.Tests.Server
             result.AssetOutput();
             result.AssetErrors();
 
+            List<byte[]>[] messageForClients = sortMessagesForClients(count, server.onData);
 
-            List<ArraySegment<byte>>[] messageForClients = Enumerable.Repeat(0, count).Select(x => new List<ArraySegment<byte>>()).ToArray();
-            onData.ForEach(x => messageForClients[x.connId - 1 /*from 1 index to 0 indexed*/].Add(x.data));
             for (int i = 0; i < count; i++)
             {
-                List<ArraySegment<byte>> messages = messageForClients[i];
+                List<byte[]> messages = messageForClients[i];
                 int expected = seconds - 1;
                 Assert.That(messages, Has.Count.AtLeast(expected), $"Should have atleast {expected} ping messages");
 
-                foreach (ArraySegment<byte> message in messages)
+                foreach (byte[] message in messages)
                 {
-                    Assert.That(message.Array[message.Offset + 0], Is.EqualTo(10), "first byte should be 10");
-                    Assert.That(message.Array[message.Offset + 1], Is.EqualTo(11), "second byte should be 11");
-                    Assert.That(message.Array[message.Offset + 2], Is.EqualTo(12), "thrid byte should be 12");
-                    Assert.That(message.Array[message.Offset + 3], Is.EqualTo(13), "fourth byte should be 13");
+                    Assert.That(message[0], Is.EqualTo(10), "first byte should be 10");
+                    Assert.That(message[1], Is.EqualTo(11), "second byte should be 11");
+                    Assert.That(message[2], Is.EqualTo(12), "thrid byte should be 12");
+                    Assert.That(message[3], Is.EqualTo(13), "fourth byte should be 13");
                 }
             }
         }
 
+        private List<byte[]>[] sortMessagesForClients(int clientCount, List<(int connId, byte[] data)> onData)
+        {
+            List<byte[]>[] messageForClients = new List<byte[]>[clientCount];
+            for (int i = 0; i < clientCount; i++)
+            {
+                messageForClients[i] = new List<byte[]>();
+            }
+
+            foreach ((int connId, byte[] data) in onData)
+            {
+                //from 1 index to 0 indexed
+                List<byte[]> list = messageForClients[connId - 1];
+                list.Add(data);
+            }
+
+            return messageForClients;
+        }
 
         [UnityTest]
         [TestCase(1, ExpectedResult = null)]
@@ -127,7 +143,7 @@ namespace Mirror.SimpleWeb.Tests.Server
         public IEnumerator ManySend(int count)
         {
             int connectIndex = 1;
-            transport.OnServerConnected.AddListener((connId) =>
+            server.OnServerConnected.AddListener((connId) =>
             {
                 Assert.That(connId, Is.EqualTo(connectIndex), "Clients should be connected in order with the next index");
                 connectIndex++;
@@ -138,7 +154,7 @@ namespace Mirror.SimpleWeb.Tests.Server
             // 4 seconds should be enough time for clients to connect then close themselves
             yield return new WaitForSeconds(4);
 
-            Assert.That(onConnect, Has.Count.EqualTo(count), "All should be connectted");
+            Assert.That(server.onConnect, Has.Count.EqualTo(count), "All should be connectted");
 
 
             // make sure all clients start connected for a while
@@ -150,12 +166,12 @@ namespace Mirror.SimpleWeb.Tests.Server
 
             for (float i = 0; i < seconds; i += Time.deltaTime)
             {
-                Assert.That(onDisconnect, Has.Count.EqualTo(0), "no clients should be disconnected");
+                Assert.That(server.onDisconnect, Has.Count.EqualTo(0), "no clients should be disconnected");
 
                 if (nextSend < i)
                 {
                     //send
-                    transport.ServerSend(allIds, Channels.DefaultReliable, segment);
+                    server.ServerSend(allIds, Channels.DefaultReliable, segment);
 
                     nextSend += sendInterval;
                 }
@@ -166,12 +182,12 @@ namespace Mirror.SimpleWeb.Tests.Server
             for (int i = 0; i < count; i++)
             {
                 // 1 indexed
-                transport.ServerDisconnect(i + 1);
+                server.ServerDisconnect(i + 1);
             }
 
             // wait for all to disconnect
             yield return new WaitForSeconds(1);
-            Assert.That(onDisconnect, Has.Count.EqualTo(count), "no clients should be disconnected");
+            Assert.That(server.onDisconnect, Has.Count.EqualTo(count), "no clients should be disconnected");
 
             Assert.That(task.IsCompleted, Is.True, "Take should have been completed");
 
@@ -181,21 +197,19 @@ namespace Mirror.SimpleWeb.Tests.Server
             result.AssetOutput();
             result.AssetErrors();
 
-
-            List<ArraySegment<byte>>[] messageForClients = Enumerable.Repeat(0, count).Select(x => new List<ArraySegment<byte>>()).ToArray();
-            onData.ForEach(x => messageForClients[x.connId - 1 /*from 1 index to 0 indexed*/].Add(x.data));
+            List<byte[]>[] messageForClients = sortMessagesForClients(count, server.onData);
             for (int i = 0; i < count; i++)
             {
-                List<ArraySegment<byte>> messages = messageForClients[i];
+                List<byte[]> messages = messageForClients[i];
                 int expected = seconds - 1;
                 Assert.That(messages, Has.Count.AtLeast(expected), $"Should have atleast {expected} ping messages");
 
-                foreach (ArraySegment<byte> message in messages)
+                foreach (byte[] message in messages)
                 {
-                    Assert.That(message.Array[message.Offset + 0], Is.EqualTo(10), "first byte should be 10");
-                    Assert.That(message.Array[message.Offset + 1], Is.EqualTo(11), "second byte should be 11");
-                    Assert.That(message.Array[message.Offset + 2], Is.EqualTo(12), "thrid byte should be 12");
-                    Assert.That(message.Array[message.Offset + 3], Is.EqualTo(13), "fourth byte should be 13");
+                    Assert.That(message[0], Is.EqualTo(10), "first byte should be 10");
+                    Assert.That(message[1], Is.EqualTo(11), "second byte should be 11");
+                    Assert.That(message[2], Is.EqualTo(12), "thrid byte should be 12");
+                    Assert.That(message[3], Is.EqualTo(13), "fourth byte should be 13");
                 }
             }
         }

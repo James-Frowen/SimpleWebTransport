@@ -10,7 +10,7 @@ using UnityEngine.TestTools;
 namespace Mirror.SimpleWeb.Tests.Server
 {
     [Category("SimpleWebTransport")]
-    public class SendMessageTest : SimpleWebServerTestBase
+    public class SendMessageTest : SimpleWebTestBase
     {
         protected override bool StartServer => true;
 
@@ -19,15 +19,15 @@ namespace Mirror.SimpleWeb.Tests.Server
         {
             Task<RunNode.Result> task = RunNode.RunAsync("ReceiveMessages.js");
 
-            yield return WaitForConnect;
+            yield return server.WaitForConnection;
 
             byte[] bytes = new byte[] { 1, 2, 3, 4, 5 };
             ArraySegment<byte> segment = new ArraySegment<byte>(bytes);
 
-            transport.ServerSend(new List<int> { 1 }, Channels.DefaultReliable, segment);
+            server.ServerSend(new List<int> { 1 }, Channels.DefaultReliable, segment);
 
             yield return new WaitForSeconds(0.5f);
-            transport.ServerDisconnect(1);
+            server.ServerDisconnect(1);
 
             yield return new WaitUntil(() => task.IsCompleted);
 
@@ -57,15 +57,15 @@ namespace Mirror.SimpleWeb.Tests.Server
         {
             Task<RunNode.Result> task = RunNode.RunAsync("ReceiveMessages.js");
 
-            yield return WaitForConnect;
+            yield return server.WaitForConnection;
 
             byte[] bytes = Enumerable.Range(1, msgSize).Select(x => (byte)x).ToArray();
             ArraySegment<byte> segment = new ArraySegment<byte>(bytes);
 
-            transport.ServerSend(new List<int> { 1 }, Channels.DefaultReliable, segment);
+            server.ServerSend(new List<int> { 1 }, Channels.DefaultReliable, segment);
 
             yield return new WaitForSeconds(0.5f);
-            transport.ServerDisconnect(1);
+            server.ServerDisconnect(1);
 
             yield return new WaitUntil(() => task.IsCompleted);
 
@@ -83,7 +83,7 @@ namespace Mirror.SimpleWeb.Tests.Server
         {
             Task<RunNode.Result> task = RunNode.RunAsync("ReceiveManyMessages.js", 5_000);
 
-            yield return WaitForConnect;
+            yield return server.WaitForConnection;
             const int messageCount = 100;
 
             for (int i = 0; i < messageCount; i++)
@@ -95,12 +95,12 @@ namespace Mirror.SimpleWeb.Tests.Server
 
                     ArraySegment<byte> segment = writer.ToArraySegment();
 
-                    transport.ServerSend(new List<int> { 1 }, Channels.DefaultReliable, segment);
+                    server.ServerSend(new List<int> { 1 }, Channels.DefaultReliable, segment);
                 }
             }
 
             yield return new WaitForSeconds(1);
-            transport.ServerDisconnect(1);
+            server.ServerDisconnect(1);
 
             yield return new WaitUntil(() => task.IsCompleted);
 
@@ -122,7 +122,7 @@ namespace Mirror.SimpleWeb.Tests.Server
             ArraySegment<byte> segment = new ArraySegment<byte>(new byte[70_000]);
 
             LogAssert.Expect(LogType.Error, "Message greater than max size");
-            bool result = transport.ServerSend(new List<int> { 1 }, Channels.DefaultReliable, segment);
+            bool result = server.ServerSend(new List<int> { 1 }, Channels.DefaultReliable, segment);
 
             Assert.IsFalse(result);
         }
@@ -135,7 +135,7 @@ namespace Mirror.SimpleWeb.Tests.Server
             ArraySegment<byte> segment = new ArraySegment<byte>();
 
             LogAssert.Expect(LogType.Error, "Message count was zero");
-            bool result = transport.ServerSend(new List<int> { 1 }, Channels.DefaultReliable, segment);
+            bool result = server.ServerSend(new List<int> { 1 }, Channels.DefaultReliable, segment);
 
             Assert.IsFalse(result);
         }

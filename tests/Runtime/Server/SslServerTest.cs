@@ -9,7 +9,7 @@ namespace Mirror.SimpleWeb.Tests.Server
 {
     [Category("SimpleWebTransport")]
     [Ignore("Needs a CA key to work, see bottom of setup")]
-    public class SslServerTest : SimpleWebServerTestBase
+    public class SslServerTest : SimpleWebTestBase
     {
         protected override bool StartServer => false;
 
@@ -18,9 +18,9 @@ namespace Mirror.SimpleWeb.Tests.Server
         {
             base.SetUp();
 
-            transport.sslEnabled = true;
-            transport.sslCertJson = "./Assets/SimpleWebTransport/source/.cert.example.Json";
-            transport.ServerStart();
+            server.sslEnabled = true;
+            server.sslCertJson = "./Assets/SimpleWebTransport/source/.cert.example.Json";
+            server.ServerStart();
 
             // to use these test you need to create a CA cert and use it to sign MirrorLocal
             // then add the cert to node so that it will accept it
@@ -47,7 +47,7 @@ namespace Mirror.SimpleWeb.Tests.Server
             // wait for message to be processed
             yield return new WaitForSeconds(0.2f);
 
-            Assert.That(onConnect, Has.Count.EqualTo(1), "Connect should be called once");
+            Assert.That(server.onConnect, Has.Count.EqualTo(1), "Connect should be called once");
         }
     }
 }

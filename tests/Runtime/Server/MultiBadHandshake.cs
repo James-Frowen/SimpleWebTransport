@@ -9,7 +9,7 @@ using UnityEngine.TestTools;
 namespace Mirror.SimpleWeb.Tests.Server
 {
     [Category("SimpleWebTransport")]
-    public class MultiBadHandshake : SimpleWebServerTestBase
+    public class MultiBadHandshake : SimpleWebTestBase
     {
         protected override bool StartServer => true;
 
@@ -30,7 +30,7 @@ namespace Mirror.SimpleWeb.Tests.Server
         public IEnumerator MultipleGoodAndBadClients()
         {
             int connectIndex = 1;
-            transport.OnServerConnected.AddListener((connId) =>
+            server.OnServerConnected.AddListener((connId) =>
             {
                 Assert.That(connId == connectIndex, "Clients should be connected in order with the next index");
                 connectIndex++;
@@ -52,9 +52,9 @@ namespace Mirror.SimpleWeb.Tests.Server
             // wait for timeout + extra so bad clients disconnect
             yield return new WaitForSeconds(2 * timeout / 1000);
 
-            Assert.That(onConnect, Has.Count.EqualTo(clientCount), "Connect should not be called");
-            Assert.That(onDisconnect, Has.Count.EqualTo(clientCount), "Disconnect should not be called");
-            Assert.That(onData, Has.Count.EqualTo(0), "Data should not be called");
+            Assert.That(server.onConnect, Has.Count.EqualTo(clientCount), "Connect should not be called");
+            Assert.That(server.onDisconnect, Has.Count.EqualTo(clientCount), "Disconnect should not be called");
+            Assert.That(server.onData, Has.Count.EqualTo(0), "Data should not be called");
 
             Assert.That(task.IsCompleted, Is.True, "Take should have been completed");
             RunNode.Result result = task.Result;
