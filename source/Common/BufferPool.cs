@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Threading;
-using UnityEngine;
 
 namespace Mirror.SimpleWeb
 {
@@ -64,10 +64,13 @@ namespace Mirror.SimpleWeb
             Array.Copy(source, offset, array, 0, length);
         }
 
-        [System.Diagnostics.Conditional("UNITY_ASSERTIONS")]
+        [Conditional("UNITY_ASSERTIONS")]
         internal void Validate(int arraySize)
         {
-            Debug.Assert(array.Length == arraySize, "Buffer that was returned had an array of the wrong size");
+            if (array.Length != arraySize)
+            {
+                Log.Error("Buffer that was returned had an array of the wrong size");
+            }
         }
     }
 
@@ -75,6 +78,11 @@ namespace Mirror.SimpleWeb
     {
         public readonly int arraySize;
         readonly ConcurrentQueue<ArrayBuffer> buffers;
+
+        /// <summary>
+        /// keeps track of how many arrays are taken vs returned
+        /// </summary>
+        internal int _current = 0;
 
         public BufferBucket(int arraySize)
         {
@@ -84,13 +92,36 @@ namespace Mirror.SimpleWeb
 
         public ArrayBuffer Take()
         {
-            return buffers.TryDequeue(out ArrayBuffer buffer) ? buffer : new ArrayBuffer(this, arraySize);
+            IncrementCreated();
+            if (buffers.TryDequeue(out ArrayBuffer buffer))
+            {
+                return buffer;
+            }
+            else
+            {
+                Log.Verbose($"BufferBucket({arraySize}) create new");
+                return new ArrayBuffer(this, arraySize);
+            }
         }
 
         public void Return(ArrayBuffer buffer)
         {
+            DecrementCreated();
             buffer.Validate(arraySize);
             buffers.Enqueue(buffer);
+        }
+
+        [Conditional("DEBUG")]
+        private void IncrementCreated()
+        {
+            Interlocked.Increment(ref _current);
+            Log.Verbose($"BufferBucket({arraySize}) count:{_current}");
+        }
+        [Conditional("DEBUG")]
+        private void DecrementCreated()
+        {
+            Interlocked.Decrement(ref _current);
+            Log.Verbose($"BufferBucket({arraySize}) count:{_current}");
         }
     }
 
@@ -139,19 +170,16 @@ namespace Mirror.SimpleWeb
             double range = maxLog - minLog;
             double each = range / (bucketCount - 1);
 
-            double[] sizes = new double[bucketCount];
-
-            for (int i = 0; i < bucketCount; i++)
-            {
-                sizes[i] = smallest * Math.Pow(Math.E, each * i);
-            }
-
             buckets = new BufferBucket[bucketCount];
 
             for (int i = 0; i < bucketCount; i++)
             {
-                buckets[i] = new BufferBucket((int)Math.Ceiling(sizes[i]));
+                double size = smallest * Math.Pow(Math.E, each * i);
+                buckets[i] = new BufferBucket((int)Math.Ceiling(size));
             }
+
+
+            Validate();
 
             // Example
             // 5         count  
@@ -171,6 +199,22 @@ namespace Mirror.SimpleWeb
             // 16,317    e^ (3 + 1.675 * 4)
 
             // perceision wont be lose when using doubles
+        }
+
+        [Conditional("UNITY_ASSERTIONS")]
+        void Validate()
+        {
+            if (buckets[0].arraySize != smallest)
+            {
+                Log.Error($"BufferPool Failed to create bucket for smallest. bucket:{buckets[0].arraySize} smallest{smallest}");
+            }
+
+            int largestBucket = buckets[bucketCount - 1].arraySize;
+            // rounded using Ceiling, so allowed to be 1 more that largest
+            if (largestBucket != largest && largestBucket != largest + 1)
+            {
+                Log.Error($"BufferPool Failed to create bucket for largest. bucket:{largestBucket} smallest{largest}");
+            }
         }
 
         public ArrayBuffer Take(int size)
