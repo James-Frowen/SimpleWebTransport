@@ -18,27 +18,6 @@ namespace Mirror.SimpleWeb
         public static Levels level = Levels.none;
 
         [Conditional("DEBUG")]
-        public static void Verbose(string msg)
-        {
-            if (level < Levels.verbose)
-                return;
-
-            Debug.Log($"VERBOSE: <color=blue>{msg}</color>");
-        }
-
-        [Conditional("DEBUG")]
-        public static void Verbose(string msg, bool showColor)
-        {
-            if (level < Levels.verbose)
-                return;
-
-            if (showColor)
-                Verbose(msg);
-            else
-                Debug.Log($"VERBOSE: {msg}");
-        }
-
-        [Conditional("DEBUG")]
         public static void DumpBuffer(byte[] buffer, int offset, int length)
         {
             if (level < Levels.verbose)
@@ -59,64 +38,49 @@ namespace Mirror.SimpleWeb
         }
 
         [Conditional("DEBUG")]
-        public static void Info(string msg)
+        public static void Verbose(string msg, bool showColor = true)
         {
-            if (level < Levels.info)
+            if (level < Levels.verbose)
                 return;
 
-            Debug.Log($"INFO: <color=blue>{msg}</color>");
+            if (showColor)
+                Debug.Log($"VERBOSE: <color=blue>{msg}</color>");
+            else
+                Debug.Log($"VERBOSE: {msg}");
         }
 
         [Conditional("DEBUG")]
-        public static void Info(string msg, bool showColor)
+        public static void Info(string msg, bool showColor = true)
         {
             if (level < Levels.info)
                 return;
 
             if (showColor)
-                Info(msg);
+                Debug.Log($"INFO: <color=blue>{msg}</color>");
             else
                 Debug.Log($"INFO: {msg}");
         }
 
         [Conditional("DEBUG")]
-        public static void Warn(string msg)
+        public static void Warn(string msg, bool showColor = true)
         {
-            if (level < Levels.error)
-                return;
-
-            Debug.LogWarning($"WARN: <color=orange>{msg}</color>");
-        }
-
-        [Conditional("DEBUG")]
-        public static void Warn(string msg, bool showColor)
-        {
-            if (level < Levels.error)
+            if (level < Levels.warn)
                 return;
 
             if (showColor)
-                Error(msg);
+                Debug.LogWarning($"WARN: <color=orange>{msg}</color>");
             else
                 Debug.LogWarning($"WARN: {msg}");
         }
 
         [Conditional("DEBUG")]
-        public static void Error(string msg)
-        {
-            if (level < Levels.error)
-                return;
-
-            Debug.LogError($"ERROR: <color=red>{msg}</color>");
-        }
-
-        [Conditional("DEBUG")]
-        public static void Error(string msg, bool showColor)
+        public static void Error(string msg, bool showColor = true)
         {
             if (level < Levels.error)
                 return;
 
             if (showColor)
-                Error(msg);
+                Debug.LogError($"ERROR: <color=red>{msg}</color>");
             else
                 Debug.LogError($"ERROR: {msg}");
         }
