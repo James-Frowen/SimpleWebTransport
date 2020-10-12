@@ -65,11 +65,9 @@ namespace Mirror.SimpleWeb.Tests
 
             T transport = go.AddComponent<T>();
             transport.port = 7776;
-            transport.logLevels = LogLevel;
+            transport.LogLevels = LogLevel;
             transport.receiveTimeout = timeout;
             transport.sendTimeout = timeout;
-
-            Log.level = LogLevel;
 
             if (transport is NeedInitTestInstance needInit)
             {

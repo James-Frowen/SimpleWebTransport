@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Security.Authentication;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Mirror.SimpleWeb
 {
@@ -41,7 +42,22 @@ namespace Mirror.SimpleWeb
 
         [Header("Debug")]
         [Tooltip("Log functions uses ConditionalAttribute which will effect which log methods are allowed. DEBUG allows warn/error, SIMPLEWEB_LOG_ENABLED allows all")]
-        public Log.Levels logLevels = Log.Levels.none;
+        [FormerlySerializedAs("logLevels")]
+        [SerializeField] Log.Levels _logLevels = Log.Levels.none;
+
+        /// <summary>
+        /// <para>Gets _logLevels field</para>
+        /// <para>Sets _logLevels and Log.level fields</para>
+        /// </summary>
+        public Log.Levels LogLevels
+        {
+            get => _logLevels;
+            set
+            {
+                _logLevels = value;
+                Log.level = _logLevels;
+            }
+        }
 
         private void OnValidate()
         {
@@ -51,7 +67,7 @@ namespace Mirror.SimpleWeb
                 maxMessageSize = ushort.MaxValue;
             }
 
-            Log.level = logLevels;
+            Log.level = _logLevels;
         }
 
         SimpleWebClient client;
@@ -68,7 +84,7 @@ namespace Mirror.SimpleWeb
 
         private void Awake()
         {
-            Log.level = logLevels;
+            Log.level = _logLevels;
         }
         public override void Shutdown()
         {
