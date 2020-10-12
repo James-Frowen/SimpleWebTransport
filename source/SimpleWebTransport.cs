@@ -21,8 +21,6 @@ namespace Mirror.SimpleWeb
         [Tooltip("disables nagle algorithm. lowers CPU% and latency but increases bandwidth")]
         public bool noDelay = true;
 
-        [Header("Server Settings")]
-
         [Tooltip("Send would stall forever if the network is cut off during a send, so we need a timeout (in milliseconds)")]
         public int sendTimeout = 5000;
 
