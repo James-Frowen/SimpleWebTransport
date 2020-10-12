@@ -30,9 +30,8 @@ namespace Mirror.SimpleWeb
 
         internal static Cert LoadCertJson(string certJsonPath)
         {
-            Cert cert = default;
             string json = File.ReadAllText(certJsonPath);
-            cert = JsonUtility.FromJson<Cert>(json);
+            Cert cert = JsonUtility.FromJson<Cert>(json);
 
             if (string.IsNullOrEmpty(cert.path))
             {
