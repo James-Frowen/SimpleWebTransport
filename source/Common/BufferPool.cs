@@ -22,10 +22,19 @@ namespace Mirror.SimpleWeb
         /// How many times release needs to be called before buffer is returned to pool
         /// <para>This allows the buffer to be used in multiple places at the same time</para>
         /// </summary>
+        public void SetReleasesRequired(int required)
+        {
+            releasesRequired = required;
+        }
+
+        /// <summary>
+        /// How many times release needs to be called before buffer is returned to pool
+        /// <para>This allows the buffer to be used in multiple places at the same time</para>
+        /// </summary>
         /// <remarks>
         /// This value is normally 0, but can be changed to require release to be called multiple times
         /// </remarks>
-        public int releasesRequired;
+        int releasesRequired;
 
         public ArrayBuffer(IBufferOwner owner, int size)
         {

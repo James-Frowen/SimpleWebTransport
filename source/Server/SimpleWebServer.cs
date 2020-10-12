@@ -44,7 +44,7 @@ namespace Mirror.SimpleWeb
         {
             ArrayBuffer buffer = bufferPool.Take(source.Count);
             buffer.CopyFrom(source);
-            buffer.releasesRequired = connectionIds.Count;
+            buffer.SetReleasesRequired(connectionIds.Count);
 
             // make copy of array before for each, data sent to each client is the same
             foreach (int id in connectionIds)
