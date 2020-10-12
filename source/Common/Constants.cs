@@ -6,7 +6,7 @@ namespace Mirror.SimpleWeb
     /// Some values are from https://tools.ietf.org/html/rfc6455
     /// </para>
     /// </summary>
-    static class Constants
+    internal static class Constants
     {
         /// <summary>
         /// Header is at most 4 bytes

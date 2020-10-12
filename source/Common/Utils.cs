@@ -1,4 +1,4 @@
-﻿using System.Threading;
+using System.Threading;
 
 namespace Mirror.SimpleWeb
 {
@@ -9,6 +9,5 @@ namespace Mirror.SimpleWeb
             // sleep in order to check for ThreadInterruptedException
             Thread.Sleep(1);
         }
-
     }
 }

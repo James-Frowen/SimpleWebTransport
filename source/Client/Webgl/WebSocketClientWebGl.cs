@@ -9,7 +9,10 @@ namespace Mirror.SimpleWeb
     {
         static readonly Dictionary<int, WebSocketClientWebGl> instances = new Dictionary<int, WebSocketClientWebGl>();
 
-        public int index;
+        /// <summary>
+        /// key for instances sent between c# and js
+        /// </summary>
+        int index;
 
         internal WebSocketClientWebGl(int maxMessageSize, int maxMessagesPerTick) : base(maxMessageSize, maxMessagesPerTick)
         {
