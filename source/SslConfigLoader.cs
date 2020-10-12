@@ -20,13 +20,12 @@ namespace Mirror.SimpleWeb
 
             Cert cert = LoadCertJson(certJsonPath);
 
-            return new SslConfig
-            {
-                enabled = transport.sslEnabled,
-                sslProtocols = transport.sslProtocols,
-                certPath = cert.path,
-                certPassword = cert.password,
-            };
+            return new SslConfig(
+                enabled: transport.sslEnabled,
+                sslProtocols: transport.sslProtocols,
+                certPath: cert.path,
+                certPassword: cert.password
+            );
         }
 
         internal static Cert LoadCertJson(string certJsonPath)
