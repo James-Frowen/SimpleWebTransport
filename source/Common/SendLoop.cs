@@ -39,8 +39,8 @@ namespace Mirror.SimpleWeb
                     }
                 }
             }
-            catch (ThreadInterruptedException) { Log.Info($"SendLoop {conn} ThreadInterrupted"); return; }
-            catch (ThreadAbortException) { Log.Info($"SendLoop {conn} ThreadAbort"); return; }
+            catch (ThreadInterruptedException) { Log.Info($"SendLoop {conn} ThreadInterrupted"); }
+            catch (ThreadAbortException) { Log.Info($"SendLoop {conn} ThreadAbort"); }
             catch (Exception e)
             {
                 Debug.LogException(e);
@@ -111,8 +111,8 @@ namespace Mirror.SimpleWeb
 
         class MaskHelper
         {
-            byte[] maskBuffer;
-            RNGCryptoServiceProvider random;
+            readonly byte[] maskBuffer;
+            readonly RNGCryptoServiceProvider random;
 
             public MaskHelper()
             {
@@ -124,7 +124,7 @@ namespace Mirror.SimpleWeb
                 random?.Dispose();
             }
 
-            internal int WriteMask(byte[] buffer, int offset)
+            public int WriteMask(byte[] buffer, int offset)
             {
                 random.GetBytes(maskBuffer);
                 Buffer.BlockCopy(maskBuffer, 0, buffer, offset, 4);
