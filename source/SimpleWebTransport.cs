@@ -42,7 +42,7 @@ namespace Mirror.SimpleWeb
         public SslProtocols sslProtocols = SslProtocols.Ssl3 | SslProtocols.Tls12;
 
         [Header("Debug")]
-        [Tooltip("Log functions uses Conditional(\"DEBUG\") so are only included in Editor and Development builds")]
+        [Tooltip("Log functions uses ConditionalAttribute which will effect which log methods are allowed. DEBUG allows warn/error, SIMPLEWEB_LOG_ENABLED allows all")]
         public Log.Levels logLevels = Log.Levels.none;
 
         private void OnValidate()

@@ -1,4 +1,6 @@
-﻿using System;
+// define this to make sure log level works
+#define SIMPLEWEB_LOG_ENABLED
+using System;
 using System.Collections;
 using NUnit.Framework;
 using UnityEngine.TestTools;

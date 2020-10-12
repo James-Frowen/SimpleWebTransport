@@ -25,3 +25,22 @@ Please report any bugs or issues [Here](https://github.com/MirrorNetworking/Simp
 If you host your webgl build on a https domain you will need to use wss which will require a ssl cert.
 
 [See this page](./HowToCreateSSLCert.md)
+
+
+# Logging
+
+Log levels can be set using the dropdown on the transport or or setting `Mirror.SimpleWeb.Log.level`. 
+
+The transport applies the dropdown value in its `Awake` and `OnValidate` methods.
+
+### Log methods
+
+Log methods in this transport use the [ConditionalAttribute](https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.conditionalattribute?view=netstandard-2.0) so they are removed depending on the preprocessor defines.
+
+These preprocessor defines effect the logging
+- `DEBUG` allows warn/error logs 
+- `SIMPLEWEB_LOG_ENABLED` allows all logs
+
+Without `SIMPLEWEB_LOG_ENABLED` info or verbose logging will never happen even if log level allows it.
+
+See the [Unity docs](https://docs.unity3d.com/Manual/PlatformDependentCompilation.html) on how set custom defines.
