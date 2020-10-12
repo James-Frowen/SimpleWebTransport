@@ -17,12 +17,12 @@ namespace Mirror.SimpleWeb
     /// </summary>
     public abstract class SimpleWebClient
     {
-        public static SimpleWebClient Create(int maxMessageSize, int maxMessagesPerTick)
+        public static SimpleWebClient Create(int maxMessageSize, int maxMessagesPerTick, int sendTimeout, int receiveTimeout)
         {
 #if UNITY_WEBGL && !UNITY_EDITOR
             return new WebSocketClientWebGl(maxMessageSize, maxMessagesPerTick);
 #else
-            return new WebSocketClientStandAlone(maxMessageSize, maxMessagesPerTick);
+            return new WebSocketClientStandAlone(maxMessageSize, maxMessagesPerTick, sendTimeout, receiveTimeout);
 #endif
         }
 

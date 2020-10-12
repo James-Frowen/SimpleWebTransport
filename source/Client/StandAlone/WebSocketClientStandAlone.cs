@@ -16,8 +16,10 @@ namespace Mirror.SimpleWeb
         readonly RNGCryptoServiceProvider random;
 
         private Connection conn;
+        readonly int sendTimeout;
+        readonly int receiveTimeout;
 
-        internal WebSocketClientStandAlone(int maxMessageSize, int maxMessagesPerTick) : base(maxMessageSize, maxMessagesPerTick)
+        internal WebSocketClientStandAlone(int maxMessageSize, int maxMessagesPerTick, int sendTimeout, int receiveTimeout) : base(maxMessageSize, maxMessagesPerTick)
         {
 #if UNITY_WEBGL && !UNITY_EDITOR
             throw new NotSupportedException();
@@ -25,6 +27,8 @@ namespace Mirror.SimpleWeb
             sslHelper = new ClientSslHelper();
             handshake = new ClientHandshake();
             random = new RNGCryptoServiceProvider();
+            this.sendTimeout = sendTimeout;
+            this.receiveTimeout = receiveTimeout;
 #endif
         }
         ~WebSocketClientStandAlone()
@@ -46,8 +50,8 @@ namespace Mirror.SimpleWeb
             {
                 TcpClient client = new TcpClient();
                 client.NoDelay = true;
-                client.ReceiveTimeout = 20000;
-                client.SendTimeout = 5000;
+                client.ReceiveTimeout = receiveTimeout;
+                client.SendTimeout = sendTimeout;
                 Uri uri = new Uri(address);
                 try
                 {
