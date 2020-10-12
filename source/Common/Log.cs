@@ -19,7 +19,7 @@ namespace Mirror.SimpleWeb
             verbose = 4,
         }
 
-        public static readonly ILogger logger = Debug.unityLogger;
+        public static ILogger logger = Debug.unityLogger;
         public static Levels level = Levels.none;
 
         [Conditional(SIMPLEWEB_LOG_ENABLED)]
