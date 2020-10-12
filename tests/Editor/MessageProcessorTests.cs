@@ -6,6 +6,7 @@ namespace Mirror.SimpleWeb.Tests
     [Category("SimpleWebTransport")]
     public class MessageProcessorTests
     {
+        // TODO Needs updating for new Message Processor methods
         private byte[] CreateMessage(bool finished = true, bool hasMask = true, int opcode = 2, int length = 10)
         {
             byte[] buffer = new byte[20];

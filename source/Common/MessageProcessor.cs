@@ -4,6 +4,7 @@ namespace Mirror.SimpleWeb
 {
     public static class MessageProcessor
     {
+        [System.Obsolete("Not used any more")]
         public struct Result
         {
             public int opcode;
@@ -78,6 +79,7 @@ namespace Mirror.SimpleWeb
         }
 
         /// <exception cref="InvalidDataException"></exception>
+        [System.Obsolete("Not used any more")]
         public static Result ProcessHeader(byte[] buffer, int maxLength, bool expectMask)
         {
             bool finished = (buffer[0] & 0b1000_0000) != 0; // has full message been sent
