@@ -2,6 +2,7 @@
 #define SIMPLEWEB_LOG_ENABLED
 using System;
 using System.Collections;
+using System.Linq;
 using NUnit.Framework;
 using UnityEngine.TestTools;
 
@@ -10,6 +11,31 @@ namespace Mirror.SimpleWeb.Tests
     [Category("SimpleWebTransport")]
     public class LogTest
     {
+        static IEnumerable BufferToStringTestCases
+        {
+            get
+            {
+                yield return new TestCaseData(new byte[5] { 10, 11, 12, 13, 14 }, null, null).Returns("0A-0B-0C-0D-0E");
+                yield return new TestCaseData(new byte[5] { 10, 11, 12, 13, 14 }, 1, 3).Returns("0B-0C-0D");
+                yield return new TestCaseData(new byte[5] { 255, 0, 128, 13, 14 }, null, 3).Returns("FF-00-80");
+                yield return new TestCaseData(new byte[5] { 255, 0, 128, 13, 14 }, null, 5).Returns("FF-00-80-0D-0E");
+
+                byte[] data = Enumerable.Range(0, 255).Select(x => (byte)x).ToArray();
+                // charaters are split by '-'
+                // charaters are in hex
+                // charaters are padded (eg 01 instead of 1)
+                string expected = string.Join("-", data.Select(x => x.ToString("X").PadLeft(2, '0')));
+                yield return new TestCaseData(data, null, null).Returns(expected);
+            }
+        }
+        [Test]
+        [TestCaseSource(nameof(BufferToStringTestCases))]
+        public string BufferToString(byte[] buffer, int? offset, int? length)
+        {
+            return Log.BufferToString(buffer, offset ?? 0, length);
+        }
+
+
         const string SomeMessage = "Some Message";
 
         static IEnumerable TestCases
@@ -54,22 +80,21 @@ namespace Mirror.SimpleWeb.Tests
 
         [Test]
         [TestCaseSource(nameof(TestCases))]
-        public void VerboseTest(bool showColor, Log.Levels levels)
+        public void ErrorTest(bool showColor, Log.Levels levels)
         {
             Log.level = levels;
 
-            if (levels >= Log.Levels.verbose)
+            if (levels >= Log.Levels.error)
             {
                 if (showColor)
-                    LogAssert.Expect(UnityEngine.LogType.Log, $"VERBOSE: <color=blue>{SomeMessage}</color>");
+                    LogAssert.Expect(UnityEngine.LogType.Error, $"ERROR: <color=red>{SomeMessage}</color>");
                 else
-                    LogAssert.Expect(UnityEngine.LogType.Log, $"VERBOSE: {SomeMessage}");
+                    LogAssert.Expect(UnityEngine.LogType.Error, $"ERROR: {SomeMessage}");
             }
-            Log.Verbose(SomeMessage, showColor);
+            Log.Error(SomeMessage, showColor);
 
             LogAssert.NoUnexpectedReceived();
         }
-
 
         [Test]
         [TestCaseSource(nameof(TestCases))]
@@ -91,6 +116,24 @@ namespace Mirror.SimpleWeb.Tests
 
         [Test]
         [TestCaseSource(nameof(TestCases))]
+        public void VerboseTest(bool showColor, Log.Levels levels)
+        {
+            Log.level = levels;
+
+            if (levels >= Log.Levels.verbose)
+            {
+                if (showColor)
+                    LogAssert.Expect(UnityEngine.LogType.Log, $"VERBOSE: <color=blue>{SomeMessage}</color>");
+                else
+                    LogAssert.Expect(UnityEngine.LogType.Log, $"VERBOSE: {SomeMessage}");
+            }
+            Log.Verbose(SomeMessage, showColor);
+
+            LogAssert.NoUnexpectedReceived();
+        }
+
+        [Test]
+        [TestCaseSource(nameof(TestCases))]
         public void WarnTest(bool showColor, Log.Levels levels)
         {
             Log.level = levels;
@@ -103,24 +146,6 @@ namespace Mirror.SimpleWeb.Tests
                     LogAssert.Expect(UnityEngine.LogType.Warning, $"WARN: {SomeMessage}");
             }
             Log.Warn(SomeMessage, showColor);
-
-            LogAssert.NoUnexpectedReceived();
-        }
-
-        [Test]
-        [TestCaseSource(nameof(TestCases))]
-        public void ErrorTest(bool showColor, Log.Levels levels)
-        {
-            Log.level = levels;
-
-            if (levels >= Log.Levels.error)
-            {
-                if (showColor)
-                    LogAssert.Expect(UnityEngine.LogType.Error, $"ERROR: <color=red>{SomeMessage}</color>");
-                else
-                    LogAssert.Expect(UnityEngine.LogType.Error, $"ERROR: {SomeMessage}");
-            }
-            Log.Error(SomeMessage, showColor);
 
             LogAssert.NoUnexpectedReceived();
         }

@@ -22,14 +22,18 @@ namespace Mirror.SimpleWeb
         public static ILogger logger = Debug.unityLogger;
         public static Levels level = Levels.none;
 
+        public static string BufferToString(byte[] buffer, int offset = 0, int? length = null)
+        {
+            return BitConverter.ToString(buffer, offset, length ?? buffer.Length);
+        }
+
         [Conditional(SIMPLEWEB_LOG_ENABLED)]
         public static void DumpBuffer(byte[] buffer, int offset, int length)
         {
             if (level < Levels.verbose)
                 return;
 
-            string text = BitConverter.ToString(buffer, offset, length);
-            logger.Log($"VERBOSE: <color=blue>{text}</color>");
+            logger.Log($"VERBOSE: <color=blue>{BufferToString(buffer, offset, length)}</color>");
         }
 
         [Conditional(SIMPLEWEB_LOG_ENABLED)]
@@ -38,8 +42,7 @@ namespace Mirror.SimpleWeb
             if (level < Levels.verbose)
                 return;
 
-            string text = BitConverter.ToString(buffer, offset, length);
-            logger.Log($"VERBOSE: <color=blue>{label}: {text}</color>");
+            logger.Log($"VERBOSE: <color=blue>{label}: {BufferToString(buffer, offset, length)}</color>");
         }
 
         [Conditional(SIMPLEWEB_LOG_ENABLED)]
