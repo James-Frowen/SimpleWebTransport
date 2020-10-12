@@ -15,7 +15,6 @@ namespace Mirror.SimpleWeb
         readonly int sendTimeout;
         readonly int receiveTimeout;
         readonly int maxMessageSize;
-        readonly SslConfig sslConfig;
 
         TcpListener listener;
         Thread acceptThread;
@@ -38,8 +37,7 @@ namespace Mirror.SimpleWeb
             this.sendTimeout = sendTimeout;
             this.receiveTimeout = receiveTimeout;
             this.maxMessageSize = maxMessageSize;
-            this.sslConfig = sslConfig;
-            sslHelper = new ServerSslHelper(this.sslConfig);
+            sslHelper = new ServerSslHelper(sslConfig);
             this.bufferPool = bufferPool;
         }
 
@@ -64,13 +62,14 @@ namespace Mirror.SimpleWeb
             listener?.Stop();
             acceptThread = null;
 
-            Connection[] connections = this.connections.Values.ToArray();
-            foreach (Connection conn in connections)
+            // make copy so that foreach doesn't break if values are removed
+            Connection[] connectionsCopy = connections.Values.ToArray();
+            foreach (Connection conn in connectionsCopy)
             {
                 conn.Close();
             }
 
-            this.connections.Clear();
+            connections.Clear();
         }
 
         void acceptLoop()
@@ -86,6 +85,7 @@ namespace Mirror.SimpleWeb
                         client.ReceiveTimeout = receiveTimeout;
                         client.NoDelay = noDelay;
 
+                        // TODO keep track of connections before they are in connections dictionary
                         Connection conn = new Connection(client);
                         Log.Info($"A client connected {conn}");
 
@@ -105,8 +105,8 @@ namespace Mirror.SimpleWeb
                     throw;
                 }
             }
-            catch (ThreadInterruptedException) { Log.Info("acceptLoop ThreadInterrupted"); return; }
-            catch (ThreadAbortException) { Log.Info("acceptLoop ThreadAbort"); return; }
+            catch (ThreadInterruptedException) { Log.Info("acceptLoop ThreadInterrupted"); }
+            catch (ThreadAbortException) { Log.Info("acceptLoop ThreadAbort"); }
             catch (Exception e) { Debug.LogException(e); }
         }
 
