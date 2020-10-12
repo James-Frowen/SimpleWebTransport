@@ -25,11 +25,8 @@ namespace Mirror.SimpleWeb
                 // if interupt is called we dont care about Exceptions
                 Utils.CheckForInterupt();
 
-                ae.Handle(e =>
-                {
-                    // rethrow
-                    return false;
-                });
+                // rethrow
+                ae.Handle(e => false);
             }
 
             if (received == -1)
@@ -49,81 +46,32 @@ namespace Mirror.SimpleWeb
             return outOffset + received;
         }
 
-        public enum ReadResult
-        {
-            Success = 1,
-            ReadMinusOne = 2,
-            ReadZero = 4,
-            ReadLessThanLength = 8,
-            Error = 16,
-            StreamDisposed = 32,
-            Fail = ReadMinusOne | ReadZero | ReadLessThanLength | Error | StreamDisposed
-
-        }
-
         /// <summary>
         /// Reads and returns results. This should never throw an exception
         /// </summary>
-        public static ReadResult SafeRead(Stream stream, byte[] outBuffer, int outOffset, int length)
+        public static bool TryRead(Stream stream, byte[] outBuffer, int outOffset, int length)
         {
             try
             {
-                int received = stream.Read(outBuffer, outOffset, length);
-
-                if (received == -1)
-                {
-                    return ReadResult.ReadMinusOne;
-                }
-
-                if (received == 0)
-                {
-                    return ReadResult.ReadZero;
-                }
-                if (received != length)
-                {
-                    return ReadResult.ReadLessThanLength;
-                }
-
-                return ReadResult.Success;
+                int count = Read(stream, outBuffer, outOffset, length);
+                return count == length;
             }
-            catch (AggregateException ae)
+            catch (ReadHelperException)
             {
-                // if interupt is called we dont care about Exceptions
-                Utils.CheckForInterupt();
-
-                ReadResult result = ReadResult.Error;
-
-                ae.Handle(e =>
-                {
-                    if (e is IOException io)
-                    {
-                        // this is only info as SafeRead is allowed to fail
-                        Log.Info($"SafeRead IOException\n{io.Message}", false);
-                        return true;
-                    }
-                    if (e is ObjectDisposedException)
-                    {
-                        result = ReadResult.StreamDisposed;
-                        return true;
-                    }
-
-                    return false;
-                });
-
-                return result;
+                return false;
             }
-            catch (IOException e)
+            catch (IOException)
             {
-                // if interupt is called we dont care about Exceptions
-                Utils.CheckForInterupt();
-
-                // this is only info as SafeRead is allowed to fail
-                Log.Info($"SafeRead IOException\n{e.Message}", false);
-                return ReadResult.Error;
+                return false;
+            }
+            catch (Exception e)
+            {
+                Log.Exception(e);
+                return false;
             }
         }
 
-        public static int? SafeReadTillMatch(Stream stream, byte[] outBuffer, int outOffset, byte[] endOfHeader)
+        public static int? SafeReadTillMatch(Stream stream, byte[] outBuffer, int outOffset, int maxLength, byte[] endOfHeader)
         {
             try
             {
@@ -135,6 +83,12 @@ namespace Mirror.SimpleWeb
                     int next = stream.ReadByte();
                     if (next == -1) // closed
                         return null;
+
+                    if (read >= maxLength)
+                    {
+                        Log.Error("SafeReadTillMatch exceeded maxLength");
+                        return null;
+                    }
 
                     outBuffer[outOffset + read] = (byte)next;
                     read++;
@@ -159,6 +113,11 @@ namespace Mirror.SimpleWeb
             catch (IOException e)
             {
                 Log.Info($"SafeRead IOException\n{e.Message}", false);
+                return null;
+            }
+            catch (Exception e)
+            {
+                Log.Exception(e);
                 return null;
             }
         }

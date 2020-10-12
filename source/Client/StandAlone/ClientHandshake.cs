@@ -40,7 +40,7 @@ namespace Mirror.SimpleWeb
 
                 byte[] responseBuffer = new byte[1000];
 
-                int? lengthOrNull = ReadHelper.SafeReadTillMatch(stream, responseBuffer, 0, Constants.endOfHandshake);
+                int? lengthOrNull = ReadHelper.SafeReadTillMatch(stream, responseBuffer, 0, responseBuffer.Length, Constants.endOfHandshake);
 
                 if (!lengthOrNull.HasValue)
                 {
