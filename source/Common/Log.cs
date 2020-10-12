@@ -92,5 +92,14 @@ namespace Mirror.SimpleWeb
             else
                 logger.LogError($"ERROR: {msg}");
         }
+
+        [Conditional(SIMPLEWEB_LOG_ENABLED), Conditional(DEBUG)]
+        public static void Exception(Exception e)
+        {
+            if (level < Levels.error)
+                return;
+
+            logger.LogError($"EXCEPTION: <color=red>{e.GetType().Name}</color> Message: {e.Message}");
+        }
     }
 }

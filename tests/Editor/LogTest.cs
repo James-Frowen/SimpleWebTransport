@@ -80,6 +80,22 @@ namespace Mirror.SimpleWeb.Tests
 
         [Test]
         [TestCaseSource(nameof(TestCases))]
+        public void ExceptionTest(bool showColor, Log.Levels levels)
+        {
+            Log.level = levels;
+
+            Exception myException = new NullReferenceException(SomeMessage);
+            if (levels >= Log.Levels.error)
+            {
+                LogAssert.Expect(UnityEngine.LogType.Error, $"EXCEPTION: <color=red>{nameof(NullReferenceException)}</color> Message: {SomeMessage}");
+            }
+            Log.Exception(myException);
+
+            LogAssert.NoUnexpectedReceived();
+        }
+
+        [Test]
+        [TestCaseSource(nameof(TestCases))]
         public void ErrorTest(bool showColor, Log.Levels levels)
         {
             Log.level = levels;
