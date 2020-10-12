@@ -47,6 +47,10 @@ namespace Mirror.SimpleWeb
 
                 closeCallback.Invoke(conn);
             }
+            finally
+            {
+                maskHelper?.Dispose();
+            }
         }
 
         static void SendMessage(Stream stream, byte[] buffer, ArrayBuffer msg, bool setMask, MaskHelper maskHelper)
@@ -109,7 +113,7 @@ namespace Mirror.SimpleWeb
             return sendLength;
         }
 
-        class MaskHelper
+        class MaskHelper : IDisposable
         {
             readonly byte[] maskBuffer;
             readonly RNGCryptoServiceProvider random;
@@ -119,9 +123,9 @@ namespace Mirror.SimpleWeb
                 maskBuffer = new byte[4];
                 random = new RNGCryptoServiceProvider();
             }
-            ~MaskHelper()
+            public void Dispose()
             {
-                random?.Dispose();
+                random.Dispose();
             }
 
             public int WriteMask(byte[] buffer, int offset)
