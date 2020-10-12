@@ -19,7 +19,10 @@ namespace Mirror.SimpleWeb
                 Stream stream = conn.stream;
 
                 byte[] keyBuffer = new byte[16];
-                new System.Random().NextBytes(keyBuffer);
+                using (RNGCryptoServiceProvider rng = new RNGCryptoServiceProvider())
+                {
+                    rng.GetBytes(keyBuffer);
+                }
 
                 string key = Convert.ToBase64String(keyBuffer);
                 string keySum = key + Constants.HandshakeGUID;
