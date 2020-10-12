@@ -8,7 +8,7 @@ namespace Mirror.SimpleWeb
 {
     internal class WebSocketClientStandAlone : SimpleWebClient
     {
-        object lockObject = new object();
+        readonly object lockObject = new object();
         bool hasClosed;
 
         readonly ClientSslHelper sslHelper;
@@ -94,8 +94,8 @@ namespace Mirror.SimpleWeb
 
                 ReceiveLoop.Loop(conn, maxMessageSize, false, receiveQueue, _ => CloseConnection(), bufferPool);
             }
-            catch (ThreadInterruptedException) { Log.Info("acceptLoop ThreadInterrupted"); return; }
-            catch (ThreadAbortException) { Log.Info("acceptLoop ThreadAbort"); return; }
+            catch (ThreadInterruptedException) { Log.Info("acceptLoop ThreadInterrupted"); }
+            catch (ThreadAbortException) { Log.Info("acceptLoop ThreadAbort"); }
             catch (Exception e) { Debug.LogException(e); }
             finally
             {
@@ -126,10 +126,10 @@ namespace Mirror.SimpleWeb
             CloseConnection();
         }
 
-        public override void Send(ArraySegment<byte> source)
+        public override void Send(ArraySegment<byte> segment)
         {
-            ArrayBuffer buffer = bufferPool.Take(source.Count);
-            buffer.CopyFrom(source);
+            ArrayBuffer buffer = bufferPool.Take(segment.Count);
+            buffer.CopyFrom(segment);
 
             conn.sendQueue.Enqueue(buffer);
             conn.sendPending.Set();
