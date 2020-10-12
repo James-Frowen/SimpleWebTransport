@@ -4,10 +4,10 @@ namespace Mirror.SimpleWeb
 {
     public struct Message
     {
-        public int connId;
-        public EventType type;
-        public ArrayBuffer data;
-        public Exception exception;
+        public readonly int connId;
+        public readonly EventType type;
+        public readonly ArrayBuffer data;
+        public readonly Exception exception;
 
         public Message(EventType type) : this()
         {
