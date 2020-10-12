@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -45,7 +44,6 @@ namespace Mirror.SimpleWeb
 
         public bool TryHandshake(Connection conn)
         {
-            TcpClient client = conn.client;
             Stream stream = conn.stream;
 
             // TOOD remove alloc
