@@ -2,11 +2,10 @@ using System;
 using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Threading;
-using UnityEngine;
 
 namespace Mirror.SimpleWeb
 {
-    internal class WebSocketClientStandAlone : SimpleWebClient
+    public class WebSocketClientStandAlone : SimpleWebClient
     {
         readonly object lockObject = new object();
         bool hasClosed;

@@ -1,11 +1,10 @@
 using System;
 using System.Collections.Generic;
 using AOT;
-using UnityEngine;
 
 namespace Mirror.SimpleWeb
 {
-    internal class WebSocketClientWebGl : SimpleWebClient
+    public class WebSocketClientWebGl : SimpleWebClient
     {
         static readonly Dictionary<int, WebSocketClientWebGl> instances = new Dictionary<int, WebSocketClientWebGl>();
 
