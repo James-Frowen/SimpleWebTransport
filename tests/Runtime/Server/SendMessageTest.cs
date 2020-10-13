@@ -121,7 +121,7 @@ namespace Mirror.SimpleWeb.Tests.Server
 
             ArraySegment<byte> segment = new ArraySegment<byte>(new byte[70_000]);
 
-            LogAssert.Expect(LogType.Error, "Message greater than max size");
+            LogAssert.Expect(LogType.Error, "ERROR: <color=red>Message greater than max size</color>");
             bool result = server.ServerSend(new List<int> { 1 }, Channels.DefaultReliable, segment);
 
             Assert.IsFalse(result);
@@ -134,7 +134,7 @@ namespace Mirror.SimpleWeb.Tests.Server
 
             ArraySegment<byte> segment = new ArraySegment<byte>();
 
-            LogAssert.Expect(LogType.Error, "Message count was zero");
+            LogAssert.Expect(LogType.Error, "ERROR: <color=red>Message count was zero</color>");
             bool result = server.ServerSend(new List<int> { 1 }, Channels.DefaultReliable, segment);
 
             Assert.IsFalse(result);
