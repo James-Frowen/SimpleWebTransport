@@ -3,7 +3,7 @@ using System.IO;
 
 namespace Mirror.SimpleWeb
 {
-    public class ReadHelperException : Exception
+    internal class ReadHelperException : Exception
     {
         public ReadHelperException(string message) : base(message) { }
     }
