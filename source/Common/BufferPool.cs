@@ -44,8 +44,8 @@ namespace Mirror.SimpleWeb
 
         public void Release()
         {
-            Interlocked.Decrement(ref releasesRequired);
-            if (releasesRequired <= 0)
+            int newValue = Interlocked.Decrement(ref releasesRequired);
+            if (newValue <= 0)
             {
                 Length = 0;
                 owner.Return(this);
@@ -138,14 +138,14 @@ namespace Mirror.SimpleWeb
         [Conditional("DEBUG")]
         private void IncrementCreated()
         {
-            Interlocked.Increment(ref _current);
-            Log.Verbose($"BufferBucket({arraySize}) count:{_current}");
+            int next = Interlocked.Increment(ref _current);
+            Log.Verbose($"BufferBucket({arraySize}) count:{next}");
         }
         [Conditional("DEBUG")]
         private void DecrementCreated()
         {
-            Interlocked.Decrement(ref _current);
-            Log.Verbose($"BufferBucket({arraySize}) count:{_current}");
+            int next = Interlocked.Decrement(ref _current);
+            Log.Verbose($"BufferBucket({arraySize}) count:{next}");
         }
     }
 
