@@ -101,3 +101,11 @@ after the `cert.json` and `cert.pfx` are in the server folder you can start you 
 Test everything is working by connection using the editor or a build 
 
 set your domain (eg `simpleweb.example.com`) in the hostname field and then start a client
+
+# Debug
+
+To check if your pfx file is working outside of unity you can use [pfxTestServer.js](DebugScripts\node~\pfxTestServer.js).
+
+To use this install `nodejs` then set the pfx path and run it with `node pfxTestServer.js`
+
+You should then be able to visit `https://simpleweb.example.com:8000` and have the server response (change port and domain to fit your needs)
