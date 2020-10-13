@@ -3,7 +3,6 @@ using System.IO;
 using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Threading;
-using UnityEngine;
 
 namespace Mirror.SimpleWeb
 {
@@ -113,7 +112,7 @@ namespace Mirror.SimpleWeb
             return sendLength;
         }
 
-        class MaskHelper : IDisposable
+        sealed class MaskHelper : IDisposable
         {
             readonly byte[] maskBuffer;
             readonly RNGCryptoServiceProvider random;
