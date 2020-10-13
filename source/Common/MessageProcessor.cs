@@ -4,47 +4,11 @@ namespace Mirror.SimpleWeb
 {
     public static class MessageProcessor
     {
-        [System.Obsolete("Not used any more")]
-        public struct Result
-        {
-            public int opcode;
-            public bool hasMask;
-            /// <summary>
-            /// offset after length in header (2 or 4 based on length + segment offset)
-            /// </summary>
-            public int offset;
-            public int msgLength;
-
-            /// <summary>
-            /// how much more data there is to read
-            /// </summary>
-            /// <remarks>
-            /// 4 bytes have already been read for header.
-            /// header could be 2 or 4 bytes long so add (offset - 4) at account for part of mask/msg already being read
-            /// </remarks>
-            public int readLength => (offset - Constants.HeaderSize) + (hasMask ? Constants.MaskSize : 0) + msgLength;
-
-            /// <summary>
-            /// when message starts
-            /// </summary>
-            public int maskOffset => hasMask ? offset : throw new InvalidDataException("this header has no mask");
-
-            /// <summary>
-            /// when message starts
-            /// </summary>
-            public int msgOffset => hasMask ? offset + Constants.MaskSize : offset;
-        }
-
-        public static byte GetBytePayloadLength(byte[] buffer)
-        {
-            byte lenByte = (byte)(buffer[1] & 0b0111_1111); // first length byte
-
-            return lenByte;
-        }
+        private static byte FirstLengthByte(byte[] buffer) => (byte)(buffer[1] & 0b0111_1111);
 
         public static bool NeedToReadShortLength(byte[] buffer)
         {
-            byte lenByte = (byte)(buffer[1] & 0b0111_1111); // first length byte
+            byte lenByte = FirstLengthByte(buffer);
 
             return lenByte >= Constants.UshortPayloadLength;
         }
@@ -56,17 +20,17 @@ namespace Mirror.SimpleWeb
 
         public static int GetPayloadLength(byte[] buffer)
         {
-            byte lenByte = (byte)(buffer[1] & 0b0111_1111); // first length byte
+            byte lenByte = FirstLengthByte(buffer);
             return GetMessageLength(buffer, 0, lenByte);
         }
 
         public static void ValidateHeader(byte[] buffer, int maxLength, bool expectMask)
         {
             bool finished = (buffer[0] & 0b1000_0000) != 0; // has full message been sent
-            bool hasMask = (buffer[1] & 0b1000_0000) != 0; // must be true, "All messages from the client to the server have this bit set"
+            bool hasMask = (buffer[1] & 0b1000_0000) != 0; // true from clients, false from server, "All messages from the client to the server have this bit set"
 
             int opcode = buffer[0] & 0b0000_1111; // expecting 1 - text message
-            byte lenByte = (byte)(buffer[1] & 0b0111_1111); // first length byte
+            byte lenByte = FirstLengthByte(buffer);
 
             ThrowIfNotFinished(finished);
             ThrowIfMaskNotExpected(hasMask, expectMask);
@@ -76,35 +40,6 @@ namespace Mirror.SimpleWeb
 
             ThrowIfLengthZero(msglen);
             ThrowIfMsgLengthTooLong(msglen, maxLength);
-        }
-
-        /// <exception cref="InvalidDataException"></exception>
-        [System.Obsolete("Not used any more")]
-        public static Result ProcessHeader(byte[] buffer, int maxLength, bool expectMask)
-        {
-            bool finished = (buffer[0] & 0b1000_0000) != 0; // has full message been sent
-            bool hasMask = (buffer[1] & 0b1000_0000) != 0; // must be true, "All messages from the client to the server have this bit set"
-
-            int opcode = buffer[0] & 0b0000_1111; // expecting 1 - text message
-            byte lenByte = (byte)(buffer[1] & 0b0111_1111); // first length byte
-
-            ThrowIfNotFinished(finished);
-            ThrowIfMaskNotExpected(hasMask, expectMask);
-            ThrowIfBadOpCode(opcode);
-
-            // offset is 2 or 4
-            (int msglen, int offsetAfterLength) = GetMessageLengthOld(buffer, 0, lenByte);
-
-            ThrowIfLengthZero(msglen);
-            ThrowIfMsgLengthTooLong(msglen, maxLength);
-
-            return new Result
-            {
-                opcode = opcode,
-                offset = offsetAfterLength,
-                hasMask = hasMask,
-                msgLength = msglen,
-            };
         }
 
         public static void ToggleMask(byte[] messageBuffer, int messageOffset, int messageLength, byte[] maskBuffer, int maskOffset)
@@ -136,28 +71,6 @@ namespace Mirror.SimpleWeb
             {
                 // header is 2 bytes long
                 return lenByte;
-            }
-        }
-        /// <exception cref="InvalidDataException"></exception>
-        static (int length, int offsetAfterLength) GetMessageLengthOld(byte[] buffer, int offset, byte lenByte)
-        {
-            if (lenByte == Constants.UshortPayloadLength)
-            {
-                // header is 4 bytes long
-                ushort value = 0;
-                value |= (ushort)(buffer[offset + 2] << 8);
-                value |= buffer[offset + 3];
-
-                return (value, offset + 4);
-            }
-            else if (lenByte == Constants.UlongPayloadLength)
-            {
-                throw new InvalidDataException("Max length is longer than allowed in a single message");
-            }
-            else // is less than 126
-            {
-                // header is 2 bytes long
-                return (lenByte, offset + 2);
             }
         }
 
