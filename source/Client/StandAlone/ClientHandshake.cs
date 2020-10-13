@@ -47,7 +47,7 @@ namespace Mirror.SimpleWeb
 
                 if (!lengthOrNull.HasValue)
                 {
-                    Debug.LogError("Connected closed before handshake");
+                    Log.Error("Connected closed before handshake");
                     return false;
                 }
 
@@ -60,7 +60,7 @@ namespace Mirror.SimpleWeb
 
                 if (responseKey != expectedResponse)
                 {
-                    Debug.LogError("Reponse key incorrect");
+                    Log.Error("Response key incorrect");
                     return false;
                 }
 
@@ -68,7 +68,7 @@ namespace Mirror.SimpleWeb
             }
             catch (Exception e)
             {
-                Debug.LogException(e);
+                Log.Exception(e);
                 return false;
             }
         }

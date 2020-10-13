@@ -41,7 +41,7 @@ namespace Mirror.SimpleWeb
         {
             if (segment.Count > maxMessageSize)
             {
-                Debug.LogError($"Cant send message with length {segment.Count} because it is over the max size of {maxMessageSize}");
+                Log.Error($"Cant send message with length {segment.Count} because it is over the max size of {maxMessageSize}");
                 return;
             }
 

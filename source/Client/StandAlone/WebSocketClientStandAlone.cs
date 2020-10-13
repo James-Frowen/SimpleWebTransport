@@ -100,7 +100,7 @@ namespace Mirror.SimpleWeb
             }
             catch (ThreadInterruptedException) { Log.Info("acceptLoop ThreadInterrupted"); }
             catch (ThreadAbortException) { Log.Info("acceptLoop ThreadAbort"); }
-            catch (Exception e) { Debug.LogException(e); }
+            catch (Exception e) { Log.Exception(e); }
             finally
             {
                 // close here incase connect fails

@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Net.Sockets;
 using System.Threading;
-using Debug = UnityEngine.Debug;
 
 namespace Mirror.SimpleWeb
 {
@@ -48,7 +47,7 @@ namespace Mirror.SimpleWeb
             listener.Server.SendTimeout = sendTimeout;
             listener.Start();
 
-            Debug.Log($"Server has started on port {port}.\nWaiting for a connection...");
+            Log.Info($"Server has started on port {port}");
 
             acceptThread = new Thread(acceptLoop);
             acceptThread.IsBackground = true;
@@ -107,7 +106,7 @@ namespace Mirror.SimpleWeb
             }
             catch (ThreadInterruptedException) { Log.Info("acceptLoop ThreadInterrupted"); }
             catch (ThreadAbortException) { Log.Info("acceptLoop ThreadAbort"); }
-            catch (Exception e) { Debug.LogException(e); }
+            catch (Exception e) { Log.Exception(e); }
         }
 
         void HandshakeAndReceiveLoop(Connection conn)
@@ -192,7 +191,7 @@ namespace Mirror.SimpleWeb
             }
             else
             {
-                Debug.LogError($"Cant close connection to {id} because connection was not found in dictionary");
+                Log.Error($"Cant close connection to {id} because connection was not found in dictionary");
                 return null;
             }
         }

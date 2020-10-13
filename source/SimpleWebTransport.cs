@@ -169,13 +169,13 @@ namespace Mirror.SimpleWeb
 
             if (segment.Count > maxMessageSize)
             {
-                Debug.LogError("Message greater than max size");
+                Log.Error("Message greater than max size");
                 return false;
             }
 
             if (segment.Count == 0)
             {
-                Debug.LogError("Message count was zero");
+                Log.Error("Message count was zero");
                 return false;
             }
 
@@ -223,7 +223,7 @@ namespace Mirror.SimpleWeb
         {
             if (!ServerActive())
             {
-                Debug.LogError(" SimpleWebServer Not Active");
+                Debug.LogError("SimpleWebServer Not Active");
                 return false;
             }
 
@@ -240,13 +240,13 @@ namespace Mirror.SimpleWeb
 
             if (segment.Count > maxMessageSize)
             {
-                Debug.LogError("Message greater than max size");
+                Log.Error("Message greater than max size");
                 return false;
             }
 
             if (segment.Count == 0)
             {
-                Debug.LogError("Message count was zero");
+                Log.Error("Message count was zero");
                 return false;
             }
 

@@ -43,7 +43,7 @@ namespace Mirror.SimpleWeb
             catch (ThreadAbortException) { Log.Info($"SendLoop {conn} ThreadAbort"); }
             catch (Exception e)
             {
-                Debug.LogException(e);
+                Log.Exception(e);
 
                 closeCallback.Invoke(conn);
             }

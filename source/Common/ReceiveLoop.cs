@@ -4,7 +4,6 @@ using System.IO;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
-using UnityEngine;
 
 namespace Mirror.SimpleWeb
 {
@@ -41,17 +40,26 @@ namespace Mirror.SimpleWeb
             {
                 Log.Info($"ReceiveLoop {conn.connId} read failed: {e.Message}");
             }
+            catch (SocketException e)
+            {
+                // this could happen if wss client closes stream
+                Log.Warn($"ReceiveLoop SocketException\n{e.Message}", false);
+            }
             catch (IOException e)
             {
                 // this could happen if client disconnects
-                Log.Warn($"SafeRead IOException\n{e.Message}", false);
+                Log.Warn($"ReceiveLoop IOException\n{e.Message}", false);
             }
             catch (InvalidDataException e)
             {
                 Log.Error($"Invalid data from {conn}: {e.Message}");
                 queue.Enqueue(new Message(conn.connId, e));
             }
-            catch (Exception e) { Debug.LogException(e); }
+            catch (Exception e)
+            {
+                Log.Exception(e);
+                queue.Enqueue(new Message(conn.connId, e));
+            }
             finally
             {
                 closeCallback.Invoke(conn);
