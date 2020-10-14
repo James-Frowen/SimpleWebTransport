@@ -57,7 +57,7 @@ namespace Mirror.SimpleWeb
                 while (client.Connected)
                 {
                     // wait for message
-                    conn.sendPending.WaitOne();
+                    conn.sendPending.Wait();
                     conn.sendPending.Reset();
 
                     while (conn.sendQueue.TryDequeue(out ArrayBuffer msg))
