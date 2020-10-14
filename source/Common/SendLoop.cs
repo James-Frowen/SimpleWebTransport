@@ -8,8 +8,40 @@ namespace Mirror.SimpleWeb
 {
     internal static class SendLoop
     {
-        public static void Loop(Connection conn, int bufferSize, bool setMask, Action<Connection> closeCallback)
+        public struct Config
         {
+            public readonly Connection conn;
+            public readonly int bufferSize;
+            public readonly bool setMask;
+            public readonly Action<Connection> closeCallback;
+
+            public Config(Connection conn, int bufferSize, bool setMask, Action<Connection> closeCallback)
+            {
+                this.conn = conn ?? throw new ArgumentNullException(nameof(conn));
+                this.bufferSize = bufferSize;
+                this.setMask = setMask;
+                this.closeCallback = closeCallback ?? throw new ArgumentNullException(nameof(closeCallback));
+            }
+
+            public void Deconstruct(out Connection conn, out int bufferSize, out bool setMask, out Action<Connection> closeCallback)
+            {
+                conn = this.conn;
+                bufferSize = this.bufferSize;
+                setMask = this.setMask;
+                closeCallback = this.closeCallback;
+            }
+
+            internal void Deconstruct(out Connection conn, out bool setMask)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+
+        public static void Loop(Config config)
+        {
+            (Connection conn, int bufferSize, bool setMask, Action<Connection> closeCallback) = config;
+
             // create write buffer for this thread
             byte[] writeBuffer = new byte[bufferSize];
             MaskHelper maskHelper = setMask ? new MaskHelper() : null;
@@ -72,7 +104,7 @@ namespace Mirror.SimpleWeb
             {
                 //todo make toggleMask write to buffer to skip Array.Copy
                 int messageOffset = sendLength - msgLength;
-                MessageProcessor.ToggleMask(buffer, messageOffset, msgLength, buffer, messageOffset - 4);
+                MessageProcessor.ToggleMask(buffer, messageOffset, msgLength, buffer, messageOffset - Constants.MaskSize);
             }
 
             stream.Write(buffer, 0, sendLength);

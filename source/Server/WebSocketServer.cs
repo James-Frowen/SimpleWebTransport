@@ -10,9 +10,7 @@ namespace Mirror.SimpleWeb
     {
         public readonly ConcurrentQueue<Message> receiveQueue = new ConcurrentQueue<Message>();
 
-        readonly bool noDelay;
-        readonly int sendTimeout;
-        readonly int receiveTimeout;
+        readonly TcpConfig tcpConfig;
         readonly int maxMessageSize;
 
         TcpListener listener;
@@ -30,11 +28,9 @@ namespace Mirror.SimpleWeb
             return _previousId;
         }
 
-        public WebSocketServer(bool noDelay, int sendTimeout, int receiveTimeout, int maxMessageSize, SslConfig sslConfig, BufferPool bufferPool)
+        public WebSocketServer(TcpConfig tcpConfig, int maxMessageSize, SslConfig sslConfig, BufferPool bufferPool)
         {
-            this.noDelay = noDelay;
-            this.sendTimeout = sendTimeout;
-            this.receiveTimeout = receiveTimeout;
+            this.tcpConfig = tcpConfig;
             this.maxMessageSize = maxMessageSize;
             sslHelper = new ServerSslHelper(sslConfig);
             this.bufferPool = bufferPool;
@@ -43,8 +39,6 @@ namespace Mirror.SimpleWeb
         public void Listen(int port)
         {
             listener = TcpListener.Create(port);
-            listener.Server.NoDelay = noDelay;
-            listener.Server.SendTimeout = sendTimeout;
             listener.Start();
 
             Log.Info($"Server has started on port {port}");
@@ -80,9 +74,7 @@ namespace Mirror.SimpleWeb
                     while (true)
                     {
                         TcpClient client = listener.AcceptTcpClient();
-                        client.SendTimeout = sendTimeout;
-                        client.ReceiveTimeout = receiveTimeout;
-                        client.NoDelay = noDelay;
+                        tcpConfig.ApplyTo(client);
 
                         // TODO keep track of connections before they are in connections dictionary
                         Connection conn = new Connection(client);
@@ -135,15 +127,29 @@ namespace Mirror.SimpleWeb
 
             Thread sendThread = new Thread(() =>
             {
-                int bufferSize = Constants.HeaderSize + maxMessageSize;
-                SendLoop.Loop(conn, bufferSize, false, CloseConnection);
+                SendLoop.Config sendConfig = new SendLoop.Config(
+                    conn,
+                    bufferSize: Constants.HeaderSize + maxMessageSize,
+                    setMask: false,
+                    CloseConnection);
+
+                SendLoop.Loop(sendConfig);
             });
 
             conn.sendThread = sendThread;
             sendThread.IsBackground = true;
+            sendThread.Name = $"SendLoop {conn.connId}";
             sendThread.Start();
 
-            ReceiveLoop.Loop(conn, maxMessageSize, true, receiveQueue, CloseConnection, bufferPool);
+            ReceiveLoop.Config receiveConfig = new ReceiveLoop.Config(
+                conn,
+                maxMessageSize,
+                expectMask: true,
+                receiveQueue,
+                CloseConnection,
+                bufferPool);
+
+            ReceiveLoop.Loop(receiveConfig);
         }
 
         void CloseConnection(Connection conn)

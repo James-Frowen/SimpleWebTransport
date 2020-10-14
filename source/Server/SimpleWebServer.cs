@@ -6,19 +6,17 @@ namespace Mirror.SimpleWeb
 {
     public class SimpleWebServer
     {
-        readonly ushort port;
         readonly int maxMessagesPerTick;
 
         readonly WebSocketServer server;
         readonly BufferPool bufferPool;
 
-        public SimpleWebServer(ushort port, int maxMessagesPerTick, bool noDelay, int sendTimeout, int receiveTimeout, int maxMessageSize, SslConfig sslConfig)
+        public SimpleWebServer(int maxMessagesPerTick, TcpConfig tcpConfig, int maxMessageSize, SslConfig sslConfig)
         {
-            this.port = port;
             this.maxMessagesPerTick = maxMessagesPerTick;
             bufferPool = new BufferPool(5, 20, maxMessageSize);
 
-            server = new WebSocketServer(noDelay, sendTimeout, receiveTimeout, maxMessageSize, sslConfig, bufferPool);
+            server = new WebSocketServer(tcpConfig, maxMessageSize, sslConfig, bufferPool);
         }
 
         public bool Active { get; private set; }
@@ -28,7 +26,7 @@ namespace Mirror.SimpleWeb
         public event Action<int, ArraySegment<byte>> onData;
         public event Action<int, Exception> onError;
 
-        public void Start()
+        public void Start(ushort port)
         {
             server.Listen(port);
             Active = true;

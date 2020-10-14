@@ -73,6 +73,8 @@ namespace Mirror.SimpleWeb
         SimpleWebClient client;
         SimpleWebServer server;
 
+        TcpConfig TcpConfig => new TcpConfig(noDelay, sendTimeout, receiveTimeout);
+
         public override bool Available()
         {
             return true;
@@ -132,7 +134,8 @@ namespace Mirror.SimpleWeb
                 Port = port
             };
 
-            client = SimpleWebClient.Create(maxMessageSize, clientMaxMessagesPerTick, sendTimeout, receiveTimeout);
+
+            client = SimpleWebClient.Create(maxMessageSize, clientMaxMessagesPerTick, TcpConfig);
             if (client == null) { return; }
 
             client.onConnect += OnClientConnected.Invoke;
@@ -198,14 +201,14 @@ namespace Mirror.SimpleWeb
             }
 
             SslConfig config = SslConfigLoader.Load(this);
-            server = new SimpleWebServer(port, serverMaxMessagesPerTick, noDelay, sendTimeout, receiveTimeout, maxMessageSize, config);
+            server = new SimpleWebServer(serverMaxMessagesPerTick, TcpConfig, maxMessageSize, config);
 
             server.onConnect += OnServerConnected.Invoke;
             server.onDisconnect += OnServerDisconnected.Invoke;
             server.onData += (int connId, ArraySegment<byte> data) => OnServerDataReceived.Invoke(connId, data, Channels.DefaultReliable);
             server.onError += OnServerError.Invoke;
 
-            server.Start();
+            server.Start(port);
         }
 
         public override void ServerStop()

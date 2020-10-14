@@ -9,19 +9,57 @@ namespace Mirror.SimpleWeb
 {
     internal static class ReceiveLoop
     {
-        public static void Loop(Connection conn, int maxMessageSize, bool expectMask, ConcurrentQueue<Message> queue, Action<Connection> closeCallback, BufferPool bufferPool)
+        public struct Config
         {
+            public readonly Connection conn;
+            public readonly int maxMessageSize;
+            public readonly bool expectMask;
+            public readonly ConcurrentQueue<Message> queue;
+            public readonly Action<Connection> closeCallback;
+            public readonly BufferPool bufferPool;
+
+            public Config(Connection conn, int maxMessageSize, bool expectMask, ConcurrentQueue<Message> queue, Action<Connection> closeCallback, BufferPool bufferPool)
+            {
+                this.conn = conn ?? throw new ArgumentNullException(nameof(conn));
+                this.maxMessageSize = maxMessageSize;
+                this.expectMask = expectMask;
+                this.queue = queue ?? throw new ArgumentNullException(nameof(queue));
+                this.closeCallback = closeCallback ?? throw new ArgumentNullException(nameof(closeCallback));
+                this.bufferPool = bufferPool ?? throw new ArgumentNullException(nameof(bufferPool));
+            }
+
+            public void Deconstruct(out Connection conn, out int maxMessageSize, out bool expectMask, out ConcurrentQueue<Message> queue, out Action<Connection> closeCallback)
+            {
+                conn = this.conn;
+                maxMessageSize = this.maxMessageSize;
+                expectMask = this.expectMask;
+                queue = this.queue;
+                closeCallback = this.closeCallback;
+            }
+
+            public void Deconstruct(out Connection conn, out ConcurrentQueue<Message> queue, out Action<Connection> closeCallback, out BufferPool bufferPool)
+            {
+                conn = this.conn;
+                queue = this.queue;
+                closeCallback = this.closeCallback;
+                bufferPool = this.bufferPool;
+            }
+        }
+
+        public static void Loop(Config config)
+        {
+            (Connection conn, int maxMessageSize, bool expectMask, ConcurrentQueue<Message> queue, Action<Connection> closeCallback) = config;
+
             byte[] readBuffer = new byte[Constants.HeaderSize + (expectMask ? Constants.MaskSize : 0) + maxMessageSize];
             try
             {
                 try
                 {
                     TcpClient client = conn.client;
-                    Stream stream = conn.stream;
 
                     while (client.Connected)
                     {
-                        bool success = ReadOneMessage(queue, closeCallback, conn, stream, readBuffer, maxMessageSize, expectMask, bufferPool);
+                        bool success = ReadOneMessage(config, readBuffer);
                         if (!success)
                             break;
                     }
@@ -66,13 +104,16 @@ namespace Mirror.SimpleWeb
             }
         }
 
-        static bool ReadOneMessage(ConcurrentQueue<Message> queue, Action<Connection> closeCallback, Connection conn, Stream stream, byte[] buffer, int maxMessageSize, bool expectMask, BufferPool bufferPool)
+        static bool ReadOneMessage(Config config, byte[] buffer)
         {
-            Log.Verbose($"Message From {conn}");
+            (Connection conn, int maxMessageSize, bool expectMask, ConcurrentQueue<Message> _, Action<Connection> _) = config;
+            Stream stream = conn.stream;
+
             int offset = 0;
             // read 2
             offset = ReadHelper.Read(stream, buffer, offset, Constants.HeaderMinSize);
-
+            // log after first blocking call
+            Log.Verbose($"Message From {conn}");
 
             if (MessageProcessor.NeedToReadShortLength(buffer))
             {
@@ -105,12 +146,14 @@ namespace Mirror.SimpleWeb
             Log.DumpBuffer($"Raw Header", buffer, 0, msgOffset);
             Log.DumpBuffer($"Message", buffer, msgOffset, payloadLength);
 
-            HandleMessage(queue, closeCallback, opcode, conn, buffer, msgOffset, payloadLength, bufferPool);
+            HandleMessage(config, opcode, buffer, msgOffset, payloadLength);
             return true;
         }
 
-        static void HandleMessage(ConcurrentQueue<Message> queue, Action<Connection> closeCallback, int opcode, Connection conn, byte[] msg, int offset, int length, BufferPool bufferPool)
+        static void HandleMessage(Config config, int opcode, byte[] msg, int offset, int length)
         {
+            (Connection conn, ConcurrentQueue<Message> queue, Action<Connection> closeCallback, BufferPool bufferPool) = config;
+
             if (opcode == 2)
             {
                 ArrayBuffer buffer = bufferPool.Take(length);

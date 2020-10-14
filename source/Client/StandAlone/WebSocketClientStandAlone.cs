@@ -13,12 +13,11 @@ namespace Mirror.SimpleWeb
         readonly ClientSslHelper sslHelper;
         readonly ClientHandshake handshake;
         readonly RNGCryptoServiceProvider random;
-
+        readonly TcpConfig tcpConfig;
         private Connection conn;
-        readonly int sendTimeout;
-        readonly int receiveTimeout;
 
-        internal WebSocketClientStandAlone(int maxMessageSize, int maxMessagesPerTick, int sendTimeout, int receiveTimeout) : base(maxMessageSize, maxMessagesPerTick)
+
+        internal WebSocketClientStandAlone(int maxMessageSize, int maxMessagesPerTick, TcpConfig tcpConfig) : base(maxMessageSize, maxMessagesPerTick)
         {
 #if UNITY_WEBGL && !UNITY_EDITOR
             throw new NotSupportedException();
@@ -26,8 +25,7 @@ namespace Mirror.SimpleWeb
             sslHelper = new ClientSslHelper();
             handshake = new ClientHandshake();
             random = new RNGCryptoServiceProvider();
-            this.sendTimeout = sendTimeout;
-            this.receiveTimeout = receiveTimeout;
+            this.tcpConfig = tcpConfig;
 #endif
         }
         ~WebSocketClientStandAlone()
@@ -48,9 +46,8 @@ namespace Mirror.SimpleWeb
             try
             {
                 TcpClient client = new TcpClient();
-                client.NoDelay = true;
-                client.ReceiveTimeout = receiveTimeout;
-                client.SendTimeout = sendTimeout;
+                tcpConfig.ApplyTo(client);
+
                 Uri uri = new Uri(address);
                 try
                 {
@@ -87,15 +84,26 @@ namespace Mirror.SimpleWeb
 
                 Thread sendThread = new Thread(() =>
                 {
-                    int bufferSize = Constants.HeaderSize + Constants.MaskSize + maxMessageSize;
-                    SendLoop.Loop(conn, bufferSize, true, _ => CloseConnection());
+                    SendLoop.Config sendConfig = new SendLoop.Config(
+                        conn,
+                        bufferSize: Constants.HeaderSize + Constants.MaskSize + maxMessageSize,
+                        setMask: true,
+                        _ => CloseConnection());
+
+                    SendLoop.Loop(sendConfig);
                 });
 
                 conn.sendThread = sendThread;
                 sendThread.IsBackground = true;
                 sendThread.Start();
 
-                ReceiveLoop.Loop(conn, maxMessageSize, false, receiveQueue, _ => CloseConnection(), bufferPool);
+                ReceiveLoop.Config config = new ReceiveLoop.Config(conn,
+                    maxMessageSize,
+                    false,
+                    receiveQueue,
+                    _ => CloseConnection(),
+                    bufferPool);
+                ReceiveLoop.Loop(config);
             }
             catch (ThreadInterruptedException) { Log.Info("acceptLoop ThreadInterrupted"); }
             catch (ThreadAbortException) { Log.Info("acceptLoop ThreadAbort"); }
