@@ -2,6 +2,7 @@
 #define SIMPLEWEB_LOG_ENABLED
 using System;
 using System.Collections;
+using System.IO;
 using System.Linq;
 using NUnit.Framework;
 using UnityEngine.TestTools;
@@ -84,11 +85,9 @@ namespace Mirror.SimpleWeb.Tests
         {
             Log.level = levels;
 
-            Exception myException = new NullReferenceException(SomeMessage);
-            if (levels >= Log.Levels.error)
-            {
-                LogAssert.Expect(UnityEngine.LogType.Error, $"EXCEPTION: <color=red>{nameof(NullReferenceException)}</color> Message: {SomeMessage}");
-            }
+            Exception myException = new IOException(SomeMessage);
+            // Exception isnt effected by log level
+            LogAssert.Expect(UnityEngine.LogType.Error, $"EXCEPTION: <color=red>{nameof(IOException)}</color> Message: {SomeMessage}");
             Log.Exception(myException);
 
             LogAssert.NoUnexpectedReceived();
