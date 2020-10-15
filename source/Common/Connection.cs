@@ -74,7 +74,6 @@ namespace Mirror.SimpleWeb
 
                 sendPending.Dispose();
 
-                // Todo is this ok to run on the main thread?? will it have negative performance if queue is large
                 // release all buffers in send queue
                 while (sendQueue.TryDequeue(out ArrayBuffer buffer))
                 {

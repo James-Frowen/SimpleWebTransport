@@ -92,7 +92,6 @@ namespace Mirror.SimpleWeb
         {
             if (!finished)
             {
-                // TODO check if we need to deal with this
                 throw new InvalidDataException("Full message should have been sent, if the full message wasn't sent it wasn't sent from this trasnport");
             }
         }
