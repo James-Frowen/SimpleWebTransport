@@ -142,13 +142,13 @@ namespace Mirror.SimpleWeb
         }
 
         [Conditional("DEBUG")]
-        private void IncrementCreated()
+        void IncrementCreated()
         {
             int next = Interlocked.Increment(ref _current);
             Log.Verbose($"BufferBucket({arraySize}) count:{next}");
         }
         [Conditional("DEBUG")]
-        private void DecrementCreated()
+        void DecrementCreated()
         {
             int next = Interlocked.Decrement(ref _current);
             Log.Verbose($"BufferBucket({arraySize}) count:{next}");

@@ -68,7 +68,7 @@ namespace Mirror.SimpleWeb
             }
         }
 
-        private string ReadToEndForHandshake(Stream stream)
+        string ReadToEndForHandshake(Stream stream)
         {
             using (ArrayBuffer readBuffer = bufferPool.Take(maxHttpHeaderSize))
             {

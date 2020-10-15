@@ -9,7 +9,7 @@ namespace Mirror.SimpleWeb
         readonly ClientSslHelper sslHelper;
         readonly ClientHandshake handshake;
         readonly TcpConfig tcpConfig;
-        private Connection conn;
+        Connection conn;
 
 
         internal WebSocketClientStandAlone(int maxMessageSize, int maxMessagesPerTick, TcpConfig tcpConfig) : base(maxMessageSize, maxMessagesPerTick)
