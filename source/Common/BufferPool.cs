@@ -11,7 +11,7 @@ namespace Mirror.SimpleWeb
         void Return(ArrayBuffer buffer);
     }
 
-    public class ArrayBuffer
+    public sealed class ArrayBuffer : IDisposable
     {
         readonly IBufferOwner owner;
 
@@ -54,6 +54,10 @@ namespace Mirror.SimpleWeb
                 count = 0;
                 owner.Return(this);
             }
+        }
+        public void Dispose()
+        {
+            Release();
         }
 
 
