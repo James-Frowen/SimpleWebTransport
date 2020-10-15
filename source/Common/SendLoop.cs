@@ -86,7 +86,7 @@ namespace Mirror.SimpleWeb
 
         static void SendMessage(Stream stream, byte[] buffer, ArrayBuffer msg, bool setMask, MaskHelper maskHelper)
         {
-            int msgLength = msg.Length;
+            int msgLength = msg.count;
             int sendLength = WriteHeader(buffer, msgLength, setMask);
 
             if (setMask)
@@ -102,7 +102,6 @@ namespace Mirror.SimpleWeb
 
             if (setMask)
             {
-                //todo make toggleMask write to buffer to skip Array.Copy
                 int messageOffset = sendLength - msgLength;
                 MessageProcessor.ToggleMask(buffer, messageOffset, msgLength, buffer, messageOffset - Constants.MaskSize);
             }

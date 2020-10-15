@@ -55,7 +55,7 @@ namespace Mirror.SimpleWeb.Tests
 
         [Test]
         [TestCaseSource(nameof(TestCases))]
-        public void DumpMessageTest(bool hasLabel, Log.Levels levels)
+        public void DumpMessageTest(bool asArrayBuffer, Log.Levels levels)
         {
             Log.level = levels;
             const string Label = "fun label";
@@ -65,16 +65,19 @@ namespace Mirror.SimpleWeb.Tests
 
             if (levels >= Log.Levels.verbose)
             {
-                if (hasLabel)
-                    LogAssert.Expect(UnityEngine.LogType.Log, $"VERBOSE: <color=blue>{Label}: {expected}</color>");
-                else
-                    LogAssert.Expect(UnityEngine.LogType.Log, $"VERBOSE: <color=blue>{expected}</color>");
+                LogAssert.Expect(UnityEngine.LogType.Log, $"VERBOSE: <color=blue>{Label}: {expected}</color>");
             }
 
-            if (hasLabel)
-                Log.DumpBuffer(Label, data, 1, 3);
+            if (asArrayBuffer)
+            {
+                ArrayBuffer buffer = new ArrayBuffer(null, 10);
+                buffer.CopyFrom(data, 1, 3);
+                Log.DumpBuffer(Label, buffer);
+            }
             else
-                Log.DumpBuffer(data, 1, 3);
+            {
+                Log.DumpBuffer(Label, data, 1, 3);
+            }
 
             LogAssert.NoUnexpectedReceived();
         }

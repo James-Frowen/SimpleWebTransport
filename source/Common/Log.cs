@@ -28,21 +28,21 @@ namespace Mirror.SimpleWeb
         }
 
         [Conditional(SIMPLEWEB_LOG_ENABLED)]
-        public static void DumpBuffer(byte[] buffer, int offset, int length)
-        {
-            if (level < Levels.verbose)
-                return;
-
-            logger.Log(LogType.Log, $"VERBOSE: <color=blue>{BufferToString(buffer, offset, length)}</color>");
-        }
-
-        [Conditional(SIMPLEWEB_LOG_ENABLED)]
         public static void DumpBuffer(string label, byte[] buffer, int offset, int length)
         {
             if (level < Levels.verbose)
                 return;
 
             logger.Log(LogType.Log, $"VERBOSE: <color=blue>{label}: {BufferToString(buffer, offset, length)}</color>");
+        }
+
+        [Conditional(SIMPLEWEB_LOG_ENABLED)]
+        public static void DumpBuffer(string label, ArrayBuffer arrayBuffer)
+        {
+            if (level < Levels.verbose)
+                return;
+
+            logger.Log(LogType.Log, $"VERBOSE: <color=blue>{label}: {BufferToString(arrayBuffer.array, 0, arrayBuffer.count)}</color>");
         }
 
         [Conditional(SIMPLEWEB_LOG_ENABLED)]
