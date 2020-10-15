@@ -20,7 +20,7 @@ namespace Mirror.SimpleWeb
         /// <summary>
         /// number of bytes writen to buffer
         /// </summary>
-        public int count;
+        internal int count;
 
         /// <summary>
         /// How many times release needs to be called before buffer is returned to pool
