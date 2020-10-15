@@ -91,7 +91,9 @@ namespace Mirror.SimpleWeb
         public override void Shutdown()
         {
             client?.Disconnect();
+            client = null;
             server?.Stop();
+            server = null;
         }
 
         private void LateUpdate()
