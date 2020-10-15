@@ -15,7 +15,7 @@ namespace Mirror.SimpleWeb
 
         TcpListener listener;
         Thread acceptThread;
-        readonly ServerHandshake handShake = new ServerHandshake();
+        readonly ServerHandshake handShake;
         readonly ServerSslHelper sslHelper;
         readonly BufferPool bufferPool;
         readonly ConcurrentDictionary<int, Connection> connections = new ConcurrentDictionary<int, Connection>();
@@ -29,6 +29,7 @@ namespace Mirror.SimpleWeb
             this.maxMessageSize = maxMessageSize;
             sslHelper = new ServerSslHelper(sslConfig);
             this.bufferPool = bufferPool;
+            handShake = new ServerHandshake(this.bufferPool);
         }
 
         public void Listen(int port)
