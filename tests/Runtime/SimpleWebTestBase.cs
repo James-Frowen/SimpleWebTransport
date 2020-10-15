@@ -15,7 +15,7 @@ namespace Mirror.SimpleWeb.Tests
     public abstract class SimpleWebTestBase
     {
         protected const int timeout = 4000;
-        const Log.Levels LogLevel = Log.Levels.info;
+        const Log.Levels LogLevel = Log.Levels.verbose;
 
         protected abstract bool StartServer { get; }
 
@@ -109,12 +109,13 @@ namespace Mirror.SimpleWeb.Tests
             return reset;
         }
 
-        protected static void WriteBadData(TcpClient client)
+        protected static void WriteBadData(TcpClient client, byte[] badData = null)
         {
-            byte[] buffer = Enumerable.Range(1, 10).Select(x => (byte)x).ToArray();
+            if (badData == null)
+                badData = Enumerable.Range(1, 10).Select(x => (byte)x).ToArray();
             try
             {
-                client.GetStream().Write(buffer, 0, 10);
+                client.GetStream().Write(badData, 0, badData.Length);
             }
             catch (IOException) { }
         }
