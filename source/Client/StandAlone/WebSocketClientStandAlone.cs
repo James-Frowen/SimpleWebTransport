@@ -55,6 +55,7 @@ namespace Mirror.SimpleWeb
                 bool success = sslHelper.TryCreateStream(conn, uri);
                 if (!success)
                 {
+                    Log.Warn("Failed to create Stream");
                     conn.Dispose();
                     return;
                 }
@@ -62,6 +63,7 @@ namespace Mirror.SimpleWeb
                 success = handshake.TryHandshake(conn, uri);
                 if (!success)
                 {
+                    Log.Warn("Failed Handshake");
                     conn.Dispose();
                     return;
                 }
@@ -93,8 +95,8 @@ namespace Mirror.SimpleWeb
                     bufferPool);
                 ReceiveLoop.Loop(config);
             }
-            catch (ThreadInterruptedException) { Log.Info("acceptLoop ThreadInterrupted"); }
-            catch (ThreadAbortException) { Log.Info("acceptLoop ThreadAbort"); }
+            catch (ThreadInterruptedException e) { Log.InfoException(e); }
+            catch (ThreadAbortException e) { Log.InfoException(e); }
             catch (Exception e) { Log.Exception(e); }
             finally
             {
@@ -113,6 +115,7 @@ namespace Mirror.SimpleWeb
         public override void Disconnect()
         {
             state = ClientState.Disconnecting;
+            Log.Info("Disconnect Called");
             conn.Dispose();
         }
 

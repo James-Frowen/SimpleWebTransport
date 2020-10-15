@@ -50,37 +50,38 @@ namespace Mirror.SimpleWeb
                 }
             }
 
-            bool success = ReadToEndForHandshake(stream);
-            if (success)
-                Log.Info($"Sent Handshake {conn}");
-            return success;
+
+            string msg = ReadToEndForHandshake(stream);
+
+            if (string.IsNullOrEmpty(msg))
+                return false;
+
+            try
+            {
+                AcceptHandshake(stream, msg);
+                return true;
+            }
+            catch (ArgumentException e)
+            {
+                Log.InfoException(e);
+                return false;
+            }
         }
 
-        private bool ReadToEndForHandshake(Stream stream)
+        private string ReadToEndForHandshake(Stream stream)
         {
-            using (
-                ArrayBuffer readBuffer = bufferPool.Take(maxHttpHeaderSize)
-                )
+            using (ArrayBuffer readBuffer = bufferPool.Take(maxHttpHeaderSize))
             {
-
                 int? readCountOrFail = ReadHelper.SafeReadTillMatch(stream, readBuffer.array, 0, maxHttpHeaderSize, Constants.endOfHandshake);
                 if (!readCountOrFail.HasValue)
-                    return false;
+                    return null;
 
                 int readCount = readCountOrFail.Value;
 
                 string msg = Encoding.UTF8.GetString(readBuffer.array, 0, readCount);
                 Log.Verbose(msg);
-                try
-                {
-                    AcceptHandshake(stream, msg);
-                    return true;
-                }
-                catch (ArgumentException e)
-                {
-                    Log.InfoException(e);
-                    return false;
-                }
+
+                return msg;
             }
         }
 

@@ -53,6 +53,8 @@ namespace Mirror.SimpleWeb
                         if (!success)
                             break;
                     }
+
+                    Log.Info($"{conn} Not Connected");
                 }
                 catch (Exception)
                 {
@@ -61,22 +63,26 @@ namespace Mirror.SimpleWeb
                     throw;
                 }
             }
-            catch (ThreadInterruptedException) { Log.Info($"ReceiveLoop {conn} ThreadInterrupted"); }
-            catch (ThreadAbortException) { Log.Info($"ReceiveLoop {conn} ThreadAbort"); }
-            catch (ObjectDisposedException) { Log.Info($"ReceiveLoop {conn} Stream closed"); }
+            catch (ThreadInterruptedException e) { Log.InfoException(e); }
+            catch (ThreadAbortException e) { Log.InfoException(e); }
+            catch (ObjectDisposedException e) { Log.InfoException(e); }
             catch (ReadHelperException e)
             {
-                Log.Info($"ReceiveLoop {conn.connId} read failed: {e.Message}");
+                // this could happen if client sends bad message
+                Log.InfoException(e);
+                queue.Enqueue(new Message(conn.connId, e));
             }
             catch (SocketException e)
             {
                 // this could happen if wss client closes stream
                 Log.Warn($"ReceiveLoop SocketException\n{e.Message}", false);
+                queue.Enqueue(new Message(conn.connId, e));
             }
             catch (IOException e)
             {
                 // this could happen if client disconnects
                 Log.Warn($"ReceiveLoop IOException\n{e.Message}", false);
+                queue.Enqueue(new Message(conn.connId, e));
             }
             catch (InvalidDataException e)
             {

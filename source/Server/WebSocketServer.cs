@@ -51,6 +51,7 @@ namespace Mirror.SimpleWeb
             listener?.Stop();
             acceptThread = null;
 
+            Log.Info("Server stoped, Closing all connections...");
             // make copy so that foreach doesn't break if values are removed
             Connection[] connectionsCopy = connections.Values.ToArray();
             foreach (Connection conn in connectionsCopy)
@@ -93,8 +94,8 @@ namespace Mirror.SimpleWeb
                     throw;
                 }
             }
-            catch (ThreadInterruptedException) { Log.Info("acceptLoop ThreadInterrupted"); }
-            catch (ThreadAbortException) { Log.Info("acceptLoop ThreadAbort"); }
+            catch (ThreadInterruptedException e) { Log.InfoException(e); }
+            catch (ThreadAbortException e) { Log.InfoException(e); }
             catch (Exception e) { Log.Exception(e); }
         }
 
@@ -112,7 +113,11 @@ namespace Mirror.SimpleWeb
 
                 success = handShake.TryHandshake(conn);
 
-                if (!success)
+                if (success)
+                {
+                    Log.Info($"Sent Handshake {conn}");
+                }
+                else
                 {
                     Log.Error($"Handshake Failed {conn}");
                     conn.Dispose();
@@ -148,8 +153,8 @@ namespace Mirror.SimpleWeb
 
                 ReceiveLoop.Loop(receiveConfig);
             }
-            catch (ThreadInterruptedException) { Log.Info("acceptLoop ThreadInterrupted"); }
-            catch (ThreadAbortException) { Log.Info("acceptLoop ThreadAbort"); }
+            catch (ThreadInterruptedException e) { Log.InfoException(e); }
+            catch (ThreadAbortException e) { Log.InfoException(e); }
             catch (Exception e) { Log.Exception(e); }
             finally
             {
@@ -184,11 +189,14 @@ namespace Mirror.SimpleWeb
         {
             if (connections.TryGetValue(id, out Connection conn))
             {
+                Log.Info($"Kicking connection {id}");
                 conn.Dispose();
                 return true;
             }
             else
             {
+                Log.Warn($"Failed to kick {id} because id not found");
+
                 return false;
             }
         }

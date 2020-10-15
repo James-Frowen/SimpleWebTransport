@@ -61,17 +61,18 @@ namespace Mirror.SimpleWeb
                         msg.Release();
                     }
                 }
+
+                Log.Info($"{conn} Not Connected");
             }
-            catch (ThreadInterruptedException) { Log.Info($"SendLoop {conn} ThreadInterrupted"); }
-            catch (ThreadAbortException) { Log.Info($"SendLoop {conn} ThreadAbort"); }
+            catch (ThreadInterruptedException e) { Log.InfoException(e); }
+            catch (ThreadAbortException e) { Log.InfoException(e); }
             catch (Exception e)
             {
                 Log.Exception(e);
-
-                conn.Dispose();
             }
             finally
             {
+                conn.Dispose();
                 maskHelper?.Dispose();
             }
         }

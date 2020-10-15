@@ -10,7 +10,7 @@ namespace Mirror.SimpleWeb
     {
         public const int IdNotSet = -1;
 
-        readonly object lockObj = new object();
+        readonly object disposedLock = new object();
 
         public TcpClient client;
         // used for ToString
@@ -49,7 +49,7 @@ namespace Mirror.SimpleWeb
             Log.Info($"Connection Close: {ToString()}");
 
 
-            lock (lockObj)
+            lock (disposedLock)
             {
                 // check hasDisposed again inside lock to make sure no other object has called this
                 if (hasDisposed) { return; }
