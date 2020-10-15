@@ -99,51 +99,62 @@ namespace Mirror.SimpleWeb
 
         void HandshakeAndReceiveLoop(Connection conn)
         {
-            bool success = sslHelper.TryCreateStream(conn);
-            if (!success)
+            try
             {
-                Log.Error($"Failed to create SSL Stream {conn}");
-                conn.Dispose();
-                return;
-            }
+                bool success = sslHelper.TryCreateStream(conn);
+                if (!success)
+                {
+                    Log.Error($"Failed to create SSL Stream {conn}");
+                    conn.Dispose();
+                    return;
+                }
 
-            success = handShake.TryHandshake(conn);
+                success = handShake.TryHandshake(conn);
 
-            if (!success)
-            {
-                Log.Error($"Handshake Failed {conn}");
-                conn.Dispose();
-                return;
-            }
+                if (!success)
+                {
+                    Log.Error($"Handshake Failed {conn}");
+                    conn.Dispose();
+                    return;
+                }
 
-            conn.connId = Interlocked.Increment(ref _idCounter);
-            connections.TryAdd(conn.connId, conn);
+                conn.connId = Interlocked.Increment(ref _idCounter);
+                connections.TryAdd(conn.connId, conn);
 
-            receiveQueue.Enqueue(new Message(conn.connId, EventType.Connected));
+                receiveQueue.Enqueue(new Message(conn.connId, EventType.Connected));
 
-            Thread sendThread = new Thread(() =>
-            {
-                SendLoop.Config sendConfig = new SendLoop.Config(
+                Thread sendThread = new Thread(() =>
+                {
+                    SendLoop.Config sendConfig = new SendLoop.Config(
+                        conn,
+                        bufferSize: Constants.HeaderSize + maxMessageSize,
+                        setMask: false);
+
+                    SendLoop.Loop(sendConfig);
+                });
+
+                conn.sendThread = sendThread;
+                sendThread.IsBackground = true;
+                sendThread.Name = $"SendLoop {conn.connId}";
+                sendThread.Start();
+
+                ReceiveLoop.Config receiveConfig = new ReceiveLoop.Config(
                     conn,
-                    bufferSize: Constants.HeaderSize + maxMessageSize,
-                    setMask: false);
+                    maxMessageSize,
+                    expectMask: true,
+                    receiveQueue,
+                    bufferPool);
 
-                SendLoop.Loop(sendConfig);
-            });
-
-            conn.sendThread = sendThread;
-            sendThread.IsBackground = true;
-            sendThread.Name = $"SendLoop {conn.connId}";
-            sendThread.Start();
-
-            ReceiveLoop.Config receiveConfig = new ReceiveLoop.Config(
-                conn,
-                maxMessageSize,
-                expectMask: true,
-                receiveQueue,
-                bufferPool);
-
-            ReceiveLoop.Loop(receiveConfig);
+                ReceiveLoop.Loop(receiveConfig);
+            }
+            catch (ThreadInterruptedException) { Log.Info("acceptLoop ThreadInterrupted"); }
+            catch (ThreadAbortException) { Log.Info("acceptLoop ThreadAbort"); }
+            catch (Exception e) { Log.Exception(e); }
+            finally
+            {
+                // close here incase connect fails
+                conn.Dispose();
+            }
         }
 
         void AfterConnectionDisposed(Connection conn)
