@@ -116,6 +116,23 @@ namespace Mirror.SimpleWeb.Tests
 
         [Test]
         [TestCaseSource(nameof(TestCases))]
+        public void InfoExceptionTest(bool showColor, Log.Levels levels)
+        {
+            Log.level = levels;
+
+            Exception myException = new IOException(SomeMessage);
+
+            if (levels >= Log.Levels.info)
+            {
+                LogAssert.Expect(UnityEngine.LogType.Log, $"INFO_EXCEPTION: <color=blue>{nameof(IOException)}</color> Message: {SomeMessage}");
+            }
+            Log.InfoException(myException);
+
+            LogAssert.NoUnexpectedReceived();
+        }
+
+        [Test]
+        [TestCaseSource(nameof(TestCases))]
         public void InfoTest(bool showColor, Log.Levels levels)
         {
             Log.level = levels;

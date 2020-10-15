@@ -69,6 +69,20 @@ namespace Mirror.SimpleWeb
                 logger.Log(LogType.Log, $"INFO: {msg}");
         }
 
+        /// <summary>
+        /// An expected Exception was caught, useful for debugging but not important
+        /// </summary>
+        /// <param name="msg"></param>
+        /// <param name="showColor"></param>
+        [Conditional(SIMPLEWEB_LOG_ENABLED)]
+        public static void InfoException(Exception e)
+        {
+            if (level < Levels.info)
+                return;
+
+            logger.Log(LogType.Log, $"INFO_EXCEPTION: <color=blue>{e.GetType().Name}</color> Message: {e.Message}");
+        }
+
         [Conditional(SIMPLEWEB_LOG_ENABLED), Conditional(DEBUG)]
         public static void Warn(string msg, bool showColor = true)
         {
