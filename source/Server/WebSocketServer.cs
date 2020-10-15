@@ -20,13 +20,8 @@ namespace Mirror.SimpleWeb
         readonly BufferPool bufferPool;
         readonly ConcurrentDictionary<int, Connection> connections = new ConcurrentDictionary<int, Connection>();
 
-        int _previousId = 0;
 
-        int GetNextId()
-        {
-            _previousId++;
-            return _previousId;
-        }
+        int _idCounter = 0;
 
         public WebSocketServer(TcpConfig tcpConfig, int maxMessageSize, SslConfig sslConfig, BufferPool bufferPool)
         {
@@ -59,7 +54,7 @@ namespace Mirror.SimpleWeb
             Connection[] connectionsCopy = connections.Values.ToArray();
             foreach (Connection conn in connectionsCopy)
             {
-                conn.Close();
+                conn.Dispose();
             }
 
             connections.Clear();
@@ -76,8 +71,9 @@ namespace Mirror.SimpleWeb
                         TcpClient client = listener.AcceptTcpClient();
                         tcpConfig.ApplyTo(client);
 
+
                         // TODO keep track of connections before they are in connections dictionary
-                        Connection conn = new Connection(client);
+                        Connection conn = new Connection(client, AfterConnectionDisposed);
                         Log.Info($"A client connected {conn}");
 
                         // handshake needs its own thread as it needs to wait for message from client
@@ -107,7 +103,7 @@ namespace Mirror.SimpleWeb
             if (!success)
             {
                 Log.Error($"Failed to create SSL Stream {conn}");
-                conn.client.Dispose();
+                conn.Dispose();
                 return;
             }
 
@@ -116,11 +112,11 @@ namespace Mirror.SimpleWeb
             if (!success)
             {
                 Log.Error($"Handshake Failed {conn}");
-                conn.client.Dispose();
+                conn.Dispose();
                 return;
             }
 
-            conn.connId = GetNextId();
+            conn.connId = Interlocked.Increment(ref _idCounter);
             connections.TryAdd(conn.connId, conn);
 
             receiveQueue.Enqueue(new Message(conn.connId, EventType.Connected));
@@ -130,8 +126,7 @@ namespace Mirror.SimpleWeb
                 SendLoop.Config sendConfig = new SendLoop.Config(
                     conn,
                     bufferSize: Constants.HeaderSize + maxMessageSize,
-                    setMask: false,
-                    CloseConnection);
+                    setMask: false);
 
                 SendLoop.Loop(sendConfig);
             });
@@ -146,17 +141,14 @@ namespace Mirror.SimpleWeb
                 maxMessageSize,
                 expectMask: true,
                 receiveQueue,
-                CloseConnection,
                 bufferPool);
 
             ReceiveLoop.Loop(receiveConfig);
         }
 
-        void CloseConnection(Connection conn)
+        void AfterConnectionDisposed(Connection conn)
         {
-            bool closed = conn.Close();
-            // only send disconnect message if closed by the call
-            if (closed)
+            if (conn.connId != Connection.IdNotSet)
             {
                 receiveQueue.Enqueue(new Message(conn.connId, EventType.Disconnected));
                 connections.TryRemove(conn.connId, out Connection _);
@@ -180,7 +172,7 @@ namespace Mirror.SimpleWeb
         {
             if (connections.TryGetValue(id, out Connection conn))
             {
-                CloseConnection(conn);
+                conn.Dispose();
                 return true;
             }
             else

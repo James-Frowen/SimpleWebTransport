@@ -13,34 +13,26 @@ namespace Mirror.SimpleWeb
             public readonly Connection conn;
             public readonly int bufferSize;
             public readonly bool setMask;
-            public readonly Action<Connection> closeCallback;
 
-            public Config(Connection conn, int bufferSize, bool setMask, Action<Connection> closeCallback)
+            public Config(Connection conn, int bufferSize, bool setMask)
             {
                 this.conn = conn ?? throw new ArgumentNullException(nameof(conn));
                 this.bufferSize = bufferSize;
                 this.setMask = setMask;
-                this.closeCallback = closeCallback ?? throw new ArgumentNullException(nameof(closeCallback));
             }
 
-            public void Deconstruct(out Connection conn, out int bufferSize, out bool setMask, out Action<Connection> closeCallback)
+            public void Deconstruct(out Connection conn, out int bufferSize, out bool setMask)
             {
                 conn = this.conn;
                 bufferSize = this.bufferSize;
                 setMask = this.setMask;
-                closeCallback = this.closeCallback;
-            }
-
-            internal void Deconstruct(out Connection conn, out bool setMask)
-            {
-                throw new NotImplementedException();
             }
         }
 
 
         public static void Loop(Config config)
         {
-            (Connection conn, int bufferSize, bool setMask, Action<Connection> closeCallback) = config;
+            (Connection conn, int bufferSize, bool setMask) = config;
 
             // create write buffer for this thread
             byte[] writeBuffer = new byte[bufferSize];
@@ -76,7 +68,7 @@ namespace Mirror.SimpleWeb
             {
                 Log.Exception(e);
 
-                closeCallback.Invoke(conn);
+                conn.Dispose();
             }
             finally
             {
