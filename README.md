@@ -21,7 +21,11 @@ This Transport uses the websocket protocol. This allows this transport to be use
 Please report any bugs or issues [Here](https://github.com/MirrorNetworking/SimpleWebTransport/issues)
 
 
-# How to create and setup an SSL Cert
+# Websocket Secure
+
+This transport supports the wss protocol which is required for https pages.
+
+## How to create and setup an SSL Cert
 
 If you host your webgl build on a https domain you will need to use wss which will require a ssl cert.
 
