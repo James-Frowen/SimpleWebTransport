@@ -41,6 +41,9 @@ jobs:
         with:
           repository: vis2k/Mirror
           fetch-depth: 0
+      
+      - name: Delete old SimpleWebTransport folder
+        run: rm -rf Assets/Mirror/Runtime/Transport/SimpleWebTransport
 
       - name: Checkout SimpleWebTransport
         uses: actions/checkout@v2
