@@ -105,7 +105,7 @@ set your domain (eg `simpleweb.example.com`) in the hostname field and then star
 
 # Debug
 
-To check if your pfx file is working outside of unity you can use [pfxTestServer.js](DebugScripts\node~\pfxTestServer.js).
+To check if your pfx file is working outside of unity you can use [pfxTestServer.js](DebugScripts/node\~/pfxTestServer.js).
 
 To use this install `nodejs` then set the pfx path and run it with `node pfxTestServer.js`
 
