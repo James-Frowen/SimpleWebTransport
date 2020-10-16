@@ -36,8 +36,8 @@ Uses [CopyBufferBenchmark](./CopyBufferBenchmark.cs) to test the speed of differ
 
 **Summary**
 
-for loop (method or inline) for small size ~10
-Buffer.BlockCopy for other 20+
+- for loop (method or inline) for small size ~10
+- Buffer.BlockCopy for other 20+
 
 
 
