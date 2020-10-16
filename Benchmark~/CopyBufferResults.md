@@ -1,4 +1,4 @@
-Uses CopyBufferBenchmark to test the speed of different copy methods for byte[]
+Uses [CopyBufferBenchmark](./CopyBufferBenchmark.cs) to test the speed of different copy methods for byte[]
 
 *Smaller array count has more iteration*
 
