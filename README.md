@@ -5,8 +5,9 @@
 
 # Simple Web Transport
 
-WebGl Transport for [Mirror](https://github.com/vis2k/Mirror)
+Websocket Transport for [Mirror](https://github.com/vis2k/Mirror)
 
+This Transport uses the websocket protocol. This allows this transport to be used in WebGL builds of unity.
 
 ## Usage
 
