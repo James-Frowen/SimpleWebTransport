@@ -126,12 +126,11 @@ namespace Mirror.SimpleWeb
             int payloadLength = MessageProcessor.GetPayloadLength(buffer);
 
             Log.Verbose($"Header ln:{payloadLength} op:{opcode} mask:{expectMask}");
+            Log.DumpBuffer($"Raw Header", buffer, 0, offset);
 
+            int msgOffset = offset;
             offset = ReadHelper.Read(stream, buffer, offset, payloadLength);
 
-            int msgOffset = offset - payloadLength;
-
-            Log.DumpBuffer($"Raw Header", buffer, 0, msgOffset);
             switch (opcode)
             {
                 case 2:
