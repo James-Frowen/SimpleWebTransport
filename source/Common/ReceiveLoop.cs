@@ -49,9 +49,7 @@ namespace Mirror.SimpleWeb
 
                     while (client.Connected)
                     {
-                        bool success = ReadOneMessage(config, readBuffer);
-                        if (!success)
-                            break;
+                        ReadOneMessage(config, readBuffer);
                     }
 
                     Log.Info($"{conn} Not Connected");
@@ -100,7 +98,7 @@ namespace Mirror.SimpleWeb
             }
         }
 
-        static bool ReadOneMessage(Config config, byte[] buffer)
+        static void ReadOneMessage(Config config, byte[] buffer)
         {
             (Connection conn, int maxMessageSize, bool expectMask, ConcurrentQueue<Message> queue, BufferPool bufferPool) = config;
             Stream stream = conn.stream;
@@ -143,8 +141,6 @@ namespace Mirror.SimpleWeb
                     HandleCloseMessage(config, buffer, msgOffset, payloadLength);
                     break;
             }
-
-            return true;
         }
 
         static void HandleArrayMessage(Config config, byte[] buffer, int msgOffset, int payloadLength)
