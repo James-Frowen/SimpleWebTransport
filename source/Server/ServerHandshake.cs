@@ -124,7 +124,7 @@ namespace Mirror.SimpleWeb
 
         byte[] CreateHash(byte[] keyBuffer)
         {
-            Log.Verbose($"Handshake Hashing {Encoding.UTF8.GetString(keyBuffer, 0, MergedKeyLength)}");
+            Log.Verbose($"Handshake Hashing {Encoding.ASCII.GetString(keyBuffer, 0, MergedKeyLength)}");
 
             return sha1.ComputeHash(keyBuffer, 0, MergedKeyLength);
         }
@@ -142,7 +142,7 @@ namespace Mirror.SimpleWeb
                 keyHashString);
 
             Log.Verbose($"Handshake Response length {message.Length}, IsExpected {message.Length == ResponseLength}");
-            Encoding.UTF8.GetBytes(message, 0, ResponseLength, responseBuffer, 0);
+            Encoding.ASCII.GetBytes(message, 0, ResponseLength, responseBuffer, 0);
         }
     }
 }
