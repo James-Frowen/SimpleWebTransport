@@ -78,7 +78,7 @@ namespace Mirror.SimpleWeb
 
                 int readCount = readCountOrFail.Value;
 
-                string msg = Encoding.UTF8.GetString(readBuffer.array, 0, readCount);
+                string msg = Encoding.ASCII.GetString(readBuffer.array, 0, readCount);
                 Log.Verbose(msg);
 
                 return msg;
@@ -87,7 +87,7 @@ namespace Mirror.SimpleWeb
 
         static bool IsGet(byte[] getHeader)
         {
-            // just check bytes here instead of using Encoding.UTF8
+            // just check bytes here instead of using Encoding.ASCII
             return getHeader[0] == 71 && // G
                    getHeader[1] == 69 && // E
                    getHeader[2] == 84;   // T
@@ -114,7 +114,7 @@ namespace Mirror.SimpleWeb
             int start = msg.IndexOf(KeyHeaderString) + KeyHeaderString.Length;
 
             Log.Verbose($"Handshake Key: {msg.Substring(start, KeyLength)}");
-            Encoding.UTF8.GetBytes(msg, start, KeyLength, keyBuffer, 0);
+            Encoding.ASCII.GetBytes(msg, start, KeyLength, keyBuffer, 0);
         }
 
         static void AppendGuid(byte[] keyBuffer)

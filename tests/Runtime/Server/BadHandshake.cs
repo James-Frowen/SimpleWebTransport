@@ -90,7 +90,7 @@ namespace Mirror.SimpleWeb.Tests.Server
                 $"GET /chat HTTP/1.1\r\n" +
                 $"Sec-WebSocket-Key: bad-key\r\n" +
                 "\r\n";
-            byte[] badData = Encoding.UTF8.GetBytes(badMessage);
+            byte[] badData = Encoding.ASCII.GetBytes(badMessage);
             WriteBadData(tcpClient, badData);
 
             // wait for message to be processed
