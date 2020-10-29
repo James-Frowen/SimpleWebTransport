@@ -39,6 +39,14 @@ namespace Mirror.SimpleWeb.Tests
         }
 
         public WaitUntil WaitForConnection => new WaitUntil(() => onConnect.Count >= 1);
+
+        public void ServerSend(System.Collections.Generic.List<int> connectionIds, int channelId, ArraySegment<byte> segment)
+        {
+            foreach (int id in connectionIds)
+            {
+                ServerSend(id, channelId, segment);
+            }
+        }
     }
     public class ClientTestInstance : SimpleWebTransport, NeedInitTestInstance
     {

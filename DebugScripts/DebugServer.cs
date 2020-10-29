@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace Mirror.SimpleWeb
@@ -48,7 +47,11 @@ namespace Mirror.SimpleWeb
             {
                 if (GUILayout.Button("Send Message"))
                 {
-                    transport.ServerSend(new List<int>() { 1 }, Channels.DefaultReliable, new ArraySegment<byte>(new byte[] { 1, 2, 4, 8 }));
+#if MIRROR_26_0_OR_NEWER
+                    transport.ServerSend(1, Channels.DefaultReliable, new ArraySegment<byte>(new byte[] { 1, 2, 4, 8 }));
+#else
+                    transport.ServerSend(new System.Collections.Generic.List<int>() { 1 }, Channels.DefaultReliable, new ArraySegment<byte>(new byte[] { 1, 2, 4, 8 }));
+#endif
                 }
             }
         }
