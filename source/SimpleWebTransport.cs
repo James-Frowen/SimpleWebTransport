@@ -37,7 +37,7 @@ namespace Mirror.SimpleWeb
         public bool sslEnabled;
         [Tooltip("Path to json file that contains path to cert and its password\n\nUse Json file so that cert password is not included in client builds\n\nSee cert.example.Json")]
         public string sslCertJson = "./cert.json";
-        public SslProtocols sslProtocols = SslProtocols.Ssl3 | SslProtocols.Tls12;
+        public SslProtocols sslProtocols = SslProtocols.Tls12;
 
         [Header("Debug")]
         [Tooltip("Log functions uses ConditionalAttribute which will effect which log methods are allowed. DEBUG allows warn/error, SIMPLEWEB_LOG_ENABLED allows all")]
