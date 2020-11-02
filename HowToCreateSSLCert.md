@@ -54,6 +54,7 @@ To create a pfx file that SimpleWebTransport can use run this command in the `/e
 ```sh
 openssl pkcs12 -export -out cert.pfx -inkey privkey.pem -in cert.pem -certfile chain.pem
 ```
+You will be asked a password, you can fill a password or leave blank.
 
 You might need to be super user in order to do this:
 
@@ -83,10 +84,15 @@ Create a `cert.json` that SimpleWebTransport can read
 
 Run this command in the `~/path/to/server/` folder
 
+If you leave password blank at cert creation:
 ```sh
 echo '{ "path":"./cert.pfx", "password": "" }' > cert.json
 ```
 
+If you setted up a password "yourPassword" at cert creation:
+```sh
+echo '{ "path":"./cert.pfx", "password": "yourPassword" }' > cert.json
+```
 
 ### Run your server
 
