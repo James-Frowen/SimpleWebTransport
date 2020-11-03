@@ -96,7 +96,14 @@ echo '{ "path":"./cert.pfx", "password": "yourPassword" }' > cert.json
 
 ### Run your server
 
-after the `cert.json` and `cert.pfx` are in the server folder you can start you using using
+after the `cert.json` and `cert.pfx` are in the server folder like this:
+```
+ServerFolder
+|- demo.x86_64
+|- cert.json
+|- cert.pfx
+```
+you can start the server using:
 ```
 ./demo.x86_64
 ```
