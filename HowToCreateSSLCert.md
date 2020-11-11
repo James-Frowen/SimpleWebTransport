@@ -96,29 +96,32 @@ echo '{ "path":"./cert.pfx", "password": "yourPassword" }' > cert.json
 
 ### Run your server
 
-after the `cert.json` and `cert.pfx` are in the server folder like this:
+After the `cert.json` and `cert.pfx` are in the server folder like this
 ```
 ServerFolder
-|- demo.x86_64
+|- demo_server.x86_64
 |- cert.json
 |- cert.pfx
 ```
-then you need to make your file executable:
+
+Then make the server file executable
 ```
-chmod +x demo.x86_64
+chmod +x demo_server.x86_64
 ```
 
-you can start the server using:
+To run in the active terminal use
 ```
-nohup ./demo.x86_64 &
+./demo_server.x86_64
 ```
-nohup means: the executable will keep running after you close your ssh session
-the "&" sign means: that your server will run in background
 
-So for a quick test and to see all the logs you can also do that:
+
+To run in background use
 ```
-./demo.x86_64
+nohup ./demo_server.x86_64 &
 ```
+> `nohup` means: the executable will keep running after you close your ssh session
+the `&` sign means: that your server will run in background
+
 
 > you may need to use `sudo` to run if you created a symbolic link
 
