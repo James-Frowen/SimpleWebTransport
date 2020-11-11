@@ -103,7 +103,19 @@ ServerFolder
 |- cert.json
 |- cert.pfx
 ```
+then you need to make your file executable:
+```
+chmod +x demo.x86_64
+```
+
 you can start the server using:
+```
+nohup ./demo.x86_64 &
+```
+nohup means: the executable will keep running after you close your ssh session
+the "&" sign means: that your server will run in background
+
+So for a quick test and to see all the logs you can also do that:
 ```
 ./demo.x86_64
 ```
