@@ -49,7 +49,7 @@ namespace Mirror.SimpleWeb
 
         [Header("Ssl Settings")]
         [Tooltip("Sets connect scheme to wss. Useful when client needs to connect using wss when TLS is outside of transport, NOTE: if sslEnabled is true clientUseWss is also true")]
-        bool clientUseWss;
+        public bool clientUseWss;
 
         public bool sslEnabled;
         [Tooltip("Path to json file that contains path to cert and its password\n\nUse Json file so that cert password is not included in client builds\n\nSee cert.example.Json")]
