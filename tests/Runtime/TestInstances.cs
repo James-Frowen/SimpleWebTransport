@@ -32,10 +32,17 @@ namespace Mirror.SimpleWeb.Tests
 
         public void Init()
         {
+#if MIRROR_29_0_OR_NEWER
+            base.OnServerConnected = (connId) => onConnect.Add(connId);
+            base.OnServerDisconnected = (connId) => onDisconnect.Add(connId);
+            base.OnServerDataReceived = (connId, data, _) => onData.Add((connId, this.CreateCopy(data)));
+            base.OnServerError = (connId, exception) => onError.Add((connId, exception));
+#else
             base.OnServerConnected.AddListener((connId) => onConnect.Add(connId));
             base.OnServerDisconnected.AddListener((connId) => onDisconnect.Add(connId));
             base.OnServerDataReceived.AddListener((connId, data, _) => onData.Add((connId, this.CreateCopy(data))));
             base.OnServerError.AddListener((connId, exception) => onError.Add((connId, exception)));
+#endif
         }
 
         public WaitUntil WaitForConnection => new WaitUntil(() => onConnect.Count >= 1);
@@ -59,10 +66,17 @@ namespace Mirror.SimpleWeb.Tests
 
         public void Init()
         {
+#if MIRROR_29_0_OR_NEWER
+            base.OnClientConnected = () => onConnect++;
+            base.OnClientDisconnected = () => onDisconnect++;
+            base.OnClientDataReceived = (data, _) => onData.Add(this.CreateCopy(data));
+            base.OnClientError = (exception) => onError.Add(exception);
+#else
             base.OnClientConnected.AddListener(() => onConnect++);
             base.OnClientDisconnected.AddListener(() => onDisconnect++);
             base.OnClientDataReceived.AddListener((data, _) => onData.Add(this.CreateCopy(data)));
             base.OnClientError.AddListener((exception) => onError.Add(exception));
+#endif
         }
 
         public WaitUntil WaitForConnect => new WaitUntil(() => onConnect >= 1);

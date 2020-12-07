@@ -11,11 +11,19 @@ namespace Mirror.SimpleWeb
 
         private void Start()
         {
+
             transport = GetComponent<SimpleWebTransport>();
+#if MIRROR_29_0_OR_NEWER
+            transport.OnServerConnected = onConnect;
+            transport.OnServerDataReceived = onData;
+            transport.OnServerDisconnected = onDisconnect;
+            transport.OnServerError = onError;
+#else
             transport.OnServerConnected.AddListener(onConnect);
             transport.OnServerDataReceived.AddListener(onData);
             transport.OnServerDisconnected.AddListener(onDisconnect);
             transport.OnServerError.AddListener(onError);
+#endif
             transport.ServerStart();
         }
 

@@ -21,7 +21,12 @@ namespace Mirror.SimpleWeb.Tests.Server
         public IEnumerator ManyConnect(int count)
         {
             int connectIndex = 1;
-            server.OnServerConnected.AddListener((connId) =>
+#if MIRROR_29_0_OR_NEWER
+            server.OnServerConnected =
+#else
+            server.OnServerConnected.AddListener
+#endif
+            ((connId) =>
             {
                 Assert.That(connId, Is.EqualTo(connectIndex), "Clients should be connected in order with the next index");
                 connectIndex++;
@@ -58,7 +63,12 @@ namespace Mirror.SimpleWeb.Tests.Server
         public IEnumerator ManyPings(int count)
         {
             int connectIndex = 1;
-            server.OnServerConnected.AddListener((connId) =>
+#if MIRROR_29_0_OR_NEWER
+            server.OnServerConnected =
+#else
+            server.OnServerConnected.AddListener
+#endif
+            ((connId) =>
             {
                 Assert.That(connId == connectIndex, "Clients should be connected in order with the next index");
                 connectIndex++;
@@ -143,7 +153,12 @@ namespace Mirror.SimpleWeb.Tests.Server
         public IEnumerator ManySend(int count)
         {
             int connectIndex = 1;
-            server.OnServerConnected.AddListener((connId) =>
+#if MIRROR_29_0_OR_NEWER
+            server.OnServerConnected =
+#else
+            server.OnServerConnected.AddListener
+#endif
+            ((connId) =>
             {
                 Assert.That(connId, Is.EqualTo(connectIndex), "Clients should be connected in order with the next index");
                 connectIndex++;

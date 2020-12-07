@@ -30,7 +30,12 @@ namespace Mirror.SimpleWeb.Tests.Server
         public IEnumerator MultipleGoodAndBadClients()
         {
             int connectIndex = 1;
-            server.OnServerConnected.AddListener((connId) =>
+#if MIRROR_29_0_OR_NEWER
+            server.OnServerConnected =
+#else
+            server.OnServerConnected.AddListener
+#endif
+            ((connId) =>
             {
                 Assert.That(connId == connectIndex, "Clients should be connected in order with the next index");
                 connectIndex++;
