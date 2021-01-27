@@ -69,9 +69,7 @@ namespace Mirror.SimpleWeb
             catch (ObjectDisposedException e) { Log.InfoException(e); }
             catch (ReadHelperException e)
             {
-                // this could happen if client sends bad message
                 Log.InfoException(e);
-                queue.Enqueue(new Message(conn.connId, e));
             }
             catch (SocketException e)
             {
