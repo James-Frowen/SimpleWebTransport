@@ -9,7 +9,7 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace Mirror.SimpleWeb.Tests
+namespace JamesFrowen.SimpleWeb.Tests
 {
     [Category("SimpleWebTransport")]
     public abstract class SimpleWebTestBase

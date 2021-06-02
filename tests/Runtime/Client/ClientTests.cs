@@ -6,7 +6,7 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace Mirror.SimpleWeb.Tests.Client
+namespace JamesFrowen.SimpleWeb.Tests.Client
 {
     [Category("SimpleWebTransport")]
     public class ClientTests : SimpleWebTestBase

@@ -7,7 +7,7 @@ using System.Linq;
 using NUnit.Framework;
 using UnityEngine.TestTools;
 
-namespace Mirror.SimpleWeb.Tests
+namespace JamesFrowen.SimpleWeb.Tests
 {
     [Category("SimpleWebTransport")]
     public class LogTest

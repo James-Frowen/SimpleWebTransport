@@ -9,7 +9,7 @@ using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
 
-namespace Mirror.SimpleWeb.Tests
+namespace JamesFrowen.SimpleWeb.Tests
 {
     public static class RunNode
     {

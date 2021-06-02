@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Mirror.SimpleWeb.Tests
+namespace JamesFrowen.SimpleWeb.Tests
 {
     public static class SimpleWebTransportExtension
     {

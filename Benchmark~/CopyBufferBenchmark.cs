@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Linq;
 using UnityEngine;
 
-namespace Mirror.SimpleWeb.Benchmark
+namespace JamesFrowen.SimpleWeb.Benchmark
 {
     public class CopyBufferBenchmark : MonoBehaviour
     {

@@ -1,7 +1,7 @@
 using System.IO;
 using UnityEngine;
 
-namespace Mirror.SimpleWeb
+namespace JamesFrowen.SimpleWeb
 {
     internal class SslConfigLoader
     {

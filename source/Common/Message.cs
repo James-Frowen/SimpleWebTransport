@@ -1,6 +1,6 @@
 using System;
 
-namespace Mirror.SimpleWeb
+namespace JamesFrowen.SimpleWeb
 {
     public struct Message
     {

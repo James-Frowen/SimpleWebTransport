@@ -3,7 +3,7 @@ using System.Collections;
 using System.Linq;
 using NUnit.Framework;
 
-namespace Mirror.SimpleWeb.Tests
+namespace JamesFrowen.SimpleWeb.Tests
 {
     [Category("SimpleWebTransport")]
     public class BufferPoolTests

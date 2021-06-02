@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace Mirror.SimpleWeb
+namespace JamesFrowen.SimpleWeb
 {
     [RequireComponent(typeof(SimpleWebTransport))]
     public class DebugServer : MonoBehaviour

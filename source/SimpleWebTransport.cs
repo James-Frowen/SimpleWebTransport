@@ -1,10 +1,12 @@
+#if MIRROR
 using System;
 using System.Net;
 using System.Security.Authentication;
 using UnityEngine;
 using UnityEngine.Serialization;
+using Mirror;
 
-namespace Mirror.SimpleWeb
+namespace JamesFrowen.SimpleWeb
 {
     public class SimpleWebTransport : Transport
     {
@@ -348,3 +350,4 @@ namespace Mirror.SimpleWeb
         #endregion
     }
 }
+#endif

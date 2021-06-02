@@ -4,7 +4,7 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace Mirror.SimpleWeb.Tests.Server
+namespace JamesFrowen.SimpleWeb.Tests.Server
 {
     [Category("SimpleWebTransport")]
     public class ConnectAndCloseTest : SimpleWebTestBase

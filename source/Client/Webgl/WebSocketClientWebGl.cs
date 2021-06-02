@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using AOT;
 
-namespace Mirror.SimpleWeb
+namespace JamesFrowen.SimpleWeb
 {
     public class WebSocketClientWebGl : SimpleWebClient
     {

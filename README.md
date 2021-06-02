@@ -34,7 +34,7 @@ If you host your webgl build on a https domain you will need to use wss which wi
 
 # Logging
 
-Log levels can be set using the dropdown on the transport or or setting `Mirror.SimpleWeb.Log.level`. 
+Log levels can be set using the dropdown on the transport or or setting `JamesFrowen.SimpleWeb.Log.level`. 
 
 The transport applies the dropdown value in its `Awake` and `OnValidate` methods.
 

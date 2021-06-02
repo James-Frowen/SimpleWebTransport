@@ -2,7 +2,7 @@ using System.IO;
 using NUnit.Framework;
 using UnityEditor;
 
-namespace Mirror.SimpleWeb.Tests
+namespace JamesFrowen.SimpleWeb.Tests
 {
     [Category("SimpleWebTransport")]
     public class SslConfigLoaderTest

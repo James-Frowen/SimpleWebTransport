@@ -2,7 +2,7 @@ using System.Diagnostics;
 using System.IO;
 using NUnit.Framework;
 
-namespace Mirror.SimpleWeb.Tests
+namespace JamesFrowen.SimpleWeb.Tests
 {
     [Category("SimpleWebTransport")]
     public class CheckNodeTest
