@@ -20,7 +20,7 @@ namespace JamesFrowen.SimpleWeb
         /// <summary>
         /// number of bytes writen to buffer
         /// </summary>
-        internal int count;
+        public int count { get; internal set; }
 
         /// <summary>
         /// How many times release needs to be called before buffer is returned to pool

@@ -130,7 +130,7 @@ namespace JamesFrowen.SimpleWeb
             client?.ProcessMessageQueue(this);
         }
 
-        #region Client
+#region Client
         string GetClientScheme() => (sslEnabled || clientUseWss) ? SecureScheme : NormalScheme;
         string GetServerScheme() => sslEnabled ? SecureScheme : NormalScheme;
         public override bool ClientConnected()
@@ -231,9 +231,9 @@ namespace JamesFrowen.SimpleWeb
             return true;
         }
 #endif
-        #endregion
+#endregion
 
-        #region Server
+#region Server
         public override bool ServerActive()
         {
             return server != null && server.Active;
@@ -246,7 +246,7 @@ namespace JamesFrowen.SimpleWeb
                 Debug.LogError("SimpleWebServer Already Started");
             }
 
-            SslConfig config = SslConfigLoader.Load(this);
+            SslConfig config = SslConfigLoader.Load(sslEnabled, sslCertJson, sslProtocols);
             server = new SimpleWebServer(serverMaxMessagesPerTick, TcpConfig, maxMessageSize, handshakeMaxSize, config);
 
             server.onConnect += OnServerConnected.Invoke;
@@ -347,7 +347,7 @@ namespace JamesFrowen.SimpleWeb
             };
             return builder.Uri;
         }
-        #endregion
+#endregion
     }
 }
 #endif

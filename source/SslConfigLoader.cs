@@ -1,28 +1,30 @@
 using System.IO;
+using System.Security.Authentication;
 using UnityEngine;
 
 namespace JamesFrowen.SimpleWeb
 {
-    internal class SslConfigLoader
+
+    public class SslConfigLoader
     {
         internal struct Cert
         {
             public string path;
             public string password;
         }
-        internal static SslConfig Load(SimpleWebTransport transport)
+        public static SslConfig Load(bool sslEnabled, string sslCertJson, SslProtocols sslProtocols)
         {
             // dont need to load anything if ssl is not enabled
-            if (!transport.sslEnabled)
+            if (!sslEnabled)
                 return default;
 
-            string certJsonPath = transport.sslCertJson;
+            string certJsonPath = sslCertJson;
 
             Cert cert = LoadCertJson(certJsonPath);
 
             return new SslConfig(
-                enabled: transport.sslEnabled,
-                sslProtocols: transport.sslProtocols,
+                enabled: sslEnabled,
+                sslProtocols: sslProtocols,
                 certPath: cert.path,
                 certPassword: cert.password
             );

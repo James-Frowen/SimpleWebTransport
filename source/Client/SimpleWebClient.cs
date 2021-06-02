@@ -28,7 +28,7 @@ namespace JamesFrowen.SimpleWeb
 
         readonly int maxMessagesPerTick;
         protected readonly int maxMessageSize;
-        protected readonly ConcurrentQueue<Message> receiveQueue = new ConcurrentQueue<Message>();
+        public readonly ConcurrentQueue<Message> receiveQueue = new ConcurrentQueue<Message>();
         protected readonly BufferPool bufferPool;
 
         protected ClientState state;
