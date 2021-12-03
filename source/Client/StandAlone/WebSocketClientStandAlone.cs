@@ -26,7 +26,15 @@ namespace JamesFrowen.SimpleWeb
         public override void Connect(Uri serverAddress)
         {
             state = ClientState.Connecting;
-            Thread receiveThread = new Thread(() => ConnectAndReceiveLoop(serverAddress));
+
+            // create connection here before thread so that send queue exist for MiragePeer to send to
+            var client = new TcpClient();
+            tcpConfig.ApplyTo(client);
+
+            // create connection object here so dispose correctly disconnects on failed connect
+            conn = new Connection(client, AfterConnectionDisposed);
+
+            var receiveThread = new Thread(() => ConnectAndReceiveLoop(serverAddress));
             receiveThread.IsBackground = true;
             receiveThread.Start();
         }
@@ -35,11 +43,13 @@ namespace JamesFrowen.SimpleWeb
         {
             try
             {
-                TcpClient client = new TcpClient();
-                tcpConfig.ApplyTo(client);
+                // connection created above
+                TcpClient client = conn.client;
+                //TcpClient client = new TcpClient();
+                //tcpConfig.ApplyTo(client);
 
-                // create connection object here so dispose correctly disconnects on failed connect
-                conn = new Connection(client, AfterConnectionDisposed);
+                //// create connection object here so dispose correctly disconnects on failed connect
+                //conn = new Connection(client, AfterConnectionDisposed);
                 conn.receiveThread = Thread.CurrentThread;
 
                 try
@@ -75,9 +85,9 @@ namespace JamesFrowen.SimpleWeb
 
                 receiveQueue.Enqueue(new Message(EventType.Connected));
 
-                Thread sendThread = new Thread(() =>
+                var sendThread = new Thread(() =>
                 {
-                    SendLoop.Config sendConfig = new SendLoop.Config(
+                    var sendConfig = new SendLoop.Config(
                         conn,
                         bufferSize: Constants.HeaderSize + Constants.MaskSize + maxMessageSize,
                         setMask: true);
@@ -89,7 +99,7 @@ namespace JamesFrowen.SimpleWeb
                 sendThread.IsBackground = true;
                 sendThread.Start();
 
-                ReceiveLoop.Config config = new ReceiveLoop.Config(conn,
+                var config = new ReceiveLoop.Config(conn,
                     maxMessageSize,
                     false,
                     receiveQueue,
