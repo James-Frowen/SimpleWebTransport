@@ -80,7 +80,7 @@ namespace JamesFrowen.SimpleWeb
             if (level < Levels.info)
                 return;
 
-            logger.Log(LogType.Log, $"INFO_EXCEPTION: <color=blue>{e.GetType().Name}</color> Message: {e.Message}");
+            logger.Log(LogType.Log, $"INFO_EXCEPTION: <color=blue>{e.GetType().Name}</color> Message: {e.Message}\n{e.StackTrace}\n\n");
         }
 
         [Conditional(SIMPLEWEB_LOG_ENABLED), Conditional(DEBUG)]
@@ -110,7 +110,7 @@ namespace JamesFrowen.SimpleWeb
         public static void Exception(Exception e)
         {
             // always log Exceptions
-            logger.Log(LogType.Error, $"EXCEPTION: <color=red>{e.GetType().Name}</color> Message: {e.Message}");
+            logger.Log(LogType.Error, $"EXCEPTION: <color=red>{e.GetType().Name}</color> Message: {e.Message}\n{e.StackTrace}\n\n");
         }
     }
 }
