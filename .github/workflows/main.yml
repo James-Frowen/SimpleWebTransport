@@ -1,133 +1,23 @@
-name: CI
+name: Release
 
 on: 
+  workflow_dispatch:
   push:
-    paths-ignore:
-      - 'doc/**'
-      - '**/*.md'
+    branches:
+     - master
   
 jobs:
-
-  requestActivationFile:
-    runs-on: ubuntu-latest
-    if: false
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
-      - name: Request manual activation file
-        uses: MirrorNG/unity-runner@2.0.0
-        id: getManualLicenseFile
-        with:
-            entrypoint: /request_activation.sh
-
-      - name: Expose as artifact
-        uses: actions/upload-artifact@v1
-        with:
-            name: Manual Activation File
-            path: ${{ steps.getManualLicenseFile.outputs.filePath }}
-
-  Tests:
-    name: Test
-    runs-on: ubuntu-latest
-    env:
-      UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
-    if: true
-    steps:
-  
-      # Checkout repository (required to test local actions)
-      - name: Checkout Mirror
-        uses: actions/checkout@v2
-        with:
-          repository: vis2k/Mirror
-          fetch-depth: 0
-      
-      - name: Delete old SimpleWebTransport folder
-        run: rm -rf Assets/Mirror/Runtime/Transport/SimpleWebTransport
-
-      - name: Checkout SimpleWebTransport
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-          path: Assets/SimpleWebTransport
-   
-      - name: Add Coverage Plugin
-        uses: canastro/copy-action@0.0.2
-        with:
-          source: Packages/manifest-coverage.json
-          target: Packages/manifest.json
-
-      - name: Activate license
-        uses: MirrorNG/unity-runner@2.0.0
-        with:
-          entrypoint: /activate.sh
-          
-      - name: Generate Solution
-        uses: MirrorNG/unity-runner@2.0.0
-        with:
-          # Arguments to pass to unity
-          args: -buildTarget StandaloneWindows64 -customBuildName MirrorNG -customBuildPath ./build/StandaloneWindows64 -projectPath . -executeMethod  UnityEditor.SyncVS.SyncSolution -quit
-  
-      # Install node packages before running tests
-      - name: Install Node Packages
-        run: npm i
-        working-directory: Assets/SimpleWebTransport/tests/node~/
-
-      # Configure test runner
-      - name: Run editor Tests
-        uses: MirrorNG/unity-runner@2.0.0
-        with:
-          args: -runTests -testPlatform editmode -testResults Tests/editmode-results.xml -enableCodeCoverage -coverageResultsPath Tests -editorTestsCategories SimpleWebTransport
-
-      - name: Run play Tests
-        uses: MirrorNG/unity-runner@2.0.0
-        with:
-          args: -runTests -testPlatform playmode -testResults Tests/playmode-results.xml -enableCodeCoverage -coverageResultsPath Tests -editorTestsCategories SimpleWebTransport
-          
-      # Upload artifacts
-      - name: Archive test results
-        uses: actions/upload-artifact@v1
-        if: always()
-        with:
-          name: Test results (editor mode)
-          path: Tests
-
-      - name: Publish test results
-        uses: MirrorNG/nunit-reporter@v1.0.9
-        if: always()
-        with:
-          path: "Tests/*.xml"
-          access-token: ${{ secrets.GITHUB_TOKEN }}
-  
-      - name: SonarQube analysis
-        if: always()
-        uses: MirrorNG/unity-runner@2.0.0
-        with:
-          entrypoint: /sonar-scanner.sh
-          projectKey: MirrorNetworking_SimpleWebTransport
-          projectName: SimpleWebTransport
-          sonarOrganisation: mirrornetworking
-          solution: ./SimpleWebTransport.csproj
-          beginArguments: >-
-              /d:sonar.verbose="true" 
-              /d:sonar.cs.nunit.reportsPaths=Tests/editmode-results.xml,Tests/playimode-results.xml 
-              /d:sonar.cs.opencover.reportsPaths=Tests/workspace-opencov/EditMode/TestCoverageResults_0000.xml,Tests/workspace-opencov/PlayMode/TestCoverageResults_0000.xml
-              /d:sonar.exclusions=Assets/Mirror/**/*
-              /d:sonar.inclusions=Assets/SimpleWebTransport/source/**/*
-              /d:sonar.scm.exclusions.disabled=true
-        env:
-          FrameworkPathOverride: /opt/Unity/Editor/Data/MonoBleedingEdge/
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   Release:
+    env:
+      TARGET_NAME: SimpleWebTransport
+      SOURCE_PATH: SimpleWebTransport
     runs-on: windows-latest
-    if: github.ref == 'refs/heads/master'
-    needs: Tests
+    # needs: Tests
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
         with:
+          submodules: recursive
           fetch-depth: 0
 
       - name: Setup dotnet
@@ -139,13 +29,16 @@ jobs:
         run: dotnet tool install -g unity-packer
   
       - name: Package
-        run: |
-          unity-packer pack SimpleWebTransport.unitypackage source Assets/SimpleWebTransport LICENSE Assets/SimpleWebTransport/LICENSE
 
+        run: >-
+          unity-packer pack ${{ env.TARGET_NAME }}.unitypackage 
+          source ${{ env.SOURCE_PATH }}/scripts
+          LICENSE ${{ env.SOURCE_PATH }}/LICENSE 
+          
       - uses: actions/upload-artifact@v1
         with:
-          name: SimpleWebTransport.unitypackage
-          path: SimpleWebTransport.unitypackage
+          name: ${{ env.TARGET_NAME }}.unitypackage
+          path: ${{ env.TARGET_NAME }}.unitypackage
 
       - name: Release
         uses: cycjimmy/semantic-release-action@v2

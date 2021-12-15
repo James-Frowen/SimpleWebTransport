@@ -2,12 +2,6 @@
     "verifyConditions": [
         "@semantic-release/github"
     ],
-    "prepare": [
-        {
-            "path": "@semantic-release/exec",
-            "prepareCmd": "echo ${nextRelease.version} > source/version.txt"
-        }
-    ],
     "publish": [
         {
             "path": "@semantic-release/github",
