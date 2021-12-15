@@ -47,12 +47,25 @@ namespace JamesFrowen.SimpleWeb
         public event Action<ArraySegment<byte>> onData;
         public event Action<Exception> onError;
 
+        /// <summary>
+        /// Processes all new messages
+        /// </summary>
+        public void ProcessMessageQueue()
+        {
+            ProcessMessageQueue(null);
+        }
+
+        /// <summary>
+        /// Processes all messages while <paramref name="behaviour"/> is enabled
+        /// </summary>
+        /// <param name="behaviour"></param>
         public void ProcessMessageQueue(MonoBehaviour behaviour)
         {
             int processedCount = 0;
+            bool skipEnabled = behaviour == null;
             // check enabled every time incase behaviour was disabled after data
             while (
-                behaviour.enabled &&
+                (skipEnabled || behaviour.enabled) &&
                 processedCount < maxMessagesPerTick &&
                 // Dequeue last
                 receiveQueue.TryDequeue(out Message next)
