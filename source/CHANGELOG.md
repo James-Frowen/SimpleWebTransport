@@ -1,3 +1,10 @@
+## [1.2.4](https://github.com/James-Frowen/SimpleWebTransport/compare/v1.2.3...v1.2.4) (2021-12-16)
+
+
+### Bug Fixes
+
+* adding meta file for changelog ([ba5b164](https://github.com/James-Frowen/SimpleWebTransport/commit/ba5b1647aa5cc69ca80f5b52c542a9b5ee749c7f))
+
 ## [1.2.3](https://github.com/James-Frowen/SimpleWebTransport/compare/v1.2.2...v1.2.3) (2021-12-16)
 
 
