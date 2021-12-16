@@ -2,7 +2,7 @@
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=MirrorNetworking_SimpleWebTransport&metric=alert_status)](https://sonarcloud.io/dashboard?id=MirrorNetworking_SimpleWebTransport) -->
 [![Discord](https://img.shields.io/discord/809535064551456888.svg)](https://discordapp.com/invite/yp6W73Xs68)
 [![release](https://img.shields.io/github/release/James-Frowen/SimpleWebTransport.svg)](https://github.com/James-Frowen/SimpleWebTransport/releases/latest)
-[![openupm](https://img.shields.io/npm/v/com.james-frowen.simplewebtransport?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/com.littlebigfun.addressable-importer/)
+[![openupm](https://img.shields.io/npm/v/com.james-frowen.simplewebtransport?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/com.james-frowen.simplewebtransport/)
 
 # Simple Web Transport
 
