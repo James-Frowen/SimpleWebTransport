@@ -26,7 +26,6 @@ Includes a Websocket server, standalone client, and a WebGL client so that both 
     Url: `https://package.openupm.com` <br/>
     Scopes:
     - `com.james-frowen`
-
 2) Close the project settings
 3) Open the package manager.  
 4) Click on menu Window -> Package Manager and select "Packages: My Registries", 
