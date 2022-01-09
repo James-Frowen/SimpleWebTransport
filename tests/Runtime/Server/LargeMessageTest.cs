@@ -82,36 +82,79 @@ namespace JamesFrowen.SimpleWeb.Tests.Server
 
 
         [UnityTest]
-        public IEnumerator ReceiveLargeArrays()
+        public IEnumerator ReceiveLargeArrayFromServer()
         {
-            ExpectInvalidDataError();
-
-            // dont worry about result, run will timeout by itself
-            _ = RunNode.RunAsync("SendLargeLargeMessagesArgs.js", args: new string[1] { "80000" });
-            const int Length = 80000;
+            // IMPORTANT: cant use javascript here because it will fragment the message instead of using longer header
+            var tcpConfig = new TcpConfig(false, timeout, timeout);
+            var client = SimpleWebClient.Create(5000, server.maxMessageSize, tcpConfig);
+            client.Connect(new UriBuilder
+            {
+                Scheme = "ws",
+                Host = "localhost",
+                Port = 7776
+            }.Uri);
 
             yield return server.WaitForConnection;
             server.server.AllowLargeMessage(1, true);
+            client.AllowLargeMessage(true);
+            ArraySegment<byte> clientReceive;
+            client.onData += (s) => clientReceive = s;
+
+            byte[] bytes = new byte[80_000];
+            var random = new System.Random();
+            random.NextBytes(bytes);
+            server.server.SendLargeMessage(1, new ArraySegment<byte>(bytes));
+            // wait for message
+            yield return new WaitForSeconds(2f);
+
+            Assert.That(clientReceive.Array, Is.Not.Null);
+            Assert.That(clientReceive.Count, Is.EqualTo(80_000));
+
+            int offset = clientReceive.Offset;
+            byte[] array = clientReceive.Array;
+            for (int i = 0; i < 80_000; i++)
+            {
+                if (bytes[i] != array[i + offset])
+                {
+                    Assert.Fail("data not the same");
+                }
+            }
+        }
+
+
+        [UnityTest]
+        public IEnumerator ReceiveLargeArrayFromClient()
+        {
+            // IMPORTANT: cant use javascript here because it will fragment the message instead of using longer header
+            var tcpConfig = new TcpConfig(false, timeout, timeout);
+            var client = SimpleWebClient.Create(5000, server.maxMessageSize, tcpConfig) as WebSocketClientStandAlone;
+            client.Connect(new Uri("ws://localhost:7776"));
+
+            yield return server.WaitForConnection;
+            server.server.AllowLargeMessage(1, true);
+            client.AllowLargeMessage(true);
+
+            byte[] bytes = new byte[80_000];
+            var random = new System.Random();
+            random.NextBytes(bytes);
+            client.SendLargeMessage(new ArraySegment<byte>(bytes));
 
             // wait for message
             yield return new WaitForSeconds(2f);
 
+
             Assert.That(server.onData, Has.Count.EqualTo(1), $"Should have 1 message");
             (int connId, byte[] data) = server.onData[0];
+            Assert.That(connId, Is.EqualTo(1), "Connd id should be 1");
 
-
-            Assert.That(connId, Has.Count.EqualTo(1), $"Should have id 1");
-            Assert.That(data.Length, Is.EqualTo(Length));
-            for (int i = 0; i < data.Length; i++)
+            Assert.That(data.Length, Is.EqualTo(80_000), "Should have 80_000 bytes");
+            for (int i = 0; i < 80_000; i++)
             {
-                if (data[i] != (byte)(i % 255))
+                if (bytes[i] != data[i])
                 {
-                    Assert.Fail("data did not match");
+                    Assert.Fail("data not the same");
                 }
             }
-
-            Assert.That(server.onDisconnect, Has.Count.EqualTo(0), $"Should have 0 disconnect");
-            Assert.That(server.onError, Has.Count.EqualTo(0), $"Should have 0 error");
         }
     }
 }

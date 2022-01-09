@@ -167,6 +167,7 @@ namespace JamesFrowen.SimpleWeb
                 MessageProcessor.ToggleMask(payload.array, 0, payload.array, 0, payloadLength, buffer, maskOffset);
             }
 
+            payload.count = payloadLength;
             queue.Enqueue(new Message(conn.connId, payload));
         }
 
