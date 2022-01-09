@@ -52,7 +52,7 @@ namespace JamesFrowen.SimpleWeb
             if (newValue <= 0)
             {
                 count = 0;
-                owner.Return(this);
+                owner?.Return(this);
             }
         }
         public void Dispose()

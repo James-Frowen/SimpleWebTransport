@@ -95,5 +95,13 @@ namespace JamesFrowen.SimpleWeb
         public abstract void Connect(Uri serverAddress);
         public abstract void Disconnect();
         public abstract void Send(ArraySegment<byte> segment);
+
+        /// <summary>
+        /// Allows large messages from connection
+        /// <para>WARNING: large message will cause buffers to be allocated which may cause negative performance</para>
+        /// </summary>
+        /// <param name="connectionId"></param>
+        /// <param name="enabled"></param>
+        public abstract void AllowLargeMessage(bool enabled);
     }
 }

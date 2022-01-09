@@ -32,6 +32,7 @@ namespace JamesFrowen.SimpleWeb
             this.onDispose = onDispose;
         }
 
+        public bool AllowLargeMessage { get; set; }
 
         /// <summary>
         /// disposes client and stops threads

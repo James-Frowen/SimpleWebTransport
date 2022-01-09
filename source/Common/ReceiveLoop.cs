@@ -116,8 +116,12 @@ namespace JamesFrowen.SimpleWeb
             {
                 offset = ReadHelper.Read(stream, buffer, offset, Constants.ShortLength);
             }
+            if (MessageProcessor.NeedToReadLongLength(buffer))
+            {
+                offset = ReadHelper.Read(stream, buffer, offset, Constants.LongLength);
+            }
 
-            MessageProcessor.ValidateHeader(buffer, maxMessageSize, expectMask);
+            MessageProcessor.ValidateHeader(buffer, maxMessageSize, expectMask, conn.AllowLargeMessage);
 
             if (expectMask)
             {
@@ -129,6 +133,12 @@ namespace JamesFrowen.SimpleWeb
 
             Log.Verbose($"Header ln:{payloadLength} op:{opcode} mask:{expectMask}");
             Log.DumpBuffer($"Raw Header", buffer, 0, offset);
+
+            if (payloadLength > maxMessageSize)
+            {
+                HandleLargeMessage(config, stream, buffer, offset, payloadLength);
+                return;
+            }
 
             int msgOffset = offset;
             offset = ReadHelper.Read(stream, buffer, offset, payloadLength);
@@ -142,6 +152,22 @@ namespace JamesFrowen.SimpleWeb
                     HandleCloseMessage(config, buffer, msgOffset, payloadLength);
                     break;
             }
+        }
+
+        private static void HandleLargeMessage(Config config, Stream stream, byte[] buffer, int msgOffset, int payloadLength)
+        {
+            (Connection conn, int _, bool expectMask, ConcurrentQueue<Message> queue, BufferPool bufferPool) = config;
+
+            var payload = new ArrayBuffer(null, payloadLength);
+            ReadHelper.Read(stream, payload.array, 0, payloadLength);
+
+            if (expectMask)
+            {
+                int maskOffset = msgOffset - Constants.MaskSize;
+                MessageProcessor.ToggleMask(payload.array, 0, payload.array, 0, payloadLength, buffer, maskOffset);
+            }
+
+            queue.Enqueue(new Message(conn.connId, payload));
         }
 
         static void HandleArrayMessage(Config config, byte[] buffer, int msgOffset, int payloadLength)

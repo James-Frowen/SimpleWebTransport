@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Runtime.CompilerServices;
 
@@ -12,7 +13,13 @@ namespace JamesFrowen.SimpleWeb
         {
             byte lenByte = FirstLengthByte(buffer);
 
-            return lenByte >= Constants.UshortPayloadLength;
+            return lenByte == Constants.UshortPayloadLength;
+        }
+        public static bool NeedToReadLongLength(byte[] buffer)
+        {
+            byte lenByte = FirstLengthByte(buffer);
+
+            return lenByte == Constants.UlongPayloadLength;
         }
 
         public static int GetOpcode(byte[] buffer)
@@ -26,7 +33,7 @@ namespace JamesFrowen.SimpleWeb
             return GetMessageLength(buffer, 0, lenByte);
         }
 
-        public static void ValidateHeader(byte[] buffer, int maxLength, bool expectMask)
+        public static void ValidateHeader(byte[] buffer, int maxLength, bool expectMask, bool allowLargeMessages = false)
         {
             bool finished = (buffer[0] & 0b1000_0000) != 0; // has full message been sent
             bool hasMask = (buffer[1] & 0b1000_0000) != 0; // true from clients, false from server, "All messages from the client to the server have this bit set"
@@ -41,7 +48,7 @@ namespace JamesFrowen.SimpleWeb
             int msglen = GetMessageLength(buffer, 0, lenByte);
 
             ThrowIfLengthZero(msglen);
-            ThrowIfMsgLengthTooLong(msglen, maxLength);
+            ThrowIfMsgLengthTooLong(msglen, maxLength, allowLargeMessages);
         }
 
         public static void ToggleMask(byte[] src, int sourceOffset, int messageLength, byte[] maskBuffer, int maskOffset)
@@ -69,7 +76,7 @@ namespace JamesFrowen.SimpleWeb
         {
             if (lenByte == Constants.UshortPayloadLength)
             {
-                // header is 4 bytes long
+                // header is 2 bytes
                 ushort value = 0;
                 value |= (ushort)(buffer[offset + 2] << 8);
                 value |= buffer[offset + 3];
@@ -78,7 +85,22 @@ namespace JamesFrowen.SimpleWeb
             }
             else if (lenByte == Constants.UlongPayloadLength)
             {
-                throw new InvalidDataException("Max length is longer than allowed in a single message");
+                // header is 8 bytes 
+                ulong value = 0;
+                value |= ((ulong)buffer[offset + 2] << 56);
+                value |= ((ulong)buffer[offset + 3] << 48);
+                value |= ((ulong)buffer[offset + 4] << 40);
+                value |= ((ulong)buffer[offset + 5] << 32);
+                value |= ((ulong)buffer[offset + 6] << 24);
+                value |= ((ulong)buffer[offset + 7] << 16);
+                value |= ((ulong)buffer[offset + 8] << 8);
+                value |= ((ulong)buffer[offset + 9] << 0);
+
+                if (value > int.MaxValue)
+                {
+                    throw new NotSupportedException($"Can't receive payloads larger that int.max: {int.MaxValue}");
+                }
+                return (int)value;
             }
             else // is less than 126
             {
@@ -129,8 +151,10 @@ namespace JamesFrowen.SimpleWeb
         /// need to check this so that data from previous buffer isnt used
         /// </summary>
         /// <exception cref="InvalidDataException"></exception>
-        static void ThrowIfMsgLengthTooLong(int msglen, int maxLength)
+        static void ThrowIfMsgLengthTooLong(int msglen, int maxLength, bool allowLargeMessages)
         {
+            if (allowLargeMessages)
+                return;
             if (msglen > maxLength)
             {
                 throw new InvalidDataException("Message length is greater than max length");

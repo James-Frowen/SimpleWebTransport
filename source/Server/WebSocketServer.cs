@@ -81,11 +81,11 @@ namespace JamesFrowen.SimpleWeb
                         // TODO keep track of connections before they are in connections dictionary
                         //      this might not be a problem as HandshakeAndReceiveLoop checks for stop
                         //      and returns/disposes before sending message to queue
-                        Connection conn = new Connection(client, AfterConnectionDisposed);
+                        var conn = new Connection(client, AfterConnectionDisposed);
                         Log.Info($"A client connected {conn}");
 
                         // handshake needs its own thread as it needs to wait for message from client
-                        Thread receiveThread = new Thread(() => HandshakeAndReceiveLoop(conn));
+                        var receiveThread = new Thread(() => HandshakeAndReceiveLoop(conn));
 
                         conn.receiveThread = receiveThread;
 
@@ -142,9 +142,9 @@ namespace JamesFrowen.SimpleWeb
 
                 receiveQueue.Enqueue(new Message(conn.connId, EventType.Connected));
 
-                Thread sendThread = new Thread(() =>
+                var sendThread = new Thread(() =>
                 {
-                    SendLoop.Config sendConfig = new SendLoop.Config(
+                    var sendConfig = new SendLoop.Config(
                         conn,
                         bufferSize: Constants.HeaderSize + maxMessageSize,
                         setMask: false);
@@ -157,7 +157,7 @@ namespace JamesFrowen.SimpleWeb
                 sendThread.Name = $"SendLoop {conn.connId}";
                 sendThread.Start();
 
-                ReceiveLoop.Config receiveConfig = new ReceiveLoop.Config(
+                var receiveConfig = new ReceiveLoop.Config(
                     conn,
                     maxMessageSize,
                     expectMask: true,
@@ -198,6 +198,39 @@ namespace JamesFrowen.SimpleWeb
             }
         }
 
+        /// <summary>
+        /// Sends a large message on main thread, this is blocking till message is sent
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="segment"></param>
+        public void SendLargeMessage(int id, ArraySegment<byte> segment)
+        {
+            if (!connections.TryGetValue(id, out Connection conn))
+            {
+                Log.Warn($"Cant send message to {id} because connection was not found in dictionary. Maybe it disconnected.");
+                return;
+            }
+
+            if (!conn.AllowLargeMessage)
+                throw new InvalidOperationException("Large message is disabled set AllowLargeMessage to true first");
+
+            // wait for send queue to be empty
+            while (conn.sendQueue.Count > 0)
+            {
+                Thread.Sleep(1);
+            }
+
+            NetworkStream stream = conn.client.GetStream();
+            // write header
+            // 14 is max header size
+            byte[] header = new byte[10];
+            int length = SendLoop.WriteHeader(header, 0, segment.Count, false);
+
+            // write large message
+            stream.Write(header, 0, length);
+            stream.Write(segment.Array, segment.Offset, segment.Count);
+        }
+
         public bool CloseConnection(int id)
         {
             if (connections.TryGetValue(id, out Connection conn))
@@ -222,8 +255,45 @@ namespace JamesFrowen.SimpleWeb
             }
             else
             {
-                Log.Error($"Cant close connection to {id} because connection was not found in dictionary");
+                Log.Error($"Cant get address of connection {id} because connection was not found in dictionary");
                 return null;
+            }
+        }
+
+        /// <summary>
+        /// Allows large messages from connection
+        /// <para>WARNING: large message will cause buffers to be allocated which may cause negative performance</para>
+        /// </summary>
+        /// <param name="connectionId"></param>
+        /// <param name="enabled"></param>
+        public void AllowLargeMessage(int id, bool enabled)
+        {
+            if (connections.TryGetValue(id, out Connection conn))
+            {
+                conn.AllowLargeMessage = enabled;
+            }
+            else
+            {
+                Log.Error($"Cant set AllowLargeMessage for connection {id} because connection was not found in dictionary");
+            }
+        }
+
+        /// <summary>
+        /// Allows large messages from connection
+        /// <para>WARNING: large message will cause buffers to be allocated which may cause negative performance</para>
+        /// </summary>
+        /// <param name="connectionId"></param>
+        /// <param name="enabled"></param>
+        public bool IsLargeMessageAllowed(int id)
+        {
+            if (connections.TryGetValue(id, out Connection conn))
+            {
+                return conn.AllowLargeMessage;
+            }
+            else
+            {
+                Log.Error($"Cant get IsLargeMessageAllowed for connection {id} because connection was not found in dictionary");
+                return false;
             }
         }
     }

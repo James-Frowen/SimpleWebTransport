@@ -20,6 +20,8 @@ namespace JamesFrowen.SimpleWeb
         /// </summary>
         Queue<byte[]> ConnectingSendQueue;
 
+        bool _allowLargeMessages;
+
         internal WebSocketClientWebGl(int maxMessageSize, int maxMessagesPerTick) : base(maxMessageSize, maxMessagesPerTick)
         {
 #if !UNITY_WEBGL || UNITY_EDITOR
@@ -45,7 +47,7 @@ namespace JamesFrowen.SimpleWeb
 
         public override void Send(ArraySegment<byte> segment)
         {
-            if (segment.Count > maxMessageSize)
+            if (!_allowLargeMessages && segment.Count > maxMessageSize)
             {
                 Log.Error($"Cant send message with length {segment.Count} because it is over the max size of {maxMessageSize}");
                 return;
@@ -61,6 +63,11 @@ namespace JamesFrowen.SimpleWeb
                     ConnectingSendQueue = new Queue<byte[]>();
                 ConnectingSendQueue.Enqueue(segment.ToArray());
             }
+        }
+
+        public override void AllowLargeMessage(bool enabled)
+        {
+            _allowLargeMessages = enabled;
         }
 
         void onOpen()
@@ -92,7 +99,15 @@ namespace JamesFrowen.SimpleWeb
         {
             try
             {
-                ArrayBuffer buffer = bufferPool.Take(count);
+                ArrayBuffer buffer;
+                if (_allowLargeMessages && count > maxMessageSize)
+                {
+                    buffer = new ArrayBuffer(null, count);
+                }
+                else
+                {
+                    buffer = bufferPool.Take(count);
+                }
                 buffer.CopyFrom(bufferPtr, count);
 
                 receiveQueue.Enqueue(new Message(buffer));

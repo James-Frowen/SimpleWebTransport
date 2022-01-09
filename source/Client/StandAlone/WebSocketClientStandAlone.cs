@@ -11,7 +11,6 @@ namespace JamesFrowen.SimpleWeb
         readonly TcpConfig tcpConfig;
         Connection conn;
 
-
         internal WebSocketClientStandAlone(int maxMessageSize, int maxMessagesPerTick, TcpConfig tcpConfig) : base(maxMessageSize, maxMessagesPerTick)
         {
 #if UNITY_WEBGL && !UNITY_EDITOR
@@ -21,6 +20,11 @@ namespace JamesFrowen.SimpleWeb
             handshake = new ClientHandshake();
             this.tcpConfig = tcpConfig;
 #endif
+        }
+
+        public override void AllowLargeMessage(bool enabled)
+        {
+            conn.AllowLargeMessage = enabled;
         }
 
         public override void Connect(Uri serverAddress)
@@ -144,6 +148,41 @@ namespace JamesFrowen.SimpleWeb
 
             conn.sendQueue.Enqueue(buffer);
             conn.sendPending.Set();
+        }
+
+        /// <summary>
+        /// Sends a large message on main thread, this is blocking till message is sent
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="segment"></param>
+        public void SendLargeMessage(ArraySegment<byte> segment)
+        {
+            if (!conn.AllowLargeMessage)
+                throw new InvalidOperationException("Large message is disabled set AllowLargeMessage to true first");
+
+            // wait for send queue to be empty
+            while (conn.sendQueue.Count > 0)
+            {
+                Thread.Sleep(1);
+            }
+
+            NetworkStream stream = conn.client.GetStream();
+            // write header
+            // 14 is max header size
+            byte[] header = new byte[10 + 4];
+            int length = SendLoop.WriteHeader(header, 0, segment.Count, true);
+            using (var maskHelper = new MaskHelper())
+            {
+                maskHelper.WriteMask(header, length);
+            }
+
+            byte[] masked = new byte[segment.Count];
+            MessageProcessor.ToggleMask(segment.Array, segment.Offset, masked, 0, segment.Count, header, length);
+
+            // write large message
+            // +4 for mask lenght
+            stream.Write(header, 0, length + 4);
+            stream.Write(masked, 0, segment.Count);
         }
     }
 }

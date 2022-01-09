@@ -10,6 +10,7 @@ namespace JamesFrowen.SimpleWeb
 
         readonly WebSocketServer server;
         readonly BufferPool bufferPool;
+        readonly int maxMessageSize;
 
         public SimpleWebServer(int maxMessagesPerTick, TcpConfig tcpConfig, int maxMessageSize, int handshakeMaxSize, SslConfig sslConfig)
         {
@@ -17,6 +18,7 @@ namespace JamesFrowen.SimpleWeb
             // use max because bufferpool is used for both messages and handshake
             int max = Math.Max(maxMessageSize, handshakeMaxSize);
             bufferPool = new BufferPool(5, 20, max);
+            this.maxMessageSize = maxMessageSize;
 
             server = new WebSocketServer(tcpConfig, maxMessageSize, handshakeMaxSize, sslConfig, bufferPool);
         }
@@ -52,12 +54,23 @@ namespace JamesFrowen.SimpleWeb
                 server.Send(id, buffer);
             }
         }
+
         public void SendOne(int connectionId, ArraySegment<byte> source)
         {
             ArrayBuffer buffer = bufferPool.Take(source.Count);
             buffer.CopyFrom(source);
 
             server.Send(connectionId, buffer);
+        }
+
+        /// <summary>
+        /// Sends a large message on main thread, this is blocking till message is sent
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="segment"></param>
+        public void SendLargeMessage(int connectionId, ArraySegment<byte> segment)
+        {
+            server.SendLargeMessage(connectionId, segment);
         }
 
         public bool KickClient(int connectionId)
@@ -113,6 +126,17 @@ namespace JamesFrowen.SimpleWeb
                         break;
                 }
             }
+        }
+
+        /// <summary>
+        /// Allows large messages from connection
+        /// <para>WARNING: large message will cause buffers to be allocated which may cause negative performance</para>
+        /// </summary>
+        /// <param name="connectionId"></param>
+        /// <param name="enabled"></param>
+        public void AllowLargeMessage(int connectionId, bool enabled)
+        {
+            server.AllowLargeMessage(connectionId, enabled);
         }
     }
 }
