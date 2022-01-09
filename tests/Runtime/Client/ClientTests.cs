@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Mirror;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -61,7 +62,7 @@ namespace JamesFrowen.SimpleWeb.Tests.Client
             yield return new WaitForSeconds(1);
 
             byte[] bytes = Enumerable.Range(10, 10).Select(x => (byte)x).ToArray();
-            ArraySegment<byte> segment = new ArraySegment<byte>(bytes);
+            var segment = new ArraySegment<byte>(bytes);
             server.ServerSend(new List<int> { 1 }, 0, segment);
 
             // wait for message
@@ -79,7 +80,7 @@ namespace JamesFrowen.SimpleWeb.Tests.Client
             yield return new WaitForSeconds(1);
 
             byte[] bytes = Enumerable.Range(10, 10).Select(x => (byte)x).ToArray();
-            ArraySegment<byte> segment = new ArraySegment<byte>(bytes);
+            var segment = new ArraySegment<byte>(bytes);
             client.ClientSend(0, segment);
 
             // wait for message
@@ -100,7 +101,7 @@ namespace JamesFrowen.SimpleWeb.Tests.Client
             List<byte[]> messages = createRandomMessages();
             foreach (byte[] msg in messages)
             {
-                ArraySegment<byte> segment = new ArraySegment<byte>(msg);
+                var segment = new ArraySegment<byte>(msg);
                 server.ServerSend(new List<int> { 1 }, 0, segment);
                 yield return null;
             }
@@ -126,7 +127,7 @@ namespace JamesFrowen.SimpleWeb.Tests.Client
             List<byte[]> messages = createRandomMessages();
             foreach (byte[] msg in messages)
             {
-                ArraySegment<byte> segment = new ArraySegment<byte>(msg);
+                var segment = new ArraySegment<byte>(msg);
                 client.ClientSend(0, segment);
                 yield return null;
             }
@@ -144,7 +145,7 @@ namespace JamesFrowen.SimpleWeb.Tests.Client
 
         List<byte[]> createRandomMessages(int count = 20)
         {
-            List<byte[]> messages = new List<byte[]>();
+            var messages = new List<byte[]>();
             for (int i = 0; i < count; i++)
             {
                 int start = UnityEngine.Random.Range(0, 255);
@@ -169,7 +170,7 @@ namespace JamesFrowen.SimpleWeb.Tests.Client
 
             byte[] bytes = new byte[messageSize];
             new System.Random().NextBytes(bytes);
-            ArraySegment<byte> segment = new ArraySegment<byte>(bytes);
+            var segment = new ArraySegment<byte>(bytes);
             server.ServerSend(new List<int> { 1 }, 0, segment);
 
             // wait for message
@@ -192,7 +193,7 @@ namespace JamesFrowen.SimpleWeb.Tests.Client
 
             byte[] bytes = new byte[messageSize];
             new System.Random().NextBytes(bytes);
-            ArraySegment<byte> segment = new ArraySegment<byte>(bytes);
+            var segment = new ArraySegment<byte>(bytes);
             client.ClientSend(0, segment);
 
             // wait for message
@@ -230,7 +231,7 @@ namespace JamesFrowen.SimpleWeb.Tests.Client
             // wait for connect
             yield return new WaitForSeconds(1);
 
-            ArraySegment<byte> segment = new ArraySegment<byte>(new byte[70_000]);
+            var segment = new ArraySegment<byte>(new byte[70_000]);
 
             LogAssert.Expect(LogType.Error, "ERROR: <color=red>Message greater than max size</color>");
             client.ClientSend(Channels.DefaultReliable, segment);
@@ -243,7 +244,7 @@ namespace JamesFrowen.SimpleWeb.Tests.Client
             // wait for connect
             yield return new WaitForSeconds(1);
 
-            ArraySegment<byte> segment = new ArraySegment<byte>();
+            var segment = new ArraySegment<byte>();
 
             LogAssert.Expect(LogType.Error, "ERROR: <color=red>Message count was zero</color>");
             client.ClientSend(Channels.DefaultReliable, segment);

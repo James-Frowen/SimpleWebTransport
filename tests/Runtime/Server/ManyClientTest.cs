@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Mirror;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -21,11 +22,7 @@ namespace JamesFrowen.SimpleWeb.Tests.Server
         public IEnumerator ManyConnect(int count)
         {
             int connectIndex = 1;
-#if MIRROR_29_0_OR_NEWER
             server.OnServerConnected =
-#else
-            server.OnServerConnected.AddListener
-#endif
             ((connId) =>
             {
                 Assert.That(connId, Is.EqualTo(connectIndex), "Clients should be connected in order with the next index");
@@ -47,7 +44,7 @@ namespace JamesFrowen.SimpleWeb.Tests.Server
             RunNode.Result result = task.Result;
             result.AssetTimeout(false);
             result.AssetErrors();
-            List<string> expected = new List<string>();
+            var expected = new List<string>();
             for (int i = 0; i < count; i++)
             {
                 expected.Add($"{i}: Connection opened");
@@ -63,11 +60,7 @@ namespace JamesFrowen.SimpleWeb.Tests.Server
         public IEnumerator ManyPings(int count)
         {
             int connectIndex = 1;
-#if MIRROR_29_0_OR_NEWER
             server.OnServerConnected =
-#else
-            server.OnServerConnected.AddListener
-#endif
             ((connId) =>
             {
                 Assert.That(connId == connectIndex, "Clients should be connected in order with the next index");
@@ -130,7 +123,7 @@ namespace JamesFrowen.SimpleWeb.Tests.Server
 
         private List<byte[]>[] sortMessagesForClients(int clientCount, List<(int connId, byte[] data)> onData)
         {
-            List<byte[]>[] messageForClients = new List<byte[]>[clientCount];
+            var messageForClients = new List<byte[]>[clientCount];
             for (int i = 0; i < clientCount; i++)
             {
                 messageForClients[i] = new List<byte[]>();
@@ -153,11 +146,7 @@ namespace JamesFrowen.SimpleWeb.Tests.Server
         public IEnumerator ManySend(int count)
         {
             int connectIndex = 1;
-#if MIRROR_29_0_OR_NEWER
             server.OnServerConnected =
-#else
-            server.OnServerConnected.AddListener
-#endif
             ((connId) =>
             {
                 Assert.That(connId, Is.EqualTo(connectIndex), "Clients should be connected in order with the next index");
@@ -176,7 +165,7 @@ namespace JamesFrowen.SimpleWeb.Tests.Server
             const int seconds = 10;
             const float sendInterval = 0.1f;
             float nextSend = 0;
-            List<int> allIds = Enumerable.Range(1, count).ToList();
+            var allIds = Enumerable.Range(1, count).ToList();
             ArraySegment<byte> segment = CreateMessage();
 
             for (float i = 0; i < seconds; i += Time.deltaTime)
@@ -231,23 +220,25 @@ namespace JamesFrowen.SimpleWeb.Tests.Server
 
         static ArraySegment<byte> CreateMessage()
         {
-            NetworkWriter writer = new NetworkWriter();
-            MessagePacker.Pack(new RpcMessage
+            var writer = new NetworkWriter();
+            writer.WriteUInt16((ushort)(typeof(RpcMessage).FullName.GetStableHashCode()));
+            var msg = new RpcMessage
             {
                 componentIndex = 2,
                 functionHash = typeof(RpcMessage).GetHashCode(),// any hash is fine for this test
                 netId = 10,
                 payload = new Func<ArraySegment<byte>>(() =>
                 {
-                    NetworkWriter writer2 = new NetworkWriter();
+                    var writer2 = new NetworkWriter();
                     writer2.WriteVector3(new Vector3(1, 2, 3));
                     writer2.WriteQuaternion(Quaternion.FromToRotation(Vector3.forward, Vector3.left));
                     writer2.WriteVector3(Vector3.one);
 
                     return writer2.ToArraySegment();
                 }).Invoke()
-            }, writer);
-            ArraySegment<byte> segment = writer.ToArraySegment();
+            };
+            msg.Write(writer);
+            var segment = writer.ToArraySegment();
             return segment;
         }
     }

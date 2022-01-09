@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Mirror;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -22,7 +23,7 @@ namespace JamesFrowen.SimpleWeb.Tests.Server
             yield return server.WaitForConnection;
 
             byte[] bytes = new byte[] { 1, 2, 3, 4, 5 };
-            ArraySegment<byte> segment = new ArraySegment<byte>(bytes);
+            var segment = new ArraySegment<byte>(bytes);
 
             server.ServerSend(new List<int> { 1 }, Channels.DefaultReliable, segment);
 
@@ -60,7 +61,7 @@ namespace JamesFrowen.SimpleWeb.Tests.Server
             yield return server.WaitForConnection;
 
             byte[] bytes = Enumerable.Range(1, msgSize).Select(x => (byte)x).ToArray();
-            ArraySegment<byte> segment = new ArraySegment<byte>(bytes);
+            var segment = new ArraySegment<byte>(bytes);
 
             server.ServerSend(new List<int> { 1 }, Channels.DefaultReliable, segment);
 
@@ -88,15 +89,13 @@ namespace JamesFrowen.SimpleWeb.Tests.Server
 
             for (int i = 0; i < messageCount; i++)
             {
-                using (PooledNetworkWriter writer = NetworkWriterPool.GetWriter())
-                {
-                    writer.WriteByte((byte)i);
-                    writer.WriteInt32(100);
+                var writer = new NetworkWriter();
+                writer.WriteByte((byte)i);
+                writer.WriteInt32(100);
 
-                    ArraySegment<byte> segment = writer.ToArraySegment();
+                var segment = writer.ToArraySegment();
 
-                    server.ServerSend(new List<int> { 1 }, Channels.DefaultReliable, segment);
-                }
+                server.ServerSend(new List<int> { 1 }, Channels.DefaultReliable, segment);
             }
 
             yield return new WaitForSeconds(1);
@@ -119,7 +118,7 @@ namespace JamesFrowen.SimpleWeb.Tests.Server
         {
             yield return null;
 
-            ArraySegment<byte> segment = new ArraySegment<byte>(new byte[70_000]);
+            var segment = new ArraySegment<byte>(new byte[70_000]);
 
             LogAssert.Expect(LogType.Error, "ERROR: <color=red>Message greater than max size</color>");
             server.ServerSend(new List<int> { 1 }, Channels.DefaultReliable, segment);
@@ -130,7 +129,7 @@ namespace JamesFrowen.SimpleWeb.Tests.Server
         {
             yield return null;
 
-            ArraySegment<byte> segment = new ArraySegment<byte>();
+            var segment = new ArraySegment<byte>();
 
             LogAssert.Expect(LogType.Error, "ERROR: <color=red>Message count was zero</color>");
             server.ServerSend(new List<int> { 1 }, Channels.DefaultReliable, segment);

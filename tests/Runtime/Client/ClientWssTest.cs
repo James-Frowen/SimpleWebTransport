@@ -48,13 +48,7 @@ namespace JamesFrowen.SimpleWeb.Tests.Client
         public IEnumerator Wss_CanPingAndStayConnectedForTime()
         {
             // server gets message and sends reply
-
-#if MIRROR_29_0_OR_NEWER
             server.OnServerDataReceived =
-
-#else
-            server.OnServerDataReceived.AddListener
-#endif
             ((i, data, __) =>
             {
                 Assert.That(i, Is.EqualTo(1), "Conenction Id should be 1");
@@ -66,12 +60,7 @@ namespace JamesFrowen.SimpleWeb.Tests.Client
                 server.ServerSend(new List<int> { i }, 0, new ArraySegment<byte>(relyBytes));
             });
 
-#if MIRROR_29_0_OR_NEWER
             server.OnClientDataReceived =
-
-#else
-            server.OnClientDataReceived.AddListener
-#endif
             ((data, __) =>
             {
                 byte[] expectedBytes = new byte[4] { 1, 2, 3, 4 };

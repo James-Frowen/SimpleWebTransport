@@ -66,7 +66,7 @@ namespace JamesFrowen.SimpleWeb.Tests
         {
             get
             {
-                findDir(ref _transportDir, nameof(SimpleWebTransport));
+                findDir(ref _transportDir, nameof(SslConfigLoader));
                 return _transportDir;
             }
         }

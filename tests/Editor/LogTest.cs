@@ -12,6 +12,17 @@ namespace JamesFrowen.SimpleWeb.Tests
     [Category("SimpleWebTransport")]
     public class LogTest
     {
+        [SetUp]
+        public void SetUp()
+        {
+            LogAssert.ignoreFailingMessages = true;
+        }
+        [TearDown]
+        public void TearDown()
+        {
+            LogAssert.ignoreFailingMessages = false;
+        }
+
         static IEnumerable BufferToStringTestCases
         {
             get
@@ -70,7 +81,7 @@ namespace JamesFrowen.SimpleWeb.Tests
 
             if (asArrayBuffer)
             {
-                ArrayBuffer buffer = new ArrayBuffer(null, 10);
+                var buffer = new ArrayBuffer(null, 10);
                 buffer.CopyFrom(data, 1, 3);
                 Log.DumpBuffer(Label, buffer);
             }
@@ -90,7 +101,7 @@ namespace JamesFrowen.SimpleWeb.Tests
 
             Exception myException = new IOException(SomeMessage);
             // Exception isnt effected by log level
-            LogAssert.Expect(UnityEngine.LogType.Error, $"EXCEPTION: <color=red>{nameof(IOException)}</color> Message: {SomeMessage}");
+            LogAssert.Expect(UnityEngine.LogType.Error, $"EXCEPTION: <color=red>{nameof(IOException)}</color> Message: {SomeMessage}\n{myException.StackTrace}");
             Log.Exception(myException);
 
             LogAssert.NoUnexpectedReceived();

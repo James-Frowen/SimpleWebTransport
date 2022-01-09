@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Mirror;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -60,7 +61,7 @@ namespace JamesFrowen.SimpleWeb.Tests
 
         protected T CreateTransport<T>() where T : SimpleWebTransport
         {
-            GameObject go = new GameObject();
+            var go = new GameObject();
             toCleanup.Add(go);
 
             T transport = go.AddComponent<T>();
@@ -82,7 +83,7 @@ namespace JamesFrowen.SimpleWeb.Tests
             {
                 try
                 {
-                    TcpClient client = new TcpClient
+                    var client = new TcpClient
                     {
                         SendTimeout = 1000,
                         ReceiveTimeout = 1000

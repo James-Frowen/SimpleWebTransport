@@ -29,6 +29,11 @@ namespace JamesFrowen.SimpleWeb.Tests
             else if (ushort.MaxValue < length && (ulong)length <= ulong.MaxValue)
             {
                 buffer[1] |= 127 & 0b0111_1111;
+
+                buffer[6] = (byte)(length >> 24);
+                buffer[7] = (byte)(length >> 16);
+                buffer[8] = (byte)(length >> 8);
+                buffer[9] = (byte)(length >> 0);
             }
 
             return buffer;
@@ -165,7 +170,7 @@ namespace JamesFrowen.SimpleWeb.Tests
                 MessageProcessor.ValidateHeader(buffer, 10 * 1024, true);
             });
 
-            Assert.That(expection.Message, Is.EqualTo("Max length is longer than allowed in a single message"));
+            Assert.That(expection.Message, Is.EqualTo("Message length is greater than max length"));
         }
     }
 }

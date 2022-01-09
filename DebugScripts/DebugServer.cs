@@ -1,3 +1,5 @@
+// todo convert these debug scripts to not require mirror
+#if MIRROR
 using System;
 using UnityEngine;
 
@@ -11,19 +13,11 @@ namespace JamesFrowen.SimpleWeb
 
         private void Start()
         {
-
             transport = GetComponent<SimpleWebTransport>();
-#if MIRROR_29_0_OR_NEWER
             transport.OnServerConnected = onConnect;
             transport.OnServerDataReceived = onData;
             transport.OnServerDisconnected = onDisconnect;
             transport.OnServerError = onError;
-#else
-            transport.OnServerConnected.AddListener(onConnect);
-            transport.OnServerDataReceived.AddListener(onData);
-            transport.OnServerDisconnected.AddListener(onDisconnect);
-            transport.OnServerError.AddListener(onError);
-#endif
             transport.ServerStart();
         }
 
@@ -55,13 +49,10 @@ namespace JamesFrowen.SimpleWeb
             {
                 if (GUILayout.Button("Send Message"))
                 {
-#if MIRROR_26_0_OR_NEWER
                     transport.ServerSend(1, Channels.DefaultReliable, new ArraySegment<byte>(new byte[] { 1, 2, 4, 8 }));
-#else
-                    transport.ServerSend(new System.Collections.Generic.List<int>() { 1 }, Channels.DefaultReliable, new ArraySegment<byte>(new byte[] { 1, 2, 4, 8 }));
-#endif
                 }
             }
         }
     }
 }
+#endif
