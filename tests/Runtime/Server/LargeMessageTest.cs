@@ -104,8 +104,14 @@ namespace JamesFrowen.SimpleWeb.Tests.Server
             var random = new System.Random();
             random.NextBytes(bytes);
             server.server.SendLargeMessage(1, new ArraySegment<byte>(bytes));
+
             // wait for message
-            yield return new WaitForSeconds(2f);
+            float end = Time.time + 2;
+            while (end > Time.time)
+            {
+                client.ProcessMessageQueue();
+                yield return null;
+            }
 
             Assert.That(clientReceive.Array, Is.Not.Null);
             Assert.That(clientReceive.Count, Is.EqualTo(80_000));
@@ -141,7 +147,6 @@ namespace JamesFrowen.SimpleWeb.Tests.Server
 
             // wait for message
             yield return new WaitForSeconds(2f);
-
 
             Assert.That(server.onData, Has.Count.EqualTo(1), $"Should have 1 message");
             (int connId, byte[] data) = server.onData[0];
