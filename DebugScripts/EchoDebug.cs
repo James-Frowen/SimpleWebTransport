@@ -1,6 +1,6 @@
-using JamesFrowen.SimpleWeb;
 using System;
 using System.Threading.Tasks;
+using JamesFrowen.SimpleWeb;
 using UnityEngine;
 
 public class EchoDebug : MonoBehaviour
@@ -11,30 +11,31 @@ public class EchoDebug : MonoBehaviour
     }
 
     Token token;
+    int counter;
 
     private void OnGUI()
     {
-        if (this.token == null)
+        if (token == null)
         {
             if (GUILayout.Button("Start"))
             {
-                this.StartWebSocket();
+                StartWebSocket();
             }
         }
         else
         {
             if (GUILayout.Button("Stop"))
             {
-                this.token.stop = true;
+                token.stop = true;
             }
         }
     }
 
     void StartWebSocket()
     {
-        this.token = new Token();
+        token = new Token();
 #if UNITY_EDITOR
-        _ = this.ServerServer();
+        _ = ServerServer();
 #else
         _ = StartClient();
 #endif
@@ -65,10 +66,10 @@ public class EchoDebug : MonoBehaviour
             server.ProcessMessageQueue();
             await Task.Yield();
 
-            if (this.token.stop) break;
+            if (token.stop) break;
         }
 
-        this.token = null;
+        token = null;
     }
 
     private async Task StartClient()
@@ -90,12 +91,12 @@ public class EchoDebug : MonoBehaviour
         {
             client.ProcessMessageQueue();
             // ping
-            client.Send(new ArraySegment<byte>(new byte[1] { 0 }));
+            client.Send(new ArraySegment<byte>(new byte[1] { (byte)(counter++) }));
             await Task.Yield();
 
-            if (this.token.stop) break;
+            if (token.stop) break;
         }
 
-        this.token = null;
+        token = null;
     }
 }
