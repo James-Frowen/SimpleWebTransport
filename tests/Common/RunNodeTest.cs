@@ -6,7 +6,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using UnityEditor;
 using UnityEngine;
 
 namespace JamesFrowen.SimpleWeb.Tests
@@ -89,13 +88,13 @@ namespace JamesFrowen.SimpleWeb.Tests
             string fullPath = ResolvePath(scriptName);
 
             // task.run will run in side thread
-            Task<Result> task = Task.Run<Result>(async () =>
+            var task = Task.Run<Result>(async () =>
             {
                 try
                 {
                     string argString = args != null ? string.Join(" ", args) : "";
 
-                    using (Process process = new Process())
+                    using (var process = new Process())
                     {
                         process.StartInfo = new ProcessStartInfo
                         {
@@ -148,7 +147,7 @@ namespace JamesFrowen.SimpleWeb.Tests
             });
 
 
-            Task<(string outputString, string errorString)> readAsyncTask = Task.Run(() => ReadyAllFrom(process));
+            var readAsyncTask = Task.Run(() => ReadyAllFrom(process));
 
 
             bool timeoutReached = false;
@@ -214,11 +213,12 @@ namespace JamesFrowen.SimpleWeb.Tests
         {
             if (string.IsNullOrEmpty(_nodeDir))
             {
-                string[] guidsFound = AssetDatabase.FindAssets($"t:Script " + nameof(RunNode));
+#if UNITY_EDITOR
+                string[] guidsFound = UnityEditor.AssetDatabase.FindAssets($"t:Script " + nameof(RunNode));
                 if (guidsFound.Length == 1 && !string.IsNullOrEmpty(guidsFound[0]))
                 {
                     // tests/common/RunNode.cs
-                    string script = AssetDatabase.GUIDToAssetPath(guidsFound[0]);
+                    string script = UnityEditor.AssetDatabase.GUIDToAssetPath(guidsFound[0]);
                     // tests/common/
                     string dir = Path.GetDirectoryName(script);
                     // tests/node~/
@@ -228,6 +228,9 @@ namespace JamesFrowen.SimpleWeb.Tests
                 {
                     UnityEngine.Debug.LogError("Could not find path of RunNode");
                 }
+#else
+                throw new System.NotSupportedException("Can't find node path in player");
+#endif
             }
         }
     }
