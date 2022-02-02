@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 namespace JamesFrowen.SimpleWeb
 {
-    internal static class SimpleWebJSLib
+    public static class SimpleWebJSLib
     {
 #if UNITY_WEBGL
         /// <summary>
@@ -14,7 +14,7 @@ namespace JamesFrowen.SimpleWeb
         /// <param name="unityVersion">major unity version, eg 2019</param>
         /// <returns></returns>
         [DllImport("__Internal")]
-        internal static extern bool Init(int unityVersion);
+        public static extern bool Init(int unityVersion);
 
         [DllImport("__Internal")]
         internal static extern bool IsConnected(int index);
@@ -30,7 +30,7 @@ namespace JamesFrowen.SimpleWeb
         [DllImport("__Internal")]
         internal static extern bool Send(int index, byte[] array, int offset, int length);
 #else
-        internal static extern bool Init(int unityVersion) => throw new NotSupportedException();
+        public static extern bool Init(int unityVersion) => throw new NotSupportedException();
 
         internal static bool IsConnected(int index) => throw new NotSupportedException();
 

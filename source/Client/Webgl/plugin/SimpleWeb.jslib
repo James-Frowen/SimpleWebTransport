@@ -19,16 +19,12 @@ const SimpleWeb = {
 
     // calls to unity function that work with multiple version because unity likes to change them without documented it
     dynCall_vi: function (ptr, args) {
-        if (this.unityVersion <= 2019)
-            Runtime.dynCall('vi', ptr, args);
-        else
-            Module.dynCall_vi(ptr, args);
+        if (typeof Runtime === "undefined") Runtime = { dynCall: dynCall }
+        Runtime.dynCall('vi', ptr, args);
     },
     dynCall_viii: function (ptr, args) {
-        if (this.unityVersion <= 2019)
-            Runtime.dynCall('viii', ptr, args);
-        else
-            Module.dynCall_viii(ptr, args);
+        if (typeof Runtime === "undefined") Runtime = { dynCall: dynCall }
+        Runtime.dynCall('viii', ptr, args);
     },
     Init: function (unityVersion) {
         console.log("SimpleWeb Init with unityVersion:" + unityVersion);
@@ -86,7 +82,9 @@ function Connect(addressPtr, openCallbackPtr, closeCallBackPtr, messageCallbackP
             else {
                 console.error("message type not supported");
             }
-        } catch (e) { console.error(e); }
+        } catch (e) {
+            console.error(e);
+        }
     });
 
     webSocket.addEventListener('error', function (event) {
