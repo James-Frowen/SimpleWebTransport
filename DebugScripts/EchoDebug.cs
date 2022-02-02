@@ -52,7 +52,7 @@ public class EchoDebug : MonoBehaviour
         server.onDisconnect += (id) => Debug.Log($"Client disconnected, id:{id}");
         server.onData += (id, data) =>
         {
-            Debug.Log($"Data from Client, id:{id}, {BitConverter.ToString(data.Array, data.Offset, data.Count)})");
+            Debug.Log($"Data from Client, id:{id}, {BitConverter.ToString(data.Array, data.Offset, data.Count)}");
             // pong
             server.SendOne(id, data);
         };
@@ -84,7 +84,7 @@ public class EchoDebug : MonoBehaviour
 
         client.onConnect += () => Debug.Log($"Connected to Server");
         client.onDisconnect += () => Debug.Log($"Disconnected from Server");
-        client.onData += (data) => Debug.Log($"Data from Server, {BitConverter.ToString(data.Array, data.Offset, data.Count)})");
+        client.onData += (data) => Debug.Log($"Data from Server, {BitConverter.ToString(data.Array, data.Offset, data.Count)}");
         client.onError += (exception) => Debug.Log($"Error because of Server, Error:{exception}");
 
         while (true)
