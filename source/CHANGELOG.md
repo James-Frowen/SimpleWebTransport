@@ -1,3 +1,10 @@
+## [1.2.5](https://github.com/James-Frowen/SimpleWebTransport/compare/v1.2.4...v1.2.5) (2022-02-02)
+
+
+### Bug Fixes
+
+* updating Pointer_stringify to UTF8ToString ([2f5a74b](https://github.com/James-Frowen/SimpleWebTransport/commit/2f5a74ba10865e934be8d3b54ebfdeb14ca491f6))
+
 ## [1.2.4](https://github.com/James-Frowen/SimpleWebTransport/compare/v1.2.3...v1.2.4) (2021-12-16)
 
 
