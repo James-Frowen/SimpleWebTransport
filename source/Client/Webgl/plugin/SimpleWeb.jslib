@@ -1,7 +1,9 @@
 // this will create a global object
+// IMPORTANT: functions must be declared in this global object, or exported at bottom of file
 const SimpleWeb = {
     webSockets: [],
     next: 1,
+    unityVersion: 0,
     GetWebSocket: function (index) {
         return SimpleWeb.webSockets[index]
     },
@@ -14,6 +16,24 @@ const SimpleWeb = {
     RemoveSocket: function (index) {
         SimpleWeb.webSockets[index] = undefined;
     },
+
+    // calls to unity function that work with multiple version because unity likes to change them without documented it
+    dynCall_vi: function (ptr, args) {
+        if (this.unityVersion <= 2019)
+            Runtime.dynCall('vi', ptr, args);
+        else
+            Module.dynCall_vi(ptr, args);
+    },
+    dynCall_viii: function (ptr, args) {
+        if (this.unityVersion <= 2019)
+            Runtime.dynCall('viii', ptr, args);
+        else
+            Module.dynCall_viii(ptr, args);
+    },
+    Init: function (unityVersion) {
+        console.log("SimpleWeb Init with unityVersion:" + unityVersion);
+        SimpleWeb.unityVersion = unityVersion;
+    }
 };
 
 function IsConnected(index) {
@@ -36,37 +56,45 @@ function Connect(addressPtr, openCallbackPtr, closeCallBackPtr, messageCallbackP
 
     // Connection opened
     webSocket.addEventListener('open', function (event) {
-        console.log("Connected to " + address);
-        Runtime.dynCall('vi', openCallbackPtr, [index]);
+        try {
+            console.log("Connected to " + address);
+            SimpleWeb.dynCall_vi(openCallbackPtr, [index]);
+        } catch (e) { console.error(e); }
     });
     webSocket.addEventListener('close', function (event) {
-        console.log("Disconnected from " + address);
-        Runtime.dynCall('vi', closeCallBackPtr, [index]);
+        try {
+            console.log("Disconnected from " + address);
+            SimpleWeb.dynCall_vi(closeCallBackPtr, [index]);
+        } catch (e) { console.error(e); }
     });
 
     // Listen for messages
     webSocket.addEventListener('message', function (event) {
-        if (event.data instanceof ArrayBuffer) {
-            // TODO dont alloc each time
-            var array = new Uint8Array(event.data);
-            var arrayLength = array.length;
+        try {
+            if (event.data instanceof ArrayBuffer) {
+                // TODO dont alloc each time
+                var array = new Uint8Array(event.data);
+                var arrayLength = array.length;
 
-            var bufferPtr = _malloc(arrayLength);
-            var dataBuffer = new Uint8Array(HEAPU8.buffer, bufferPtr, arrayLength);
-            dataBuffer.set(array);
+                var bufferPtr = _malloc(arrayLength);
+                var dataBuffer = new Uint8Array(HEAPU8.buffer, bufferPtr, arrayLength);
+                dataBuffer.set(array);
 
-            Runtime.dynCall('viii', messageCallbackPtr, [index, bufferPtr, arrayLength]);
-            _free(bufferPtr);
-        }
-        else {
-            console.error("message type not supported")
-        }
+                SimpleWeb.dynCall_viii(messageCallbackPtr, [index, bufferPtr, arrayLength]);
+                _free(bufferPtr);
+            }
+            else {
+                console.error("message type not supported");
+            }
+        } catch (e) { console.error(e); }
     });
 
     webSocket.addEventListener('error', function (event) {
-        console.error('Socket Error', event);
+        try {
+            console.error('Socket Error', event);
 
-        Runtime.dynCall('vi', errorCallbackPtr, [index]);
+            SimpleWeb.dynCall_vi(errorCallbackPtr, [index]);
+        } catch (e) { console.error(e); }
     });
 
     return index;
@@ -93,13 +121,13 @@ function Send(index, arrayPtr, offset, length) {
     return false;
 }
 
-
 const SimpleWebLib = {
     $SimpleWeb: SimpleWeb,
     IsConnected,
     Connect,
     Disconnect,
-    Send
+    Send,
+    Init: SimpleWeb.Init
 };
 autoAddDeps(SimpleWebLib, '$SimpleWeb');
 mergeInto(LibraryManager.library, SimpleWebLib);

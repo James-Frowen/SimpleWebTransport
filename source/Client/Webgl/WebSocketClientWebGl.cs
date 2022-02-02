@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using AOT;
+using UnityEngine;
 
 namespace JamesFrowen.SimpleWeb
 {
@@ -29,11 +30,19 @@ namespace JamesFrowen.SimpleWeb
 
         public bool CheckJsConnected() => SimpleWebJSLib.IsConnected(index);
 
+
         public override void Connect(Uri serverAddress)
         {
+            Init();
             index = SimpleWebJSLib.Connect(serverAddress.ToString(), OpenCallback, CloseCallBack, MessageCallback, ErrorCallback);
             instances.Add(index, this);
             state = ClientState.Connecting;
+        }
+        public void Init()
+        {
+            // get major version for init
+            int version = int.Parse(Application.unityVersion.Split('.')[0]);
+            SimpleWebJSLib.Init(version);
         }
 
         public override void Disconnect()
