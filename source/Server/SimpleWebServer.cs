@@ -10,7 +10,6 @@ namespace JamesFrowen.SimpleWeb
 
         readonly WebSocketServer server;
         readonly BufferPool bufferPool;
-        readonly int maxMessageSize;
 
         public SimpleWebServer(int maxMessagesPerTick, TcpConfig tcpConfig, int maxMessageSize, int handshakeMaxSize, SslConfig sslConfig)
         {
@@ -18,7 +17,6 @@ namespace JamesFrowen.SimpleWeb
             // use max because bufferpool is used for both messages and handshake
             int max = Math.Max(maxMessageSize, handshakeMaxSize);
             bufferPool = new BufferPool(5, 20, max);
-            this.maxMessageSize = maxMessageSize;
 
             server = new WebSocketServer(tcpConfig, maxMessageSize, handshakeMaxSize, sslConfig, bufferPool);
         }
