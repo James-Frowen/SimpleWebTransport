@@ -51,7 +51,7 @@ namespace JamesFrowen.SimpleWeb
                 if (hasDisposed) { return; }
                 hasDisposed = true;
 
-                // stop threads first so they dont try to use disposed objects
+                // stop threads first so they don't try to use disposed objects
                 receiveThread.Interrupt();
                 sendThread?.Interrupt();
 

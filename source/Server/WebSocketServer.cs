@@ -54,8 +54,7 @@ namespace JamesFrowen.SimpleWeb
             listener?.Stop();
             acceptThread = null;
 
-
-            Log.Info("Server stoped, Closing all connections...");
+            Log.Info("Server stopped, Closing all connections...");
             // make copy so that foreach doesn't break if values are removed
             Connection[] connectionsCopy = connections.Values.ToArray();
             foreach (Connection conn in connectionsCopy)
@@ -171,7 +170,7 @@ namespace JamesFrowen.SimpleWeb
             catch (Exception e) { Log.Exception(e); }
             finally
             {
-                // close here incase connect fails
+                // close here in case connect fails
                 conn.Dispose();
             }
         }

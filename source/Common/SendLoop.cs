@@ -49,7 +49,7 @@ namespace JamesFrowen.SimpleWeb
                 TcpClient client = conn.client;
                 Stream stream = conn.stream;
 
-                // null check incase disconnect while send thread is starting
+                // null check in case disconnect while send thread is starting
                 if (client == null)
                     return;
 
@@ -91,7 +91,7 @@ namespace JamesFrowen.SimpleWeb
                         }
 
                         // after no message in queue, send remaining messages
-                        // dont need to check offset > 0 because last message in queue will always be sent here
+                        // don't need to check offset > 0 because last message in queue will always be sent here
 
                         stream.Write(writeBuffer, 0, offset);
                     }
@@ -100,7 +100,12 @@ namespace JamesFrowen.SimpleWeb
                         while (conn.sendQueue.TryDequeue(out ArrayBuffer msg))
                         {
                             // check if connected before sending message
-                            if (!client.Connected) { Log.Info($"SendLoop {conn} not connected"); msg.Release(); return; }
+                            if (!client.Connected) 
+                            { 
+                                Log.Info($"SendLoop {conn} not connected"); 
+                                msg.Release(); 
+                                return; 
+                            }
 
                             int length = SendMessage(writeBuffer, 0, msg, setMask, maskHelper);
                             stream.Write(writeBuffer, 0, length);

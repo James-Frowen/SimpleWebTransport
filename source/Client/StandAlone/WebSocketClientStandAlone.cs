@@ -26,7 +26,7 @@ namespace JamesFrowen.SimpleWeb
         {
             state = ClientState.Connecting;
 
-            // create connection here before thread so that send queue exist for MiragePeer to send to
+            // create connection here before thread so that send queue exist before connected
             var client = new TcpClient();
             tcpConfig.ApplyTo(client);
 
@@ -44,11 +44,6 @@ namespace JamesFrowen.SimpleWeb
             {
                 // connection created above
                 TcpClient client = conn.client;
-                //TcpClient client = new TcpClient();
-                //tcpConfig.ApplyTo(client);
-
-                //// create connection object here so dispose correctly disconnects on failed connect
-                //conn = new Connection(client, AfterConnectionDisposed);
                 conn.receiveThread = Thread.CurrentThread;
 
                 try
@@ -110,7 +105,7 @@ namespace JamesFrowen.SimpleWeb
             catch (Exception e) { Log.Exception(e); }
             finally
             {
-                // close here incase connect fails
+                // close here in case connect fails
                 conn?.Dispose();
             }
         }

@@ -37,7 +37,7 @@ namespace JamesFrowen.SimpleWeb
 
             if (string.IsNullOrEmpty(cert.path))
             {
-                throw new InvalidDataException("Cert Json didnt not contain \"path\"");
+                throw new InvalidDataException("Cert Json didn't not contain \"path\"");
             }
             if (string.IsNullOrEmpty(cert.password))
             {
