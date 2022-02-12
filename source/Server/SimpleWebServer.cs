@@ -52,6 +52,7 @@ namespace JamesFrowen.SimpleWeb
                 server.Send(id, buffer);
             }
         }
+
         public void SendOne(int connectionId, ArraySegment<byte> source)
         {
             ArrayBuffer buffer = bufferPool.Take(source.Count);

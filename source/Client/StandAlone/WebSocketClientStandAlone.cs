@@ -11,7 +11,6 @@ namespace JamesFrowen.SimpleWeb
         readonly TcpConfig tcpConfig;
         Connection conn;
 
-
         internal WebSocketClientStandAlone(int maxMessageSize, int maxMessagesPerTick, TcpConfig tcpConfig) : base(maxMessageSize, maxMessagesPerTick)
         {
 #if UNITY_WEBGL && !UNITY_EDITOR

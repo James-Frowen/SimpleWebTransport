@@ -32,7 +32,6 @@ namespace JamesFrowen.SimpleWeb
             this.onDispose = onDispose;
         }
 
-
         /// <summary>
         /// disposes client and stops threads
         /// </summary>

@@ -81,11 +81,11 @@ namespace JamesFrowen.SimpleWeb
                         // TODO keep track of connections before they are in connections dictionary
                         //      this might not be a problem as HandshakeAndReceiveLoop checks for stop
                         //      and returns/disposes before sending message to queue
-                        Connection conn = new Connection(client, AfterConnectionDisposed);
+                        var conn = new Connection(client, AfterConnectionDisposed);
                         Log.Info($"A client connected {conn}");
 
                         // handshake needs its own thread as it needs to wait for message from client
-                        Thread receiveThread = new Thread(() => HandshakeAndReceiveLoop(conn));
+                        var receiveThread = new Thread(() => HandshakeAndReceiveLoop(conn));
 
                         conn.receiveThread = receiveThread;
 
@@ -142,9 +142,9 @@ namespace JamesFrowen.SimpleWeb
 
                 receiveQueue.Enqueue(new Message(conn.connId, EventType.Connected));
 
-                Thread sendThread = new Thread(() =>
+                var sendThread = new Thread(() =>
                 {
-                    SendLoop.Config sendConfig = new SendLoop.Config(
+                    var sendConfig = new SendLoop.Config(
                         conn,
                         bufferSize: Constants.HeaderSize + maxMessageSize,
                         setMask: false);
@@ -157,7 +157,7 @@ namespace JamesFrowen.SimpleWeb
                 sendThread.Name = $"SendLoop {conn.connId}";
                 sendThread.Start();
 
-                ReceiveLoop.Config receiveConfig = new ReceiveLoop.Config(
+                var receiveConfig = new ReceiveLoop.Config(
                     conn,
                     maxMessageSize,
                     expectMask: true,
@@ -222,7 +222,7 @@ namespace JamesFrowen.SimpleWeb
             }
             else
             {
-                Log.Error($"Cant close connection to {id} because connection was not found in dictionary");
+                Log.Error($"Cant get address of connection {id} because connection was not found in dictionary");
                 return null;
             }
         }

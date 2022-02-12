@@ -33,7 +33,7 @@ namespace JamesFrowen.SimpleWeb.Tests.Server
 
             Assert.That(connId, Is.EqualTo(1), "Connd id should be 1");
 
-            Assert.That(data.Count, Is.EqualTo(messageSize), "Shoudl have 10 bytes");
+            Assert.That(data.Length, Is.EqualTo(messageSize), "Shoudl have 10 bytes");
             for (int i = 0; i < messageSize; i++)
             {
                 // js sends i+10 for each byte
@@ -62,7 +62,7 @@ namespace JamesFrowen.SimpleWeb.Tests.Server
 
                 Assert.That(connId, Is.EqualTo(1), "Connd id should be 1");
 
-                Assert.That(data.Count, Is.EqualTo(messageSize), "Should have 10 bytes");
+                Assert.That(data.Length, Is.EqualTo(messageSize), "Should have 10 bytes");
 
                 Assert.That(data[0], Is.EqualTo(i), "Data should match: first bytes should be send index");
 
@@ -93,7 +93,7 @@ namespace JamesFrowen.SimpleWeb.Tests.Server
 
             Assert.That(connId, Is.EqualTo(1), "Connd id should be 1");
 
-            Assert.That(data.Count, Is.EqualTo(messageSize), "Should have 16384 bytes");
+            Assert.That(data.Length, Is.EqualTo(messageSize), "Should have 16384 bytes");
             for (int i = 0; i < messageSize; i++)
             {
                 // js sends i%255 for each byte
@@ -119,7 +119,7 @@ namespace JamesFrowen.SimpleWeb.Tests.Server
 
             Assert.That(connId, Is.EqualTo(1), "Connd id should be 1");
 
-            Assert.That(data.Count, Is.EqualTo(messageSize), "Should have 16384 bytes");
+            Assert.That(data.Length, Is.EqualTo(messageSize), "Should have 16384 bytes");
             for (int i = 0; i < messageSize; i++)
             {
                 // js sends i%255 for each byte
@@ -163,7 +163,7 @@ namespace JamesFrowen.SimpleWeb.Tests.Server
 
                 Assert.That(connId, Is.EqualTo(1), "Connd id should be 1");
 
-                Assert.That(data.Count, Is.EqualTo(messageSize), "Should have 10 bytes");
+                Assert.That(data.Length, Is.EqualTo(messageSize), "Should have 10 bytes");
 
                 Assert.That(data[0], Is.EqualTo(i), "Data should match: first bytes should be send index");
 

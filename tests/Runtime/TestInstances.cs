@@ -154,8 +154,8 @@ namespace JamesFrowen.SimpleWeb
             Log.level = _logLevels;
         }
 
-        SimpleWebClient client;
-        SimpleWebServer server;
+        public SimpleWebClient client;
+        public SimpleWebServer server;
 
         TcpConfig TcpConfig => new TcpConfig(noDelay, sendTimeout, receiveTimeout);
 
