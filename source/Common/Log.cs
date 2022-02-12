@@ -33,7 +33,7 @@ namespace JamesFrowen.SimpleWeb
             if (level < Levels.verbose)
                 return;
 
-            logger.Log(LogType.Log, $"VERBOSE: <color=blue>{label}: {BufferToString(buffer, offset, length)}</color>");
+            logger.Log(LogType.Log, $"VERBOSE: <color=cyan>{label}: {BufferToString(buffer, offset, length)}</color>");
         }
 
         [Conditional(SIMPLEWEB_LOG_ENABLED)]
@@ -42,7 +42,7 @@ namespace JamesFrowen.SimpleWeb
             if (level < Levels.verbose)
                 return;
 
-            logger.Log(LogType.Log, $"VERBOSE: <color=blue>{label}: {BufferToString(arrayBuffer.array, 0, arrayBuffer.count)}</color>");
+            logger.Log(LogType.Log, $"VERBOSE: <color=cyan>{label}: {BufferToString(arrayBuffer.array, 0, arrayBuffer.count)}</color>");
         }
 
         [Conditional(SIMPLEWEB_LOG_ENABLED)]
@@ -52,7 +52,7 @@ namespace JamesFrowen.SimpleWeb
                 return;
 
             if (showColor)
-                logger.Log(LogType.Log, $"VERBOSE: <color=blue>{msg}</color>");
+                logger.Log(LogType.Log, $"VERBOSE: <color=cyan>{msg}</color>");
             else
                 logger.Log(LogType.Log, $"VERBOSE: {msg}");
         }
@@ -64,7 +64,7 @@ namespace JamesFrowen.SimpleWeb
                 return;
 
             if (showColor)
-                logger.Log(LogType.Log, $"INFO: <color=blue>{msg}</color>");
+                logger.Log(LogType.Log, $"INFO: <color=cyan>{msg}</color>");
             else
                 logger.Log(LogType.Log, $"INFO: {msg}");
         }
@@ -80,7 +80,7 @@ namespace JamesFrowen.SimpleWeb
             if (level < Levels.info)
                 return;
 
-            logger.Log(LogType.Log, $"INFO_EXCEPTION: <color=blue>{e.GetType().Name}</color> Message: {e.Message}\n{e.StackTrace}\n\n");
+            logger.Log(LogType.Log, $"INFO_EXCEPTION: <color=cyan>{e.GetType().Name}</color> Message: {e.Message}\n{e.StackTrace}\n\n");
         }
 
         [Conditional(SIMPLEWEB_LOG_ENABLED), Conditional(DEBUG)]
