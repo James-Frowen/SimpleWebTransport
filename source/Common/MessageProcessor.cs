@@ -9,12 +9,14 @@ namespace JamesFrowen.SimpleWeb
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         static byte FirstLengthByte(byte[] buffer) => (byte)(buffer[1] & 0b0111_1111);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool NeedToReadShortLength(byte[] buffer)
         {
             byte lenByte = FirstLengthByte(buffer);
 
             return lenByte == Constants.UshortPayloadLength;
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool NeedToReadLongLength(byte[] buffer)
         {
             byte lenByte = FirstLengthByte(buffer);
@@ -22,11 +24,13 @@ namespace JamesFrowen.SimpleWeb
             return lenByte == Constants.UlongPayloadLength;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int GetOpcode(byte[] buffer)
         {
             return buffer[0] & 0b0000_1111;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int GetPayloadLength(byte[] buffer)
         {
             byte lenByte = FirstLengthByte(buffer);
@@ -61,17 +65,20 @@ namespace JamesFrowen.SimpleWeb
             ThrowIfMsgLengthTooLong(msglen, maxLength);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void ToggleMask(byte[] src, int sourceOffset, int messageLength, byte[] maskBuffer, int maskOffset)
         {
             ToggleMask(src, sourceOffset, src, sourceOffset, messageLength, maskBuffer, maskOffset);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void ToggleMask(byte[] src, int sourceOffset, ArrayBuffer dst, int messageLength, byte[] maskBuffer, int maskOffset)
         {
             ToggleMask(src, sourceOffset, dst.array, 0, messageLength, maskBuffer, maskOffset);
             dst.count = messageLength;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void ToggleMask(byte[] src, int srcOffset, byte[] dst, int dstOffset, int messageLength, byte[] maskBuffer, int maskOffset)
         {
             for (int i = 0; i < messageLength; i++)
@@ -116,15 +123,6 @@ namespace JamesFrowen.SimpleWeb
             {
                 // header is 2 bytes long
                 return lenByte;
-            }
-        }
-
-        /// <exception cref="InvalidDataException"></exception>
-        static void ThrowIfNotFinished(bool finished)
-        {
-            if (!finished)
-            {
-                throw new InvalidDataException("Full message should have been sent, if the full message wasn't sent it wasn't sent from this trasnport");
             }
         }
 
