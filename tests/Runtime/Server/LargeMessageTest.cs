@@ -138,11 +138,11 @@ namespace JamesFrowen.SimpleWeb.Tests.Server
 
         [UnityTest]
         [Timeout(5000)]
-        public IEnumerator ReceiveLargeArrayFromJSClient()
+        [TestCase(80_000)]
+        [TestCase(800_000)]
+        public IEnumerator ReceiveLargeArrayFromJSClient(int messageSize)
         {
-            const int messageSize = 80_000;
-
-            server.maxMessageSize = 100_000;
+            server.maxMessageSize = messageSize * 2;
             server.ServerStart();
 
             // dont worry about result, run will timeout by itself
