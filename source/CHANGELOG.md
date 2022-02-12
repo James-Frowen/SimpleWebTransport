@@ -1,3 +1,10 @@
+## [1.2.7](https://github.com/James-Frowen/SimpleWebTransport/compare/v1.2.6...v1.2.7) (2022-02-12)
+
+
+### Bug Fixes
+
+* fixing ObjectDisposedException in toString ([426de52](https://github.com/James-Frowen/SimpleWebTransport/commit/426de52ee4e98ac6212713b2b2272e3affb8fc99))
+
 ## [1.2.6](https://github.com/James-Frowen/SimpleWebTransport/compare/v1.2.5...v1.2.6) (2022-02-02)
 
 
