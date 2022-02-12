@@ -65,11 +65,6 @@ namespace JamesFrowen.SimpleWeb
             }
         }
 
-        public override void AllowLargeMessage(bool enabled)
-        {
-            _allowLargeMessages = enabled;
-        }
-
         void onOpen()
         {
             receiveQueue.Enqueue(new Message(EventType.Connected));

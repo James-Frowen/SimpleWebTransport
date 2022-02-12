@@ -63,16 +63,6 @@ namespace JamesFrowen.SimpleWeb
             server.Send(connectionId, buffer);
         }
 
-        /// <summary>
-        /// Sends a large message on main thread, this is blocking till message is sent
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="segment"></param>
-        public void SendLargeMessage(int connectionId, ArraySegment<byte> segment)
-        {
-            server.SendLargeMessage(connectionId, segment);
-        }
-
         public bool KickClient(int connectionId)
         {
             return server.CloseConnection(connectionId);
@@ -126,17 +116,6 @@ namespace JamesFrowen.SimpleWeb
                         break;
                 }
             }
-        }
-
-        /// <summary>
-        /// Allows large messages from connection
-        /// <para>WARNING: large message will cause buffers to be allocated which may cause negative performance</para>
-        /// </summary>
-        /// <param name="connectionId"></param>
-        /// <param name="enabled"></param>
-        public void AllowLargeMessage(int connectionId, bool enabled)
-        {
-            server.AllowLargeMessage(connectionId, enabled);
         }
     }
 }

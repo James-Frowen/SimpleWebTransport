@@ -33,7 +33,7 @@ namespace JamesFrowen.SimpleWeb
             return GetMessageLength(buffer, 0, lenByte);
         }
 
-        public static void ValidateHeader(byte[] buffer, int maxLength, bool expectMask, bool allowLargeMessages = false)
+        public static void ValidateHeader(byte[] buffer, int maxLength, bool expectMask)
         {
             bool finished = (buffer[0] & 0b1000_0000) != 0; // has full message been sent
             bool hasMask = (buffer[1] & 0b1000_0000) != 0; // true from clients, false from server, "All messages from the client to the server have this bit set"
@@ -48,7 +48,7 @@ namespace JamesFrowen.SimpleWeb
             int msglen = GetMessageLength(buffer, 0, lenByte);
 
             ThrowIfLengthZero(msglen);
-            ThrowIfMsgLengthTooLong(msglen, maxLength, allowLargeMessages);
+            ThrowIfMsgLengthTooLong(msglen, maxLength);
         }
 
         public static void ToggleMask(byte[] src, int sourceOffset, int messageLength, byte[] maskBuffer, int maskOffset)
@@ -151,10 +151,8 @@ namespace JamesFrowen.SimpleWeb
         /// need to check this so that data from previous buffer isnt used
         /// </summary>
         /// <exception cref="InvalidDataException"></exception>
-        static void ThrowIfMsgLengthTooLong(int msglen, int maxLength, bool allowLargeMessages)
+        static void ThrowIfMsgLengthTooLong(int msglen, int maxLength)
         {
-            if (allowLargeMessages)
-                return;
             if (msglen > maxLength)
             {
                 throw new InvalidDataException("Message length is greater than max length");

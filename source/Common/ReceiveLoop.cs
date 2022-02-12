@@ -121,7 +121,7 @@ namespace JamesFrowen.SimpleWeb
                 offset = ReadHelper.Read(stream, buffer, offset, Constants.LongLength);
             }
 
-            MessageProcessor.ValidateHeader(buffer, maxMessageSize, expectMask, conn.AllowLargeMessage);
+            MessageProcessor.ValidateHeader(buffer, maxMessageSize, expectMask);
 
             if (expectMask)
             {

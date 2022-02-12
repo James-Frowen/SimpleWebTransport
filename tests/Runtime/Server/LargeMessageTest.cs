@@ -11,12 +11,15 @@ namespace JamesFrowen.SimpleWeb.Tests.Server
     [Category("SimpleWebTransport")]
     public class LargeMessageTest : SimpleWebTestBase
     {
-        protected override bool StartServer => true;
+        protected override bool StartServer => false;
 
         [UnityTest]
         public IEnumerator SendLarge()
         {
             Task<RunNode.Result> task = RunNode.RunAsync("ReceiveMessages.js");
+
+            server.maxMessageSize = 100_000;
+            server.ServerStart();
 
             yield return server.WaitForConnection;
 
@@ -26,8 +29,7 @@ namespace JamesFrowen.SimpleWeb.Tests.Server
 
             var segment = new ArraySegment<byte>(bytes);
 
-            server.server.AllowLargeMessage(1, true);
-            server.server.SendLargeMessage(1, segment);
+            server.server.SendOne(1, segment);
 
             yield return new WaitForSeconds(0.5f);
             server.ServerDisconnect(1);
@@ -51,42 +53,14 @@ namespace JamesFrowen.SimpleWeb.Tests.Server
         }
 
         [UnityTest]
-        public IEnumerator SendLargeError()
-        {
-            Task<RunNode.Result> task = RunNode.RunAsync("ReceiveMessages.js");
-
-            yield return server.WaitForConnection;
-
-            byte[] bytes = new byte[80_000];
-            var random = new System.Random();
-            random.NextBytes(bytes);
-
-            var segment = new ArraySegment<byte>(bytes);
-
-            var expected = new InvalidOperationException("Large message is disabled set AllowLargeMessage to true first");
-            InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() =>
-            {
-                server.server.SendLargeMessage(1, segment);
-            });
-            Assert.That(exception.Message, Is.EqualTo(expected.Message));
-
-            server.ServerDisconnect(1);
-            yield return new WaitUntil(() => task.IsCompleted);
-
-            RunNode.Result result = task.Result;
-            result.AssetTimeout(false);
-            // no messages
-            result.AssetOutput();
-            result.AssetErrors();
-        }
-
-
-        [UnityTest]
         public IEnumerator ReceiveLargeArrayFromServer()
         {
+            server.maxMessageSize = 100_000;
+            server.ServerStart();
+
             // IMPORTANT: cant use javascript here because it will fragment the message instead of using longer header
             var tcpConfig = new TcpConfig(false, timeout, timeout);
-            var client = SimpleWebClient.Create(5000, server.maxMessageSize, tcpConfig);
+            var client = SimpleWebClient.Create(server.maxMessageSize, 5000, tcpConfig);
             client.Connect(new UriBuilder
             {
                 Scheme = "ws",
@@ -95,15 +69,13 @@ namespace JamesFrowen.SimpleWeb.Tests.Server
             }.Uri);
 
             yield return server.WaitForConnection;
-            server.server.AllowLargeMessage(1, true);
-            client.AllowLargeMessage(true);
             ArraySegment<byte> clientReceive;
             client.onData += (s) => clientReceive = s;
 
             byte[] bytes = new byte[80_000];
             var random = new System.Random();
             random.NextBytes(bytes);
-            server.server.SendLargeMessage(1, new ArraySegment<byte>(bytes));
+            server.server.SendOne(1, new ArraySegment<byte>(bytes));
 
             // wait for message
             float end = Time.time + 2;
@@ -127,23 +99,23 @@ namespace JamesFrowen.SimpleWeb.Tests.Server
             }
         }
 
-
         [UnityTest]
         public IEnumerator ReceiveLargeArrayFromClient()
         {
+            server.maxMessageSize = 100_000;
+            server.ServerStart();
+
             // IMPORTANT: cant use javascript here because it will fragment the message instead of using longer header
             var tcpConfig = new TcpConfig(false, timeout, timeout);
-            var client = SimpleWebClient.Create(5000, server.maxMessageSize, tcpConfig) as WebSocketClientStandAlone;
+            var client = SimpleWebClient.Create(server.maxMessageSize, 5000, tcpConfig);
             client.Connect(new Uri("ws://localhost:7776"));
 
             yield return server.WaitForConnection;
-            server.server.AllowLargeMessage(1, true);
-            client.AllowLargeMessage(true);
 
             byte[] bytes = new byte[80_000];
             var random = new System.Random();
             random.NextBytes(bytes);
-            client.SendLargeMessage(new ArraySegment<byte>(bytes));
+            client.Send(new ArraySegment<byte>(bytes));
 
             // wait for message
             yield return new WaitForSeconds(2f);
