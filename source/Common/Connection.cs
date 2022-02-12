@@ -83,8 +83,15 @@ namespace JamesFrowen.SimpleWeb
 
         public override string ToString()
         {
-            System.Net.EndPoint endpoint = client?.Client?.RemoteEndPoint;
-            return $"[Conn:{connId}, endPoint:{endpoint}]";
+            if (hasDisposed)
+            {
+                return $"[Conn:{connId}, Disposed]";
+            }
+            else
+            {
+                System.Net.EndPoint endpoint = client?.Client?.RemoteEndPoint;
+                return $"[Conn:{connId}, endPoint:{endpoint}]";
+            }
         }
     }
 }
