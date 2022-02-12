@@ -33,17 +33,27 @@ namespace JamesFrowen.SimpleWeb
             return GetMessageLength(buffer, 0, lenByte);
         }
 
-        public static void ValidateHeader(byte[] buffer, int maxLength, bool expectMask)
+        /// <summary>
+        /// Has full message been sent
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool Finished(byte[] buffer)
         {
-            bool finished = (buffer[0] & 0b1000_0000) != 0; // has full message been sent
+            return (buffer[0] & 0b1000_0000) != 0;
+        }
+
+        public static void ValidateHeader(byte[] buffer, int maxLength, bool expectMask, bool opCodeContinuation = false)
+        {
+            bool finished = Finished(buffer);
             bool hasMask = (buffer[1] & 0b1000_0000) != 0; // true from clients, false from server, "All messages from the client to the server have this bit set"
 
             int opcode = buffer[0] & 0b0000_1111; // expecting 1 - text message
             byte lenByte = FirstLengthByte(buffer);
 
-            ThrowIfNotFinished(finished);
             ThrowIfMaskNotExpected(hasMask, expectMask);
-            ThrowIfBadOpCode(opcode);
+            ThrowIfBadOpCode(opcode, finished, opCodeContinuation);
 
             int msglen = GetMessageLength(buffer, 0, lenByte);
 
@@ -128,12 +138,36 @@ namespace JamesFrowen.SimpleWeb
         }
 
         /// <exception cref="InvalidDataException"></exception>
-        static void ThrowIfBadOpCode(int opcode)
+        static void ThrowIfBadOpCode(int opcode, bool finished, bool opCodeContinuation)
         {
+            // 0 = continuation
             // 2 = binary
             // 8 = close
-            if (opcode != 2 && opcode != 8)
+
+            // do we expect Continuation?
+            if (opCodeContinuation)
             {
+                // good it was Continuation
+                if (opcode == 0)
+                    return;
+
+                // bad, wasn't Continuation
+                throw new InvalidDataException("Expected opcode to be Continuation");
+            }
+            else if (!finished)
+            {
+                // fragmented message, should be binary
+                if (opcode == 2)
+                    return;
+
+                throw new InvalidDataException("Expected opcode to be binary");
+            }
+            else
+            {
+                // normal message, should be binary or close
+                if (opcode == 2 || opcode == 8)
+                    return;
+
                 throw new InvalidDataException("Expected opcode to be binary or close");
             }
         }
@@ -151,7 +185,7 @@ namespace JamesFrowen.SimpleWeb
         /// need to check this so that data from previous buffer isnt used
         /// </summary>
         /// <exception cref="InvalidDataException"></exception>
-        static void ThrowIfMsgLengthTooLong(int msglen, int maxLength)
+        public static void ThrowIfMsgLengthTooLong(int msglen, int maxLength)
         {
             if (msglen > maxLength)
             {

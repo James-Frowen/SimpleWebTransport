@@ -146,12 +146,12 @@ namespace JamesFrowen.SimpleWeb.Tests.Server
             server.ServerStart();
 
             // dont worry about result, run will timeout by itself
-            Task<RunNode.Result> task = RunNode.RunAsync("SendLargeLargeMessagesArgs.js", arg0: messageSize.ToString());
+            _ = RunNode.RunAsync("SendLargeLargeMessagesArgs.js", arg0: messageSize.ToString());
 
             yield return server.WaitForConnection;
 
             // wait for message
-            yield return new WaitForSeconds(0.5f);
+            yield return new WaitForSeconds(2f);
 
             Assert.That(server.onData, Has.Count.EqualTo(1), "Should have 1 message");
 
