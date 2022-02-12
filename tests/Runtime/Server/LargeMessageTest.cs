@@ -14,12 +14,13 @@ namespace JamesFrowen.SimpleWeb.Tests.Server
         protected override bool StartServer => false;
 
         [UnityTest]
+        [Timeout(5000)]
         public IEnumerator SendLarge()
         {
-            Task<RunNode.Result> task = RunNode.RunAsync("ReceiveMessages.js");
-
             server.maxMessageSize = 100_000;
             server.ServerStart();
+
+            Task<RunNode.Result> task = RunNode.RunAsync("ReceiveMessages.js");
 
             yield return server.WaitForConnection;
 
@@ -53,6 +54,7 @@ namespace JamesFrowen.SimpleWeb.Tests.Server
         }
 
         [UnityTest]
+        [Timeout(5000)]
         public IEnumerator ReceiveLargeArrayFromServer()
         {
             server.maxMessageSize = 100_000;
@@ -100,12 +102,12 @@ namespace JamesFrowen.SimpleWeb.Tests.Server
         }
 
         [UnityTest]
-        public IEnumerator ReceiveLargeArrayFromClient()
+        [Timeout(5000)]
+        public IEnumerator ReceiveLargeArrayFromStandAloneClient()
         {
             server.maxMessageSize = 100_000;
             server.ServerStart();
 
-            // IMPORTANT: cant use javascript here because it will fragment the message instead of using longer header
             var tcpConfig = new TcpConfig(false, timeout, timeout);
             var client = SimpleWebClient.Create(server.maxMessageSize, 5000, tcpConfig);
             client.Connect(new Uri("ws://localhost:7776"));
@@ -128,6 +130,40 @@ namespace JamesFrowen.SimpleWeb.Tests.Server
             for (int i = 0; i < 80_000; i++)
             {
                 if (bytes[i] != data[i])
+                {
+                    Assert.Fail("data not the same");
+                }
+            }
+        }
+
+        [UnityTest]
+        [Timeout(5000)]
+        public IEnumerator ReceiveLargeArrayFromJSClient()
+        {
+            const int messageSize = 80_000;
+
+            server.maxMessageSize = 100_000;
+            server.ServerStart();
+
+            // dont worry about result, run will timeout by itself
+            Task<RunNode.Result> task = RunNode.RunAsync("SendLargeLargeMessagesArgs.js", arg0: messageSize.ToString());
+
+            yield return server.WaitForConnection;
+
+            // wait for message
+            yield return new WaitForSeconds(0.5f);
+
+            Assert.That(server.onData, Has.Count.EqualTo(1), "Should have 1 message");
+
+            (int connId, byte[] data) = server.onData[0];
+
+            Assert.That(connId, Is.EqualTo(1), "Connd id should be 1");
+
+            Assert.That(data.Length, Is.EqualTo(messageSize), $"Should have {messageSize} bytes");
+            for (int i = 0; i < messageSize; i++)
+            {
+                // js sends i%255 for each byte
+                if (data[i] != (byte)(i % 255))
                 {
                     Assert.Fail("data not the same");
                 }
