@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/James-Frowen/SimpleWebTransport/compare/v1.2.7...v1.3.0) (2022-02-12)
+
+
+### Features
+
+* Allowing max message size to be increase to int32.max ([#2](https://github.com/James-Frowen/SimpleWebTransport/issues/2)) ([4cc60fd](https://github.com/James-Frowen/SimpleWebTransport/commit/4cc60fd67f3c65d90ced0e6f9f97d15d0368076d))
+
 ## [1.2.7](https://github.com/James-Frowen/SimpleWebTransport/compare/v1.2.6...v1.2.7) (2022-02-12)
 
 
