@@ -31,7 +31,7 @@ namespace JamesFrowen.SimpleWeb
 
         Stream CreateStream(NetworkStream stream, Uri uri)
         {
-            SslStream sslStream = new SslStream(stream, true, ValidateServerCertificate);
+            var sslStream = new SslStream(stream, true, ValidateServerCertificate);
             sslStream.AuthenticateAsClient(uri.Host);
             return sslStream;
         }

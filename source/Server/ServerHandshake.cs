@@ -25,7 +25,7 @@ namespace JamesFrowen.SimpleWeb
         public ServerHandshake(BufferPool bufferPool, int handshakeMaxSize)
         {
             this.bufferPool = bufferPool;
-            this.maxHttpHeaderSize = handshakeMaxSize;
+            maxHttpHeaderSize = handshakeMaxSize;
         }
 
         ~ServerHandshake()

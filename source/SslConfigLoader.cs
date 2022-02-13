@@ -35,10 +35,11 @@ namespace JamesFrowen.SimpleWeb
             string json = File.ReadAllText(certJsonPath);
             Cert cert = JsonUtility.FromJson<Cert>(json);
 
-            if (string.IsNullOrEmpty(cert.path))
+            if (string.IsNullOrWhiteSpace(cert.path))
             {
                 throw new InvalidDataException("Cert Json didn't not contain \"path\"");
             }
+            // dont use IsNullOrWhiteSpace here because whitespace could be a valid password for a cert
             if (string.IsNullOrEmpty(cert.password))
             {
                 // password can be empty

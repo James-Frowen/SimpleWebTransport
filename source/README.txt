@@ -10,7 +10,7 @@ Documentation:
   https://github.com/James-Frowen/SimpleWebTransport/blob/master/README.md
 
 Support:
-  Discord: https://discord.gg/yp6W73Xs68
+  Discord: https://discord.gg/BZTQcftBkE
   Bug Reports: https://github.com/James-Frowen/SimpleWebTransport/issues
 
 

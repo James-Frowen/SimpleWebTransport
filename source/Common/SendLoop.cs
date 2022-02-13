@@ -100,11 +100,11 @@ namespace JamesFrowen.SimpleWeb
                         while (conn.sendQueue.TryDequeue(out ArrayBuffer msg))
                         {
                             // check if connected before sending message
-                            if (!client.Connected) 
-                            { 
-                                Log.Info($"SendLoop {conn} not connected"); 
-                                msg.Release(); 
-                                return; 
+                            if (!client.Connected)
+                            {
+                                Log.Info($"SendLoop {conn} not connected");
+                                msg.Release();
+                                return;
                             }
 
                             int length = SendMessage(writeBuffer, 0, msg, setMask, maskHelper);

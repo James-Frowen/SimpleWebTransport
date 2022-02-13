@@ -59,7 +59,7 @@ namespace JamesFrowen.SimpleWeb
 
         Stream CreateStream(NetworkStream stream)
         {
-            SslStream sslStream = new SslStream(stream, true, acceptClient);
+            var sslStream = new SslStream(stream, true, acceptClient);
             sslStream.AuthenticateAsServer(certificate, false, config.sslProtocols, false);
 
             return sslStream;

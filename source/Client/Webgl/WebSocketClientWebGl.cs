@@ -15,8 +15,11 @@ namespace JamesFrowen.SimpleWeb
         int index;
 
         /// <summary>
-        /// Message sent by high level while still connecting, they will be send after onOpen is called
-        /// <para>this is a workaround for mirage where send it called right after Connect</para>
+        /// Queue for messages sent by high level while still connecting, they will be sent after onOpen is called.
+        /// <para>
+        ///     This is a workaround for anything that calls Send immediately after Connect.
+        ///     Without this the JS websocket will give errors.
+        /// </para>
         /// </summary>
         Queue<byte[]> ConnectingSendQueue;
 

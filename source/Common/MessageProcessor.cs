@@ -180,7 +180,7 @@ namespace JamesFrowen.SimpleWeb
         }
 
         /// <summary>
-        /// need to check this so that data from previous buffer isnt used
+        /// need to check this so that data from previous buffer isn't used
         /// </summary>
         /// <exception cref="InvalidDataException"></exception>
         public static void ThrowIfMsgLengthTooLong(int msglen, int maxLength)

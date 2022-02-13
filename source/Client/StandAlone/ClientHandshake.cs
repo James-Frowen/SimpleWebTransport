@@ -18,7 +18,7 @@ namespace JamesFrowen.SimpleWeb
                 Stream stream = conn.stream;
 
                 byte[] keyBuffer = new byte[16];
-                using (RNGCryptoServiceProvider rng = new RNGCryptoServiceProvider())
+                using (var rng = new RNGCryptoServiceProvider())
                 {
                     rng.GetBytes(keyBuffer);
                 }

@@ -228,7 +228,7 @@ namespace JamesFrowen.SimpleWeb
             // 3056      e^ (3 + 1.675 * 3)
             // 16,317    e^ (3 + 1.675 * 4)
 
-            // perceision wont be lose when using doubles
+            // precision wont be lose when using doubles
         }
 
         [Conditional("UNITY_ASSERTIONS")]
