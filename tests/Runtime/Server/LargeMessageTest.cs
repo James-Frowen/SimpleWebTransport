@@ -138,8 +138,8 @@ namespace JamesFrowen.SimpleWeb.Tests.Server
 
         [UnityTest]
         [Timeout(5000)]
-        [TestCase(80_000)]
-        [TestCase(800_000)]
+        [TestCase(80_000, ExpectedResult = null)]
+        [TestCase(800_000, ExpectedResult = null)]
         public IEnumerator ReceiveLargeArrayFromJSClient(int messageSize)
         {
             server.maxMessageSize = messageSize * 2;
