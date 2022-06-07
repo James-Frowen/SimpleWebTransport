@@ -1,3 +1,10 @@
+## [1.3.1](https://github.com/James-Frowen/SimpleWebTransport/compare/v1.3.0...v1.3.1) (2022-06-07)
+
+
+### Bug Fixes
+
+* Header lookup needs to be case insensitive ([63aedd8](https://github.com/James-Frowen/SimpleWebTransport/commit/63aedd8086b45b30dbbc6039d47a6c59db7aeded))
+
 # [1.3.0](https://github.com/James-Frowen/SimpleWebTransport/compare/v1.2.7...v1.3.0) (2022-02-12)
 
 
