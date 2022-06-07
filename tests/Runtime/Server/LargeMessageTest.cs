@@ -71,7 +71,7 @@ namespace JamesFrowen.SimpleWeb.Tests.Server
             }.Uri);
 
             yield return server.WaitForConnection;
-            ArraySegment<byte> clientReceive;
+            ArraySegment<byte> clientReceive = default;
             client.onData += (s) => clientReceive = s;
 
             byte[] bytes = new byte[80_000];
