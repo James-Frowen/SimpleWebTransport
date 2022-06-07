@@ -1,3 +1,10 @@
+## [1.3.2](https://github.com/James-Frowen/SimpleWebTransport/compare/v1.3.1...v1.3.2) (2022-06-07)
+
+
+### Bug Fixes
+
+* adding new line before key header ([3495845](https://github.com/James-Frowen/SimpleWebTransport/commit/3495845b8c3fa6838f0838660b652302a20b714a))
+
 ## [1.3.1](https://github.com/James-Frowen/SimpleWebTransport/compare/v1.3.0...v1.3.1) (2022-06-07)
 
 
