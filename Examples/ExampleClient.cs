@@ -5,21 +5,41 @@ namespace JamesFrowen.SimpleWeb.Examples
 {
     public class ExampleClient : MonoBehaviour
     {
-        bool echo;
+        [SerializeField] private string _address = "ws://localhost:7778";
+        [SerializeField] private int _maxMessageSize = 32000;
+
+        [SerializeField] private bool _noDelay = true;
+        [SerializeField] private int _sendTimeout = 5000;
+        [SerializeField] private int _receiveTimeout = 5000;
+
+        [SerializeField] private int _maxMessagePerTick = 500;
+
+
+        [Header("Ssl Settings")]
+        [Tooltip("Sets connect scheme to wss. Useful when client needs to connect using wss when TLS is outside of transport.\nNOTE: if sslEnabled is true clientUseWss is also true")]
+        public bool clientUseWss;
+
+
+        private bool echo;
         private SimpleWebClient client;
-        float keepAlive;
+        private float keepAlive;
 
         private void Connect()
         {
-            var tcpConfig = new TcpConfig(true, 5000, 5000);
-            client = SimpleWebClient.Create(32000, 500, tcpConfig);
+            TcpConfig tcpConfig = new TcpConfig(_noDelay, _sendTimeout, _receiveTimeout);
+            client = SimpleWebClient.Create(_maxMessageSize, _maxMessagePerTick, tcpConfig);
 
             client.onConnect += () => Debug.Log($"Connected to Server");
             client.onDisconnect += () => Debug.Log($"Disconnected from Server");
             client.onData += OnData;
             client.onError += (exception) => Debug.Log($"Error because of Server, Error:{exception}");
 
-            client.Connect(new Uri("ws://localhost:7776"));
+            UriBuilder builder = new UriBuilder(_address)
+            {
+                Scheme = clientUseWss ? "wss" : "ws"
+            };
+
+            client.Connect(builder.Uri);
         }
         private void Update()
         {
@@ -35,7 +55,7 @@ namespace JamesFrowen.SimpleWeb.Examples
             client?.Disconnect();
         }
 
-        void OnData(ArraySegment<byte> data)
+        private void OnData(ArraySegment<byte> data)
         {
             Debug.Log($"Data from Server, length:{data.Count}");
             if (echo)
