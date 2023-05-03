@@ -18,7 +18,13 @@ ssh <serverAddress> 'sudo systemctl restart nginx'
 ```
 make sure to replace `<serverAddress>` with the ip address of the serve
 
-### SSL 
+### webgl hosting
+
+to correctly host the webgl files, make sure too check the guide here:
+[Server configuration code samples](https://docs.unity3d.com/Manual/webgl-server-configuration-code-samples.html). 
+The values for Nginx should already be in example [http.config](./http.config) files 
+
+## SSL 
 
 instructions from https://certbot.eff.org/instructions?ws=nginx&os=ubuntufocal&tab=standard
 
