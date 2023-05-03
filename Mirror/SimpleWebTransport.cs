@@ -7,15 +7,17 @@ using UnityEngine.Serialization;
 namespace Mirror.SimpleWeb
 {
     [DisallowMultipleComponent]
-    public class SimpleWebTransport : Transport
+    public class SimpleWebTransport : Transport, PortTransport
     {
         public const string NormalScheme = "ws";
         public const string SecureScheme = "wss";
 
-        [Tooltip("Port to use for server")]
-        public ushort ServerPort = 7778;
-        [Tooltip("Port to use for client, change this if server is sitting ")]
-        public ushort ClientPort = 7778;
+        [Tooltip("Port to use for server and client")]
+        public ushort port = 7778;
+        public ushort Port { get => port; set => port=value; }
+
+        [Tooltip("Tells the client to use the default port. This is useful when connecting to reverse proxy rather than directly to websocket server")]
+        public bool ClientUseDefaultPort = 7778;
 
         [Tooltip("Protect against allocation attacks by keeping the max message size small. Otherwise an attacker might send multiple fake packets with 2GB headers, causing the server to run out of memory after allocating multiple large packets.")]
         public int maxMessageSize = 16 * 1024;
@@ -123,8 +125,9 @@ namespace Mirror.SimpleWeb
             {
                 Scheme = GetClientScheme(),
                 Host = hostname,
-                Port = ClientPort
             };
+            if (!ClientUseDefaultPort)
+                builder.Port = Port;
 
             ClientConnect(builder.Uri);
         }
@@ -213,7 +216,7 @@ namespace Mirror.SimpleWeb
             {
                 Scheme = GetServerScheme(),
                 Host = Dns.GetHostName(),
-                Port = ServerPort
+                Port = port
             };
             return builder.Uri;
         }
