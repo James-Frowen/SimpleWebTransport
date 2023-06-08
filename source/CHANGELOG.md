@@ -1,3 +1,10 @@
+## [1.4.1](https://github.com/James-Frowen/SimpleWebTransport/compare/v1.4.0...v1.4.1) (2023-06-08)
+
+
+### Bug Fixes
+
+* fixing AssemblyInfo version ([ee8ebb3](https://github.com/James-Frowen/SimpleWebTransport/commit/ee8ebb3ad9608228b69392f52aec99c1cc12848b))
+
 # [1.4.0](https://github.com/James-Frowen/SimpleWebTransport/compare/v1.3.2...v1.4.0) (2023-06-08)
 
 
