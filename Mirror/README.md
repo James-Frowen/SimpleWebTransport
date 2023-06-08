@@ -12,4 +12,4 @@ Set `port` to port you want server to listen to on localhost
 
 Set `ClientUseDefaultPort` and `ClientUseWss` to true
 
-![inspector-image](./transport-inspector.png)
+![inspector-image](./.transport-inspector.png)

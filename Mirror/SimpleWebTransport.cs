@@ -1,6 +1,8 @@
+#if MIRROR
 using System;
 using System.Net;
 using System.Security.Authentication;
+using JamesFrowen.SimpleWeb;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -299,3 +301,4 @@ namespace Mirror.SimpleWeb
         #endregion
     }
 }
+#endif
