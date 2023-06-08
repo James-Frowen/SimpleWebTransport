@@ -1,3 +1,10 @@
+## [1.6.1](https://github.com/James-Frowen/SimpleWebTransport/compare/v1.6.0...v1.6.1) (2023-06-08)
+
+
+### Bug Fixes
+
+* adding missing function from mirror example ([c15d060](https://github.com/James-Frowen/SimpleWebTransport/commit/c15d060be3b4e832649ea9737d3f7975d116a180))
+
 # [1.6.0](https://github.com/James-Frowen/SimpleWebTransport/compare/v1.5.0...v1.6.0) (2023-06-08)
 
 
