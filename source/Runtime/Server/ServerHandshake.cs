@@ -20,15 +20,17 @@ namespace JamesFrowen.SimpleWeb
         readonly int maxHttpHeaderSize = 3000;
 
         readonly bool getRealIpHeader;
+        readonly string realIpHeader;
 
         readonly SHA1 sha1 = SHA1.Create();
         readonly BufferPool bufferPool;
 
-        public ServerHandshake(BufferPool bufferPool, int handshakeMaxSize, bool getRealIpHeader)
+        public ServerHandshake(BufferPool bufferPool, int handshakeMaxSize, string realIpHeader)
         {
             this.bufferPool = bufferPool;
             maxHttpHeaderSize = handshakeMaxSize;
-            this.getRealIpHeader = getRealIpHeader;
+            this.realIpHeader = realIpHeader;
+            getRealIpHeader = !string.IsNullOrEmpty(realIpHeader);
         }
 
         ~ServerHandshake()
@@ -119,10 +121,10 @@ namespace JamesFrowen.SimpleWeb
             }
         }
 
-        static string GetRealIdHeader(string msg)
+        string GetRealIdHeader(string msg)
         {
-            const string RealIpHeaderString = "X-Real-IP: ";
-            int start = msg.IndexOf(RealIpHeaderString, StringComparison.InvariantCultureIgnoreCase) + RealIpHeaderString.Length;
+            var headerStr = $"{realIpHeader}: ";
+            int start = msg.IndexOf(headerStr, StringComparison.InvariantCultureIgnoreCase) + headerStr.Length;
             int end = msg.IndexOf("\r\n", start, StringComparison.InvariantCultureIgnoreCase);
 
             int length = end - start;

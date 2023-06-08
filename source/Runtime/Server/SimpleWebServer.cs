@@ -11,14 +11,14 @@ namespace JamesFrowen.SimpleWeb
         readonly WebSocketServer server;
         readonly BufferPool bufferPool;
 
-        public SimpleWebServer(int maxMessagesPerTick, TcpConfig tcpConfig, int maxMessageSize, int handshakeMaxSize, SslConfig sslConfig, bool getRealIpHeader = false)
+        public SimpleWebServer(int maxMessagesPerTick, TcpConfig tcpConfig, int maxMessageSize, int handshakeMaxSize, SslConfig sslConfig, string realIpHeader = null)
         {
             this.maxMessagesPerTick = maxMessagesPerTick;
             // use max because bufferpool is used for both messages and handshake
             int max = Math.Max(maxMessageSize, handshakeMaxSize);
             bufferPool = new BufferPool(5, 20, max);
 
-            server = new WebSocketServer(tcpConfig, maxMessageSize, handshakeMaxSize, sslConfig, bufferPool, getRealIpHeader);
+            server = new WebSocketServer(tcpConfig, maxMessageSize, handshakeMaxSize, sslConfig, bufferPool, realIpHeader);
         }
 
         public bool Active { get; private set; }

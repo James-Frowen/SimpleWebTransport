@@ -68,6 +68,7 @@ namespace Mirror.SimpleWeb
         [Header("Reverse proxy settings")]
         [Tooltip("Should the server get the ip address from the X-Real-IP during client handshake")]
         public bool serverGetRealIp;
+        public string serverRealIPHeader = "X-Real-IP";
 
         [Header("Debug")]
         [Tooltip("Log functions uses ConditionalAttribute which will effect which log methods are allowed. DEBUG allows warn/error, SIMPLEWEB_LOG_ENABLED allows all")]
@@ -238,7 +239,8 @@ namespace Mirror.SimpleWeb
                 Debug.LogError("[SimpleWebTransport] Server Already Started");
 
             SslConfig config = SslConfigLoader.Load(sslEnabled, sslCertJson, sslProtocols);
-            server = new SimpleWebServer(serverMaxMessagesPerTick, TcpConfig, maxMessageSize, handshakeMaxSize, config, serverGetRealIp);
+            var ipHeader = serverGetRealIp ? serverIpHeader : null;
+            server = new SimpleWebServer(serverMaxMessagesPerTick, TcpConfig, maxMessageSize, handshakeMaxSize, config, ipHeader);
 
             server.onConnect += OnServerConnected.Invoke;
             server.onDisconnect += OnServerDisconnected.Invoke;
