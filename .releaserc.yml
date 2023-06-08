@@ -4,7 +4,7 @@ plugins:
   - '@semantic-release/commit-analyzer'
   - - '@semantic-release/exec'
     - prepareCmd: "sed -i -e '/AssemblyVersion/s/\".*\"/\"${nextRelease.version}\"/' 
-        source/AssemblyInfo.cs"
+        source/Runtime/AssemblyInfo.cs"
   - - '@semantic-release/changelog'
     - changelogFile: 'source/CHANGELOG.md'
   - - '@semantic-release/npm'
