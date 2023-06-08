@@ -1,3 +1,10 @@
+## [1.6.2](https://github.com/James-Frowen/SimpleWebTransport/compare/v1.6.1...v1.6.2) (2023-06-08)
+
+
+### Performance Improvements
+
+* caching remoteAddress ([d2f63ba](https://github.com/James-Frowen/SimpleWebTransport/commit/d2f63ba895ab1936eb830a649a5e7a78503f13ed))
+
 ## [1.6.1](https://github.com/James-Frowen/SimpleWebTransport/compare/v1.6.0...v1.6.1) (2023-06-08)
 
 
