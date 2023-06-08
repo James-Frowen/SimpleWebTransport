@@ -61,6 +61,7 @@ namespace JamesFrowen.SimpleWeb
                 AcceptHandshake(stream, msg);
 
                 conn.request = new Request(msg);
+                conn.remoteAddress = conn.CalculateAddress();
 
                 return true;
             }
