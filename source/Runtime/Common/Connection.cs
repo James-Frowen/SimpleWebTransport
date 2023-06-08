@@ -90,18 +90,14 @@ namespace JamesFrowen.SimpleWeb
             {
                 return $"[Conn:{connId}, Disposed]";
             }
-            else
+
+            if (!string.IsNullOrEmpty(RealIp))
             {
-                if (string.IsNullOrEmpty(RealIp))
-                {
-                    System.Net.EndPoint endpoint = client?.Client?.RemoteEndPoint;
-                    return $"[Conn:{connId}, endPoint:{endpoint}]";
-                }
-                else
-                {
-                    return $"[Conn:{connId}, Ip:{RealIp}]";
-                }
+                return $"[Conn:{connId}, Ip:{RealIp}]";
             }
+
+            System.Net.EndPoint endpoint = client?.Client?.RemoteEndPoint;
+            return $"[Conn:{connId}, endPoint:{endpoint}]";
         }
     }
 }
