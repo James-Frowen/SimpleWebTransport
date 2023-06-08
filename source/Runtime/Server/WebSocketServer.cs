@@ -12,7 +12,6 @@ namespace JamesFrowen.SimpleWeb
 
         readonly TcpConfig tcpConfig;
         readonly int maxMessageSize;
-        readonly bool useRealIpHeader;
 
         TcpListener listener;
         Thread acceptThread;
@@ -25,14 +24,13 @@ namespace JamesFrowen.SimpleWeb
 
         int _idCounter = 0;
 
-        public WebSocketServer(TcpConfig tcpConfig, int maxMessageSize, int handshakeMaxSize, SslConfig sslConfig, BufferPool bufferPool, string realIpHeader = null)
+        public WebSocketServer(TcpConfig tcpConfig, int maxMessageSize, int handshakeMaxSize, SslConfig sslConfig, BufferPool bufferPool)
         {
             this.tcpConfig = tcpConfig;
             this.maxMessageSize = maxMessageSize;
             sslHelper = new ServerSslHelper(sslConfig);
             this.bufferPool = bufferPool;
-            this.useRealIpHeader = !string.IsNullOrEmpty(realIpHeader);
-            handShake = new ServerHandshake(this.bufferPool, handshakeMaxSize, realIpHeader);
+            handShake = new ServerHandshake(this.bufferPool, handshakeMaxSize);
         }
 
         public void Listen(int port)
@@ -217,18 +215,32 @@ namespace JamesFrowen.SimpleWeb
 
         public string GetClientAddress(int id)
         {
-            if (connections.TryGetValue(id, out Connection conn))
-            {
-                if (useRealIpHeader)
-                    return conn.RealIp;
-                else
-                    return conn.client.Client.RemoteEndPoint.ToString();
-            }
-            else
+            if (!connections.TryGetValue(id, out Connection conn))
             {
                 Log.Error($"Cant get address of connection {id} because connection was not found in dictionary");
                 return null;
             }
+
+            var headers = conn.request.Headers;
+            if (headers.TryGetValue("X-Forwarded-For", out var forwardFor))
+            {
+                var ips = forwardFor.ToString().Split(',');
+                var actualClientIP = ips[0];
+                return actualClientIP;
+            }
+
+            return conn.client.Client.RemoteEndPoint.ToString();
+        }
+
+        public Request GetClientRequest(int id)
+        {
+            if (!connections.TryGetValue(id, out Connection conn))
+            {
+                Log.Error($"Cant get request of connection {id} because connection was not found in dictionary");
+                return null;
+            }
+
+            return conn.request;
         }
     }
 }

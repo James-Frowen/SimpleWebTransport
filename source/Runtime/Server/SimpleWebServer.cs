@@ -11,14 +11,14 @@ namespace JamesFrowen.SimpleWeb
         readonly WebSocketServer server;
         readonly BufferPool bufferPool;
 
-        public SimpleWebServer(int maxMessagesPerTick, TcpConfig tcpConfig, int maxMessageSize, int handshakeMaxSize, SslConfig sslConfig, string realIpHeader = null)
+        public SimpleWebServer(int maxMessagesPerTick, TcpConfig tcpConfig, int maxMessageSize, int handshakeMaxSize, SslConfig sslConfig)
         {
             this.maxMessagesPerTick = maxMessagesPerTick;
             // use max because bufferpool is used for both messages and handshake
             int max = Math.Max(maxMessageSize, handshakeMaxSize);
             bufferPool = new BufferPool(5, 20, max);
 
-            server = new WebSocketServer(tcpConfig, maxMessageSize, handshakeMaxSize, sslConfig, bufferPool, realIpHeader);
+            server = new WebSocketServer(tcpConfig, maxMessageSize, handshakeMaxSize, sslConfig, bufferPool);
         }
 
         public bool Active { get; private set; }
@@ -69,6 +69,11 @@ namespace JamesFrowen.SimpleWeb
         public string GetClientAddress(int connectionId)
         {
             return server.GetClientAddress(connectionId);
+        }
+
+        public Request GetClientRequest(int connectionId)
+        {
+            return server.GetClientRequest(connectionId);
         }
 
         /// <summary>

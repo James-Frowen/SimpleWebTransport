@@ -9,16 +9,18 @@ namespace JamesFrowen.SimpleWeb
     internal sealed class Connection : IDisposable
     {
         public const int IdNotSet = -1;
-
         readonly object disposedLock = new object();
 
         public TcpClient client;
 
         public int connId = IdNotSet;
+
         /// <summary>
-        /// Ip set via X-Real-IP header when using a reverse proxy
+        /// Connect request, sent from client to start handshake
+        /// <para>Only valid on server</para>
         /// </summary>
-        public string RealIp;
+        public Request request;
+
         public Stream stream;
         public Thread receiveThread;
         public Thread sendThread;
@@ -87,17 +89,17 @@ namespace JamesFrowen.SimpleWeb
         public override string ToString()
         {
             if (hasDisposed)
-            {
                 return $"[Conn:{connId}, Disposed]";
-            }
-
-            if (!string.IsNullOrEmpty(RealIp))
-            {
-                return $"[Conn:{connId}, Ip:{RealIp}]";
-            }
-
-            System.Net.EndPoint endpoint = client?.Client?.RemoteEndPoint;
-            return $"[Conn:{connId}, endPoint:{endpoint}]";
+            else
+                try
+                {
+                    System.Net.EndPoint endpoint = client?.Client?.RemoteEndPoint;
+                    return $"[Conn:{connId}, endPoint:{endpoint}]";
+                }
+                catch (SocketException)
+                {
+                    return $"[Conn:{connId}, endPoint:n/a]";
+                }
         }
     }
 }

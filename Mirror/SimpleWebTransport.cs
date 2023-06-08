@@ -65,11 +65,6 @@ namespace Mirror.SimpleWeb
         [Tooltip("Protocols that SSL certificate is created to support.")]
         public SslProtocols sslProtocols = SslProtocols.Tls12;
 
-        [Header("Reverse proxy settings")]
-        [Tooltip("Should the server get the ip address from the X-Real-IP during client handshake")]
-        public bool serverGetRealIp;
-        public string serverRealIPHeader = "X-Real-IP";
-
         [Header("Debug")]
         [Tooltip("Log functions uses ConditionalAttribute which will effect which log methods are allowed. DEBUG allows warn/error, SIMPLEWEB_LOG_ENABLED allows all")]
         [FormerlySerializedAs("logLevels")]
@@ -239,8 +234,7 @@ namespace Mirror.SimpleWeb
                 Debug.LogError("[SimpleWebTransport] Server Already Started");
 
             SslConfig config = SslConfigLoader.Load(sslEnabled, sslCertJson, sslProtocols);
-            var ipHeader = serverGetRealIp ? serverIpHeader : null;
-            server = new SimpleWebServer(serverMaxMessagesPerTick, TcpConfig, maxMessageSize, handshakeMaxSize, config, ipHeader);
+            server = new SimpleWebServer(serverMaxMessagesPerTick, TcpConfig, maxMessageSize, handshakeMaxSize, config);
 
             server.onConnect += OnServerConnected.Invoke;
             server.onDisconnect += OnServerDisconnected.Invoke;
