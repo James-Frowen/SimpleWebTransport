@@ -12,6 +12,6 @@ plugins:
       pkgRoot: "source"
   - - '@semantic-release/git'
     - assets:
-        - 'source/AssemblyInfo.cs'
+        - 'source/Runtime/AssemblyInfo.cs'
         - 'source/package.json'
         - 'source/CHANGELOG.md'
