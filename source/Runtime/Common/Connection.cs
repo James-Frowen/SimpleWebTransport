@@ -9,6 +9,7 @@ namespace JamesFrowen.SimpleWeb
     internal sealed class Connection : IDisposable
     {
         public const int IdNotSet = -1;
+
         readonly object disposedLock = new object();
 
         public TcpClient client;
@@ -46,15 +47,15 @@ namespace JamesFrowen.SimpleWeb
             Log.Verbose($"Dispose {ToString()}");
 
             // check hasDisposed first to stop ThreadInterruptedException on lock
-            if (hasDisposed) { return; }
+            if (hasDisposed) return;
 
             Log.Info($"Connection Close: {ToString()}");
-
 
             lock (disposedLock)
             {
                 // check hasDisposed again inside lock to make sure no other object has called this
-                if (hasDisposed) { return; }
+                if (hasDisposed) return;
+
                 hasDisposed = true;
 
                 // stop threads first so they don't try to use disposed objects
@@ -78,9 +79,7 @@ namespace JamesFrowen.SimpleWeb
 
                 // release all buffers in send queue
                 while (sendQueue.TryDequeue(out ArrayBuffer buffer))
-                {
                     buffer.Release();
-                }
 
                 onDispose.Invoke(this);
             }

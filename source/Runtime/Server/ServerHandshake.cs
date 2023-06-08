@@ -16,7 +16,6 @@ namespace JamesFrowen.SimpleWeb
         internal const int KeyLength = 24;
         const int MergedKeyLength = 60;
         const string KeyHeaderString = "\r\nSec-WebSocket-Key: ";
-
         // this isn't an official max, just a reasonable size for a websocket handshake
         readonly int maxHttpHeaderSize = 3000;
 
@@ -42,8 +41,8 @@ namespace JamesFrowen.SimpleWeb
             {
                 if (!ReadHelper.TryRead(stream, getHeader.array, 0, GetSize))
                     return false;
-                getHeader.count = GetSize;
 
+                getHeader.count = GetSize;
 
                 if (!IsGet(getHeader.array))
                 {
@@ -51,7 +50,6 @@ namespace JamesFrowen.SimpleWeb
                     return false;
                 }
             }
-
 
             string msg = ReadToEndForHandshake(stream);
 
@@ -129,7 +127,6 @@ namespace JamesFrowen.SimpleWeb
         byte[] CreateHash(byte[] keyBuffer)
         {
             Log.Verbose($"Handshake Hashing {Encoding.ASCII.GetString(keyBuffer, 0, MergedKeyLength)}");
-
             return sha1.ComputeHash(keyBuffer, 0, MergedKeyLength);
         }
 

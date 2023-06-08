@@ -21,7 +21,6 @@ namespace JamesFrowen.SimpleWeb
         readonly BufferPool bufferPool;
         readonly ConcurrentDictionary<int, Connection> connections = new ConcurrentDictionary<int, Connection>();
 
-
         int _idCounter = 0;
 
         public WebSocketServer(TcpConfig tcpConfig, int maxMessageSize, int handshakeMaxSize, SslConfig sslConfig, BufferPool bufferPool)
@@ -58,9 +57,7 @@ namespace JamesFrowen.SimpleWeb
             // make copy so that foreach doesn't break if values are removed
             Connection[] connectionsCopy = connections.Values.ToArray();
             foreach (Connection conn in connectionsCopy)
-            {
                 conn.Dispose();
-            }
 
             connections.Clear();
         }
@@ -75,7 +72,6 @@ namespace JamesFrowen.SimpleWeb
                     {
                         TcpClient client = listener.AcceptTcpClient();
                         tcpConfig.ApplyTo(client);
-
 
                         // TODO keep track of connections before they are in connections dictionary
                         //      this might not be a problem as HandshakeAndReceiveLoop checks for stop
