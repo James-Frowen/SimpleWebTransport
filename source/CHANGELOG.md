@@ -1,3 +1,10 @@
+# [1.6.0](https://github.com/James-Frowen/SimpleWebTransport/compare/v1.5.0...v1.6.0) (2023-06-08)
+
+
+### Features
+
+* storing all headers instead of just ([cf90ab6](https://github.com/James-Frowen/SimpleWebTransport/commit/cf90ab6f30719242e9e93aa7c282d123a08bf423))
+
 # [1.5.0](https://github.com/James-Frowen/SimpleWebTransport/compare/v1.4.1...v1.5.0) (2023-06-08)
 
 
