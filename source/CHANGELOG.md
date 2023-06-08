@@ -1,3 +1,15 @@
+# [1.4.0](https://github.com/James-Frowen/SimpleWebTransport/compare/v1.3.2...v1.4.0) (2023-06-08)
+
+
+### Bug Fixes
+
+* using realIp for tostring ([db9ffe6](https://github.com/James-Frowen/SimpleWebTransport/commit/db9ffe6d8b5e581b43e5c599610671c6a0efe732))
+
+
+### Features
+
+* adding option to get real ip from reverse proxy ([7d8acaa](https://github.com/James-Frowen/SimpleWebTransport/commit/7d8acaaf9c2bbc3b09bbc0f11b33463f6a6a3f0d))
+
 ## [1.3.2](https://github.com/James-Frowen/SimpleWebTransport/compare/v1.3.1...v1.3.2) (2022-06-07)
 
 
