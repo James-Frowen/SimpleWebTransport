@@ -19,13 +19,16 @@ namespace JamesFrowen.SimpleWeb
         // this isn't an official max, just a reasonable size for a websocket handshake
         readonly int maxHttpHeaderSize = 3000;
 
+        readonly bool getRealIpHeader;
+
         readonly SHA1 sha1 = SHA1.Create();
         readonly BufferPool bufferPool;
 
-        public ServerHandshake(BufferPool bufferPool, int handshakeMaxSize)
+        public ServerHandshake(BufferPool bufferPool, int handshakeMaxSize, bool getRealIpHeader)
         {
             this.bufferPool = bufferPool;
             maxHttpHeaderSize = handshakeMaxSize;
+            this.getRealIpHeader = getRealIpHeader;
         }
 
         ~ServerHandshake()
@@ -60,6 +63,13 @@ namespace JamesFrowen.SimpleWeb
             try
             {
                 AcceptHandshake(stream, msg);
+
+                if (getRealIpHeader)
+                {
+                    conn.RealIp = GetRealIdHeader(msg);
+                }
+
+
                 return true;
             }
             catch (ArgumentException e)
@@ -109,6 +119,16 @@ namespace JamesFrowen.SimpleWeb
             }
         }
 
+        static string GetRealIdHeader(string msg)
+        {
+            const string RealIpHeaderString = "X-Real-IP: ";
+            int start = msg.IndexOf(RealIpHeaderString, StringComparison.InvariantCultureIgnoreCase) + RealIpHeaderString.Length;
+            int end = msg.IndexOf("\r\n", start, StringComparison.InvariantCultureIgnoreCase);
+
+            int length = end - start;
+            string realIp = msg.Substring(start, length);
+            return realIp;
+        }
 
         internal static void GetKey(string msg, byte[] keyBuffer)
         {

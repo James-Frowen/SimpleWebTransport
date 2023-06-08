@@ -12,6 +12,7 @@ namespace JamesFrowen.SimpleWeb
 
         readonly TcpConfig tcpConfig;
         readonly int maxMessageSize;
+        readonly bool getRealIpHeader;
 
         TcpListener listener;
         Thread acceptThread;
@@ -24,13 +25,14 @@ namespace JamesFrowen.SimpleWeb
 
         int _idCounter = 0;
 
-        public WebSocketServer(TcpConfig tcpConfig, int maxMessageSize, int handshakeMaxSize, SslConfig sslConfig, BufferPool bufferPool)
+        public WebSocketServer(TcpConfig tcpConfig, int maxMessageSize, int handshakeMaxSize, SslConfig sslConfig, BufferPool bufferPool, bool getRealIpHeader = false)
         {
             this.tcpConfig = tcpConfig;
             this.maxMessageSize = maxMessageSize;
             sslHelper = new ServerSslHelper(sslConfig);
             this.bufferPool = bufferPool;
-            handShake = new ServerHandshake(this.bufferPool, handshakeMaxSize);
+            this.getRealIpHeader = getRealIpHeader;
+            handShake = new ServerHandshake(this.bufferPool, handshakeMaxSize, getRealIpHeader);
         }
 
         public void Listen(int port)
@@ -217,7 +219,10 @@ namespace JamesFrowen.SimpleWeb
         {
             if (connections.TryGetValue(id, out Connection conn))
             {
-                return conn.client.Client.RemoteEndPoint.ToString();
+                if (getRealIpHeader)
+                    return conn.RealIp;
+                else
+                    return conn.client.Client.RemoteEndPoint.ToString();
             }
             else
             {

@@ -15,6 +15,10 @@ namespace JamesFrowen.SimpleWeb
         public TcpClient client;
 
         public int connId = IdNotSet;
+        /// <summary>
+        /// Ip set via X-Real-IP header when using a reverse proxy
+        /// </summary>
+        public string RealIp;
         public Stream stream;
         public Thread receiveThread;
         public Thread sendThread;
