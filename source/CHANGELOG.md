@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/James-Frowen/SimpleWebTransport/compare/v1.4.1...v1.5.0) (2023-06-08)
+
+
+### Features
+
+* adding option to change ip real header ([f50f4b2](https://github.com/James-Frowen/SimpleWebTransport/commit/f50f4b2299d36eac30f02b441745b4a4a4242680))
+
 ## [1.4.1](https://github.com/James-Frowen/SimpleWebTransport/compare/v1.4.0...v1.4.1) (2023-06-08)
 
 
