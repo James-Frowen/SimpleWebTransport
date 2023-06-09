@@ -1,3 +1,10 @@
+## [1.6.3](https://github.com/James-Frowen/SimpleWebTransport/compare/v1.6.2...v1.6.3) (2023-06-09)
+
+
+### Bug Fixes
+
+* converting endpoint to ipv4 ([49340c2](https://github.com/James-Frowen/SimpleWebTransport/commit/49340c2bef3a6ee334cb985431dd2ccbfc7c749e))
+
 ## [1.6.2](https://github.com/James-Frowen/SimpleWebTransport/compare/v1.6.1...v1.6.2) (2023-06-08)
 
 
