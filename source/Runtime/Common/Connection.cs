@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 
@@ -10,8 +11,7 @@ namespace JamesFrowen.SimpleWeb
     internal sealed class Connection : IDisposable
     {
         public const int IdNotSet = -1;
-
-        readonly object disposedLock = new object();
+        private readonly object disposedLock = new object();
 
         public TcpClient client;
 
@@ -36,8 +36,7 @@ namespace JamesFrowen.SimpleWeb
         public ConcurrentQueue<ArrayBuffer> sendQueue = new ConcurrentQueue<ArrayBuffer>();
 
         public Action<Connection> onDispose;
-
-        volatile bool hasDisposed;
+        private volatile bool hasDisposed;
 
         public Connection(TcpClient client, Action<Connection> onDispose)
         {
@@ -111,17 +110,23 @@ namespace JamesFrowen.SimpleWeb
         /// Gets the address based on the <see cref="request"/> and RemoteEndPoint
         /// <para>Called after ServerHandShake is accepted</para>
         /// </summary>
-        /// <exception cref="NotImplementedException"></exception>
         internal string CalculateAddress()
         {
-            if (request.Headers.TryGetValue("X-Forwarded-For", out var forwardFor))
+            if (request.Headers.TryGetValue("X-Forwarded-For", out string forwardFor))
             {
-                var actualClientIP = forwardFor.ToString().Split(',').First();
+                string actualClientIP = forwardFor.ToString().Split(',').First();
                 // Remove the port number from the address
                 return actualClientIP.Split(':').First();
             }
+            else
+            {
+                IPEndPoint ipEndPoint = (IPEndPoint)client.Client.RemoteEndPoint;
+                IPAddress ipAddress = ipEndPoint.Address;
+                if (ipAddress.IsIPv4MappedToIPv6)
+                    ipAddress = ipAddress.MapToIPv4();
 
-            return client.Client.RemoteEndPoint.ToString();
+                return ipAddress.ToString();
+            }
         }
     }
 }

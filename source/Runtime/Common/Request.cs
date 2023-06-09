@@ -10,17 +10,16 @@ namespace JamesFrowen.SimpleWeb
     public class Request
     {
         private static readonly char[] lineSplitChars = new char[] { '\r', '\n' };
+        private static readonly char[] headerSplitChars = new char[] { ':' };
         public string RequestLine;
         public Dictionary<string, string> Headers = new Dictionary<string, string>();
 
         public Request(string message)
         {
             string[] all = message.Split(lineSplitChars, StringSplitOptions.RemoveEmptyEntries);
-            // we need to add GET back in because ServerHandshake doesn't include it
-            RequestLine = "GET" + all[0];
+            RequestLine = all.First();
             Headers = all.Skip(1)
-                         .Select(header => header.Split(':'))
-                         .Where(split => split.Length == 2)
+                         .Select(header => header.Split(headerSplitChars, 2, StringSplitOptions.RemoveEmptyEntries))
                          .ToDictionary(split => split[0].Trim(), split => split[1].Trim());
         }
     }
