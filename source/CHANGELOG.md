@@ -1,3 +1,10 @@
+## [1.6.4](https://github.com/James-Frowen/SimpleWebTransport/compare/v1.6.3...v1.6.4) (2023-07-15)
+
+
+### Bug Fixes
+
+* improving error message from opcode ([41cbed0](https://github.com/James-Frowen/SimpleWebTransport/commit/41cbed01932828640dfac2bb3c41f1f583b2af54))
+
 ## [1.6.3](https://github.com/James-Frowen/SimpleWebTransport/compare/v1.6.2...v1.6.3) (2023-06-09)
 
 
