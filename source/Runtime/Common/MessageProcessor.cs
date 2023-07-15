@@ -166,7 +166,7 @@ namespace JamesFrowen.SimpleWeb
                 if (opcode == 2 || opcode == 8)
                     return;
 
-                throw new InvalidDataException("Expected opcode to be binary or close");
+                throw new InvalidDataException($"Unexpected opcode {opcode}");
             }
         }
 
