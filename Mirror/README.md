@@ -5,7 +5,7 @@ Scripts to run SimpleWebTransport with Mirror
 
 ### Server settings
 
-Set `port` to port you want server to listen to on localhost
+Set `port` to port you want server to listen on for the reverse proxy, default is `7777`
 
 
 ### Client settings
