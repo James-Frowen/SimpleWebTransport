@@ -106,7 +106,22 @@ Please report any bugs or issues [Here](https://github.com/James-Frowen/SimpleWe
 
 This transport supports the wss protocol which is required for https pages.
 
-## How to create and setup an SSL Cert
+## Reverse proxy
+
+Using a reverse proxy for SSL is generally more efficient than implementing SSL directly within Unity or other game servers, as the proxy can specialize in handling encryption, freeing up the game server to focus on delivering smooth gameplay.
+
+To use reverse proxy with Mirror see this page [Mirror/README.md](https://github.com/James-Frowen/SimpleWebTransport/blob/master/Mirror/README.md)
+
+#### Nginx
+
+Nginx is a popular reverse proxy thaat is easy to set up, and also has the ability to host WebGL files making it easy to set up development server. For a short guide on Nginx see this page: [NginxConfig](https://github.com/James-Frowen/SimpleWebTransport/tree/master/NginxConfig)
+
+#### Other reverse proxies
+
+The [Mirror docs](https://mirror-networking.gitbook.io/docs/manual/transports/websockets-transport/reverse-proxy) explains how to set up some othher revierse proxies, 
+
+
+## (not recommended) How to create and setup an SSL Cert
 
 If you host your webgl build on a https domain you will need to use wss which will require a ssl cert.
 
