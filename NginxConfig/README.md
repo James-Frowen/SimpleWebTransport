@@ -10,7 +10,10 @@ sudo apt update
 sudo apt install nginx
 ```
 
-Copy config from http.config locally to default site on server
+Copy config from `http.config` locally to default site on server
+
+If you want to host the webgl files onm the same VPS then use `http_with_webgl_host.config` instead of `http.config`
+
 ```sh
 scp -r "http.config" "<serverAddress>:~"
 ssh <serverAddress> 'sudo mv ~/http.config /etc/nginx/sites-available/default'
