@@ -1,3 +1,10 @@
+## [1.6.5](https://github.com/James-Frowen/SimpleWebTransport/compare/v1.6.4...v1.6.5) (2024-03-14)
+
+
+### Bug Fixes
+
+* stopping websocket variable being put in global scope ([074d85b](https://github.com/James-Frowen/SimpleWebTransport/commit/074d85b907d3f9d7e303efdda55295ed9be0678f))
+
 ## [1.6.4](https://github.com/James-Frowen/SimpleWebTransport/compare/v1.6.3...v1.6.4) (2023-07-15)
 
 
