@@ -1,3 +1,13 @@
+# [2.0.0](https://github.com/James-Frowen/SimpleWebTransport/compare/v1.6.5...v2.0.0) (2024-03-16)
+
+
+* fix!: removing Runtime from global scope ([2e28322](https://github.com/James-Frowen/SimpleWebTransport/commit/2e283225e53c8f1a90f7504d11811d501c2f7f2b))
+
+
+### BREAKING CHANGES
+
+* no longer supports unity 2020 or earlier
+
 ## [1.6.5](https://github.com/James-Frowen/SimpleWebTransport/compare/v1.6.4...v1.6.5) (2024-03-14)
 
 
