@@ -1,3 +1,10 @@
+## [2.0.1](https://github.com/James-Frowen/SimpleWebTransport/compare/v2.0.0...v2.0.1) (2024-03-16)
+
+
+### Bug Fixes
+
+* updating unity version in package ([b4f1f26](https://github.com/James-Frowen/SimpleWebTransport/commit/b4f1f260311c431b10221a104bf14a50342cde41))
+
 # [2.0.0](https://github.com/James-Frowen/SimpleWebTransport/compare/v1.6.5...v2.0.0) (2024-03-16)
 
 
