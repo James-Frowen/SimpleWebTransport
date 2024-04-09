@@ -11,12 +11,12 @@ namespace JamesFrowen.SimpleWeb
         readonly TcpConfig tcpConfig;
         Connection conn;
 
-        internal WebSocketClientStandAlone(int maxMessageSize, int maxMessagesPerTick, TcpConfig tcpConfig) : base(maxMessageSize, maxMessagesPerTick)
+        internal WebSocketClientStandAlone(int maxMessageSize, int maxMessagesPerTick, TcpConfig tcpConfig, bool allowSSLErrors) : base(maxMessageSize, maxMessagesPerTick)
         {
 #if UNITY_WEBGL && !UNITY_EDITOR
             throw new NotSupportedException();
 #else
-            sslHelper = new ClientSslHelper();
+            sslHelper = new ClientSslHelper(allowSSLErrors);
             handshake = new ClientHandshake();
             this.tcpConfig = tcpConfig;
 #endif

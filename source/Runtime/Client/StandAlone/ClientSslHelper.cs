@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Codice.CM.Common;
+using System;
 using System.IO;
 using System.Net.Security;
 using System.Net.Sockets;
@@ -8,6 +9,13 @@ namespace JamesFrowen.SimpleWeb
 {
     internal class ClientSslHelper
     {
+        private readonly bool allowErrors;
+
+        public ClientSslHelper(bool allowErrors)
+        {
+            this.allowErrors = allowErrors;
+        }
+
         internal bool TryCreateStream(Connection conn, Uri uri)
         {
             NetworkStream stream = conn.client.GetStream();
@@ -36,12 +44,20 @@ namespace JamesFrowen.SimpleWeb
             return sslStream;
         }
 
-        static bool ValidateServerCertificate(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+        bool ValidateServerCertificate(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
         {
-            // Do not allow this client to communicate with unauthenticated servers.
-
             // only accept if no errors
-            return sslPolicyErrors == SslPolicyErrors.None;
+            if (sslPolicyErrors == SslPolicyErrors.None)
+                return true;
+
+            if (allowErrors)
+            {
+                Log.Error($"Cert had Errors {sslPolicyErrors}, but allowErrors is true");
+                return true;
+            }
+
+            // Do not allow this client to communicate with unauthenticated servers.
+            return false; 
         }
     }
 }
