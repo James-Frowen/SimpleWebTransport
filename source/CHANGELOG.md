@@ -1,3 +1,10 @@
+# [2.1.0](https://github.com/James-Frowen/SimpleWebTransport/compare/v2.0.1...v2.1.0) (2024-04-09)
+
+
+### Features
+
+* adding option to allow ssl errors. Useful when testing with self signed cert ([d956089](https://github.com/James-Frowen/SimpleWebTransport/commit/d9560893c1f8ac2f38a3dd1baf462dea7b42aaff))
+
 ## [2.0.1](https://github.com/James-Frowen/SimpleWebTransport/compare/v2.0.0...v2.0.1) (2024-03-16)
 
 
