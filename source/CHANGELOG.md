@@ -1,3 +1,10 @@
+## [2.1.1](https://github.com/James-Frowen/SimpleWebTransport/compare/v2.1.0...v2.1.1) (2024-04-09)
+
+
+### Bug Fixes
+
+* removing invalid auto import ([a37bc02](https://github.com/James-Frowen/SimpleWebTransport/commit/a37bc023a5de45cac8740f6e6d62e60b04a25335))
+
 # [2.1.0](https://github.com/James-Frowen/SimpleWebTransport/compare/v2.0.1...v2.1.0) (2024-04-09)
 
 
