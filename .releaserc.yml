@@ -1,17 +1,37 @@
 plugins:
-  - '@semantic-release/github'
   - '@semantic-release/release-notes-generator'
   - '@semantic-release/commit-analyzer'
+  
   - - '@semantic-release/exec'
     - prepareCmd: "sed -i -e '/AssemblyVersion/s/\".*\"/\"${nextRelease.version}\"/' 
         source/Runtime/AssemblyInfo.cs"
+  
   - - '@semantic-release/changelog'
     - changelogFile: 'source/CHANGELOG.md'
+  
   - - '@semantic-release/npm'
     - npmPublish: false
       pkgRoot: "source"
+  
+  - - '@semantic-release/exec'
+    - prepareCmd: "unity-packer pack SimpleWebTransport.unitypackage 
+        source Assets/SimpleWebTransport/scripts 
+        LICENSE Assets/SimpleWebTransport/LICENSE"
+
+  - - '@semantic-release/exec'
+    - prepareCmd: "unity-packer pack SimpleWebTransport_Mirror.unitypackage 
+        source Assets/Mirror/Transports/SimpleWeb
+        LICENSE Assets/Mirror/Transports/SimpleWeb/LICENSE
+        Mirror/SimpleWebTransport.cs Assets/Mirror/Transports/SimpleWeb/SimpleWebTransport.cs"
+
   - - '@semantic-release/git'
     - assets:
         - 'source/Runtime/AssemblyInfo.cs'
         - 'source/package.json'
         - 'source/CHANGELOG.md'
+
+  - - "@semantic-release/github"
+    - assets:
+        - path: "SimpleWebTransport.unitypackage"
+          label: "SimpleWebTransport Unity Package"
+          name: "SimpleWebTransport-${nextRelease.version}.unitypackage"
