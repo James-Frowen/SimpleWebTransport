@@ -1,3 +1,10 @@
+# [2.2.0](https://github.com/James-Frowen/SimpleWebTransport/compare/v2.1.1...v2.2.0) (2024-04-24)
+
+
+### Features
+
+* adding versions of SendAll that accept ICollection or IEnumerable ([28b6b25](https://github.com/James-Frowen/SimpleWebTransport/commit/28b6b25f7c1bf26cef04f5bae25377b485eec1ae))
+
 ## [2.1.1](https://github.com/James-Frowen/SimpleWebTransport/compare/v2.1.0...v2.1.1) (2024-04-09)
 
 
