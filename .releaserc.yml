@@ -35,3 +35,7 @@ plugins:
         - path: "SimpleWebTransport.unitypackage"
           label: "SimpleWebTransport Unity Package"
           name: "SimpleWebTransport-${nextRelease.version}.unitypackage"
+        - path: "SimpleWebTransport_Mirror.unitypackage"
+          label: "Mirror SimpleWebTransport Unity Package"
+          name: "SimpleWebTransport-Mirror-${nextRelease.version}.unitypackage"
+          
