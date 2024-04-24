@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace JamesFrowen.SimpleWeb
@@ -38,11 +39,48 @@ namespace JamesFrowen.SimpleWeb
             Active = false;
         }
 
+        /// <summary>
+        /// Sends to a list of connections, use <see cref="List{int}"/> version to avoid foreach allocation
+        /// </summary>
+        /// <param name="connectionIds"></param>
+        /// <param name="source"></param>
         public void SendAll(List<int> connectionIds, ArraySegment<byte> source)
         {
             ArrayBuffer buffer = bufferPool.Take(source.Count);
             buffer.CopyFrom(source);
             buffer.SetReleasesRequired(connectionIds.Count);
+
+            // make copy of array before for each, data sent to each client is the same
+            foreach (int id in connectionIds)
+                server.Send(id, buffer);
+        }
+
+        /// <summary>
+        /// Sends to a list of connections, use <see cref="ICollection{int}"/> version when you are using a non-list collection (will allocate in foreach)
+        /// </summary>
+        /// <param name="connectionIds"></param>
+        /// <param name="source"></param>
+        public void SendAll(ICollection<int> connectionIds, ArraySegment<byte> source)
+        {
+            ArrayBuffer buffer = bufferPool.Take(source.Count);
+            buffer.CopyFrom(source);
+            buffer.SetReleasesRequired(connectionIds.Count);
+
+            // make copy of array before for each, data sent to each client is the same
+            foreach (int id in connectionIds)
+                server.Send(id, buffer);
+        }
+
+        /// <summary>
+        /// Sends to a list of connections, use <see cref="IEnumerable{int}"/> version in cases where you want to use LINQ to get connections (will allocate from LINQ functions and foreach)
+        /// </summary>
+        /// <param name="connectionIds"></param>
+        /// <param name="source"></param>
+        public void SendAll(IEnumerable<int> connectionIds, ArraySegment<byte> source)
+        {
+            ArrayBuffer buffer = bufferPool.Take(source.Count);
+            buffer.CopyFrom(source);
+            buffer.SetReleasesRequired(connectionIds.Count());
 
             // make copy of array before for each, data sent to each client is the same
             foreach (int id in connectionIds)
