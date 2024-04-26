@@ -1,3 +1,6 @@
+verifyConditions:
+  - "@semantic-release/github"
+
 plugins:
   - '@semantic-release/release-notes-generator'
   - '@semantic-release/commit-analyzer'
