@@ -32,6 +32,25 @@ Includes a Websocket server, standalone client, and a WebGL client so that both 
 5) select the latest version of `SimpleWebTransport` and click install, like so:
 6) You may come back to the package manager to unistall `SimpleWebTransport` or upgrade it.
 
+Or add to `Packages/manifest.json`
+
+```json
+{
+    "dependencies": {
+        "com.james-frowen.simplewebtransport": "2.2.0"
+    },
+    "scopedRegistries": [
+        {
+            "name": "package.openupm.com",
+            "url": "https://package.openupm.com",
+            "scopes": [
+                "com.james-frowen.simplewebtransport"
+            ]
+        }
+    ]
+}
+```
+
 ## Usage
 
 Below are some examples of how to set up a server and client so that they will connect and low any message sent between them
