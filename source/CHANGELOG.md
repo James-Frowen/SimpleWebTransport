@@ -1,3 +1,10 @@
+## [2.2.1](https://github.com/James-Frowen/SimpleWebTransport/compare/v2.2.0...v2.2.1) (2024-07-08)
+
+
+### Bug Fixes
+
+* increasing default handshake max size ([5a8aaa6](https://github.com/James-Frowen/SimpleWebTransport/commit/5a8aaa6398181a38d3ac0a0cc14008cc8dd00c32))
+
 # [2.2.0](https://github.com/James-Frowen/SimpleWebTransport/compare/v2.1.1...v2.2.0) (2024-04-24)
 
 
