@@ -25,7 +25,7 @@ namespace Mirror.SimpleWeb
         public int maxMessageSize = 16 * 1024;
 
         [Tooltip("Max size for http header send as handshake for websockets")]
-        public int handshakeMaxSize = 3000;
+        public int handshakeMaxSize = 16 * 1024;
 
         [Tooltip("disables nagle algorithm. lowers CPU% and latency but increases bandwidth")]
         public bool noDelay = true;
