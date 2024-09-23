@@ -23,7 +23,7 @@ namespace JamesFrowen.SimpleWeb.Tests.Server
             yield return server.WaitForConnection;
 
             byte[] bytes = new byte[] { 1, 2, 3, 4, 5 };
-            var segment = new ArraySegment<byte>(bytes);
+            ArraySegment<byte> segment = new ArraySegment<byte>(bytes);
 
             server.ServerSend(new List<int> { 1 }, Channels.DefaultReliable, segment);
 
@@ -61,7 +61,7 @@ namespace JamesFrowen.SimpleWeb.Tests.Server
             yield return server.WaitForConnection;
 
             byte[] bytes = Enumerable.Range(1, msgSize).Select(x => (byte)x).ToArray();
-            var segment = new ArraySegment<byte>(bytes);
+            ArraySegment<byte> segment = new ArraySegment<byte>(bytes);
 
             server.ServerSend(new List<int> { 1 }, Channels.DefaultReliable, segment);
 
@@ -89,11 +89,11 @@ namespace JamesFrowen.SimpleWeb.Tests.Server
 
             for (int i = 0; i < messageCount; i++)
             {
-                var writer = new NetworkWriter();
+                NetworkWriter writer = new NetworkWriter();
                 writer.WriteByte((byte)i);
                 writer.WriteInt32(100);
 
-                var segment = writer.ToArraySegment();
+                ArraySegment<byte> segment = writer.ToArraySegment();
 
                 server.ServerSend(new List<int> { 1 }, Channels.DefaultReliable, segment);
             }
@@ -114,11 +114,40 @@ namespace JamesFrowen.SimpleWeb.Tests.Server
         }
 
         [UnityTest]
+        public IEnumerator SendManyTextMessages()
+        {
+            Task<RunNode.Result> task = RunNode.RunAsync("ReceiveManyMessagesText.js", 5_000);
+
+            yield return server.WaitForConnection;
+            const int messageCount = 100;
+
+            for (int i = 0; i < messageCount; i++)
+            {
+                string message = $"Message {i}";
+                server.ServerSendText(new List<int> { 1 }, message);
+            }
+
+            yield return new WaitForSeconds(1);
+            server.ServerDisconnect(1);
+
+            yield return new WaitUntil(() => task.IsCompleted);
+
+            RunNode.Result result = task.Result;
+
+            IEnumerable<string> expected = Enumerable.Range(0, messageCount).Select(i => $"Received text message: Message {i}");
+
+            result.AssetTimeout(false);
+            result.AssetOutput(expected.ToArray());
+            result.AssetErrors();
+
+        }
+
+        [UnityTest]
         public IEnumerator ErrorWhenMessageTooBig()
         {
             yield return null;
 
-            var segment = new ArraySegment<byte>(new byte[70_000]);
+            ArraySegment<byte> segment = new ArraySegment<byte>(new byte[70_000]);
 
             LogAssert.Expect(LogType.Error, "ERROR: <color=red>Message greater than max size</color>");
             server.ServerSend(new List<int> { 1 }, Channels.DefaultReliable, segment);
@@ -129,7 +158,7 @@ namespace JamesFrowen.SimpleWeb.Tests.Server
         {
             yield return null;
 
-            var segment = new ArraySegment<byte>();
+            ArraySegment<byte> segment = new ArraySegment<byte>();
 
             LogAssert.Expect(LogType.Error, "ERROR: <color=red>Message count was zero</color>");
             server.ServerSend(new List<int> { 1 }, Channels.DefaultReliable, segment);

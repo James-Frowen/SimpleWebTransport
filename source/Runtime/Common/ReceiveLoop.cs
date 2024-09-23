@@ -124,12 +124,17 @@ namespace JamesFrowen.SimpleWeb
             {
                 switch (header.opcode)
                 {
+                    case OpCode.text:
+                        HandleArrayMessage(config, buffer, msgOffset, header.payloadLength, EventType.Text);
+                        break;
                     case OpCode.binary:
-                        HandleArrayMessage(config, buffer, msgOffset, header.payloadLength);
+                        HandleArrayMessage(config, buffer, msgOffset, header.payloadLength, EventType.Data);
                         break;
                     case OpCode.close:
                         HandleCloseMessage(config, buffer, msgOffset, header.payloadLength);
                         break;
+                    default:
+                        throw new InvalidDataException($"Unexpected opcode {header.opcode}");
                 }
             }
             else
@@ -138,6 +143,7 @@ namespace JamesFrowen.SimpleWeb
                 Queue<ArrayBuffer> fragments = new Queue<ArrayBuffer>();
                 fragments.Enqueue(CopyMessageToBuffer(bufferPool, expectMask, buffer, msgOffset, header.payloadLength));
                 int totalSize = header.payloadLength;
+                OpCode opcode = header.opcode;
 
                 while (!header.finished)
                 {
@@ -150,7 +156,6 @@ namespace JamesFrowen.SimpleWeb
                     totalSize += header.payloadLength;
                     MessageProcessor.ThrowIfMsgLengthTooLong(totalSize, maxMessageSize);
                 }
-
 
                 ArrayBuffer msg = bufferPool.Take(totalSize);
                 msg.count = 0;
@@ -166,8 +171,8 @@ namespace JamesFrowen.SimpleWeb
 
                 // dump after mask off
                 Log.DumpBuffer($"Message", msg);
-
-                queue.Enqueue(new Message(conn.connId, msg));
+                EventType type = opcode == OpCode.binary ? EventType.Data : EventType.Text;
+                queue.Enqueue(new Message(conn.connId, msg, type));
             }
         }
 
@@ -209,7 +214,7 @@ namespace JamesFrowen.SimpleWeb
             return header;
         }
 
-        static void HandleArrayMessage(Config config, byte[] buffer, int msgOffset, int payloadLength)
+        static void HandleArrayMessage(Config config, byte[] buffer, int msgOffset, int payloadLength, EventType type)
         {
             (Connection conn, int _, bool expectMask, ConcurrentQueue<Message> queue, BufferPool bufferPool) = config;
 
@@ -218,7 +223,7 @@ namespace JamesFrowen.SimpleWeb
             // dump after mask off
             Log.DumpBuffer($"Message", arrayBuffer);
 
-            queue.Enqueue(new Message(conn.connId, arrayBuffer));
+            queue.Enqueue(new Message(conn.connId, arrayBuffer, type));
         }
 
         static ArrayBuffer CopyMessageToBuffer(BufferPool bufferPool, bool expectMask, byte[] buffer, int msgOffset, int payloadLength)

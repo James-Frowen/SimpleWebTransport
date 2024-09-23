@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using UnityEngine;
 
 namespace JamesFrowen.SimpleWeb
@@ -10,6 +11,7 @@ namespace JamesFrowen.SimpleWeb
         public event Action<int> onConnect;
         public event Action<int> onDisconnect;
         public event Action<int, ArraySegment<byte>> onData;
+        public event Action<int, string> onText;
         public event Action<int, Exception> onError;
 
         readonly int maxMessagesPerTick;
@@ -133,8 +135,16 @@ namespace JamesFrowen.SimpleWeb
                         break;
                     case EventType.Data:
                         onData?.Invoke(next.connId, next.data.ToSegment());
+                        break;
+                    case EventType.Text:
+                        if (onText != null)
+                        {
+                            string messageText = Encoding.UTF8.GetString(next.data.array, 0, next.data.count);
+                            onText.Invoke(next.connId, messageText);
+                        }
                         next.data.Release();
                         break;
+
                     case EventType.Disconnected:
                         onDisconnect?.Invoke(next.connId);
                         break;
