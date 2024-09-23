@@ -9,7 +9,7 @@ using UnityEngine.Profiling;
 
 namespace JamesFrowen.SimpleWeb
 {
-    internal static class ReceiveLoop
+    static class ReceiveLoop
     {
         public struct Config
         {
@@ -135,7 +135,7 @@ namespace JamesFrowen.SimpleWeb
             else
             {
                 // todo cache this to avoid allocations
-                var fragments = new Queue<ArrayBuffer>();
+                Queue<ArrayBuffer> fragments = new Queue<ArrayBuffer>();
                 fragments.Enqueue(CopyMessageToBuffer(bufferPool, expectMask, buffer, msgOffset, header.payloadLength));
                 int totalSize = header.payloadLength;
 
@@ -175,7 +175,7 @@ namespace JamesFrowen.SimpleWeb
         {
             (Connection conn, int maxMessageSize, bool expectMask, ConcurrentQueue<Message> queue, BufferPool bufferPool) = config;
             Stream stream = conn.stream;
-            var header = new Header();
+            Header header = new Header();
 
             // read 2
             header.offset = ReadHelper.Read(stream, buffer, header.offset, Constants.HeaderMinSize);
@@ -264,7 +264,7 @@ namespace JamesFrowen.SimpleWeb
 
         static int GetCloseCode(byte[] buffer, int msgOffset)
         {
-            return buffer[msgOffset + 0] << 8 | buffer[msgOffset + 1];
+            return (buffer[msgOffset + 0] << 8) | buffer[msgOffset + 1];
         }
     }
 }

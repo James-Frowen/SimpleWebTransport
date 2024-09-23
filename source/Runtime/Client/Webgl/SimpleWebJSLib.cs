@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 namespace JamesFrowen.SimpleWeb
 {
-    internal static class SimpleWebJSLib
+    static class SimpleWebJSLib
     {
 #if UNITY_WEBGL
         [DllImport("__Internal")]

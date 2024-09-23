@@ -83,7 +83,7 @@ namespace JamesFrowen.SimpleWeb
         {
             for (int i = 0; i < messageLength; i++)
             {
-                byte maskByte = maskBuffer[maskOffset + i % Constants.MaskSize];
+                byte maskByte = maskBuffer[maskOffset + (i % Constants.MaskSize)];
                 dst[dstOffset + i] = (byte)(src[srcOffset + i] ^ maskByte);
             }
         }
@@ -104,14 +104,14 @@ namespace JamesFrowen.SimpleWeb
             {
                 // header is 8 bytes 
                 ulong value = 0;
-                value |= ((ulong)buffer[offset + 2] << 56);
-                value |= ((ulong)buffer[offset + 3] << 48);
-                value |= ((ulong)buffer[offset + 4] << 40);
-                value |= ((ulong)buffer[offset + 5] << 32);
-                value |= ((ulong)buffer[offset + 6] << 24);
-                value |= ((ulong)buffer[offset + 7] << 16);
-                value |= ((ulong)buffer[offset + 8] << 8);
-                value |= ((ulong)buffer[offset + 9] << 0);
+                value |= (ulong)buffer[offset + 2] << 56;
+                value |= (ulong)buffer[offset + 3] << 48;
+                value |= (ulong)buffer[offset + 4] << 40;
+                value |= (ulong)buffer[offset + 5] << 32;
+                value |= (ulong)buffer[offset + 6] << 24;
+                value |= (ulong)buffer[offset + 7] << 16;
+                value |= (ulong)buffer[offset + 8] << 8;
+                value |= (ulong)buffer[offset + 9] << 0;
 
                 if (value > int.MaxValue)
                 {

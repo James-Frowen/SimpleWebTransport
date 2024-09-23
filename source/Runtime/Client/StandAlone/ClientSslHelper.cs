@@ -6,9 +6,9 @@ using System.Security.Cryptography.X509Certificates;
 
 namespace JamesFrowen.SimpleWeb
 {
-    internal class ClientSslHelper
+    class ClientSslHelper
     {
-        private readonly bool allowErrors;
+        readonly bool allowErrors;
 
         public ClientSslHelper(bool allowErrors)
         {
@@ -38,7 +38,7 @@ namespace JamesFrowen.SimpleWeb
 
         Stream CreateStream(NetworkStream stream, Uri uri)
         {
-            var sslStream = new SslStream(stream, true, ValidateServerCertificate);
+            SslStream sslStream = new SslStream(stream, true, ValidateServerCertificate);
             sslStream.AuthenticateAsClient(uri.Host);
             return sslStream;
         }
@@ -56,7 +56,7 @@ namespace JamesFrowen.SimpleWeb
             }
 
             // Do not allow this client to communicate with unauthenticated servers.
-            return false; 
+            return false;
         }
     }
 }

@@ -27,13 +27,13 @@ namespace JamesFrowen.SimpleWeb
             state = ClientState.Connecting;
 
             // create connection here before thread so that send queue exist before connected
-            var client = new TcpClient();
+            TcpClient client = new TcpClient();
             tcpConfig.ApplyTo(client);
 
             // create connection object here so dispose correctly disconnects on failed connect
             conn = new Connection(client, AfterConnectionDisposed);
 
-            var receiveThread = new Thread(() => ConnectAndReceiveLoop(serverAddress));
+            Thread receiveThread = new Thread(() => ConnectAndReceiveLoop(serverAddress));
             receiveThread.IsBackground = true;
             receiveThread.Start();
         }
@@ -79,9 +79,9 @@ namespace JamesFrowen.SimpleWeb
 
                 receiveQueue.Enqueue(new Message(EventType.Connected));
 
-                var sendThread = new Thread(() =>
+                Thread sendThread = new Thread(() =>
                 {
-                    var sendConfig = new SendLoop.Config(
+                    SendLoop.Config sendConfig = new SendLoop.Config(
                         conn,
                         bufferSize: Constants.HeaderSize + Constants.MaskSize + maxMessageSize,
                         setMask: true);
@@ -93,7 +93,7 @@ namespace JamesFrowen.SimpleWeb
                 sendThread.IsBackground = true;
                 sendThread.Start();
 
-                var config = new ReceiveLoop.Config(conn,
+                ReceiveLoop.Config config = new ReceiveLoop.Config(conn,
                     maxMessageSize,
                     false,
                     receiveQueue,
