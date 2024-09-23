@@ -51,6 +51,13 @@ namespace JamesFrowen.SimpleWeb.Tests
                 ServerSend(id, channelId, segment);
             }
         }
+        public void ServerSendText(System.Collections.Generic.List<int> connectionIds, int channelId, string message)
+        {
+            foreach (int id in connectionIds)
+            {
+                ServerSend(id, channelId, message);
+            }
+        }
     }
     public class ClientTestInstance : SimpleWebTransport, NeedInitTestInstance
     {
@@ -214,7 +221,7 @@ namespace JamesFrowen.SimpleWeb
                 return;
             }
 
-            var builder = new UriBuilder
+            UriBuilder builder = new UriBuilder
             {
                 Scheme = GetClientScheme(),
                 Host = hostname,
@@ -353,7 +360,7 @@ namespace JamesFrowen.SimpleWeb
 
         public override Uri ServerUri()
         {
-            var builder = new UriBuilder
+            UriBuilder builder = new UriBuilder
             {
                 Scheme = GetServerScheme(),
                 Host = Dns.GetHostName(),
