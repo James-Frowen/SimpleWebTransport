@@ -42,7 +42,7 @@ namespace JamesFrowen.SimpleWeb
         {
             public int payloadLength;
             public int offset;
-            public int opcode;
+            public OpCode opcode;
             public bool finished;
         }
 
@@ -124,10 +124,10 @@ namespace JamesFrowen.SimpleWeb
             {
                 switch (header.opcode)
                 {
-                    case 2:
+                    case OpCode.binary:
                         HandleArrayMessage(config, buffer, msgOffset, header.payloadLength);
                         break;
-                    case 8:
+                    case OpCode.close:
                         HandleCloseMessage(config, buffer, msgOffset, header.payloadLength);
                         break;
                 }

@@ -4,6 +4,14 @@ using System.Runtime.CompilerServices;
 
 namespace JamesFrowen.SimpleWeb
 {
+    public enum OpCode : byte
+    {
+        continuation = 0,
+        text = 1,
+        binary = 2,
+        close = 8,
+    }
+
     public static class MessageProcessor
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -25,9 +33,9 @@ namespace JamesFrowen.SimpleWeb
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int GetOpcode(byte[] buffer)
+        public static OpCode GetOpcode(byte[] buffer)
         {
-            return buffer[0] & 0b0000_1111;
+            return (OpCode)(buffer[0] & 0b0000_1111);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -53,7 +61,7 @@ namespace JamesFrowen.SimpleWeb
             bool finished = Finished(buffer);
             bool hasMask = (buffer[1] & 0b1000_0000) != 0; // true from clients, false from server, "All messages from the client to the server have this bit set"
 
-            int opcode = buffer[0] & 0b0000_1111; // expecting 1 - text message
+            OpCode opcode = GetOpcode(buffer);
             byte lenByte = FirstLengthByte(buffer);
 
             ThrowIfMaskNotExpected(hasMask, expectMask);
@@ -136,34 +144,29 @@ namespace JamesFrowen.SimpleWeb
         }
 
         /// <exception cref="InvalidDataException"></exception>
-        static void ThrowIfBadOpCode(int opcode, bool finished, bool opCodeContinuation)
+        static void ThrowIfBadOpCode(OpCode opcode, bool finished, bool opCodeContinuation)
         {
-            // 0 = continuation
-            // 2 = binary
-            // 8 = close
-
             // do we expect Continuation?
             if (opCodeContinuation)
             {
                 // good it was Continuation
-                if (opcode == 0)
+                if (opcode == OpCode.continuation)
                     return;
 
-                // bad, wasn't Continuation
                 throw new InvalidDataException("Expected opcode to be Continuation");
             }
             else if (!finished)
             {
-                // fragmented message, should be binary
-                if (opcode == 2)
+                // Fragmented message, should be binary
+                if (opcode == OpCode.binary)
                     return;
 
                 throw new InvalidDataException("Expected opcode to be binary");
             }
             else
             {
-                // normal message, should be binary or close
-                if (opcode == 2 || opcode == 8)
+                // Normal message, should be binary, text, or close
+                if (opcode == OpCode.binary || opcode == OpCode.close)
                     return;
 
                 throw new InvalidDataException($"Unexpected opcode {opcode}");
