@@ -1,3 +1,10 @@
+## [2.2.2](https://github.com/James-Frowen/SimpleWebTransport/compare/v2.2.1...v2.2.2) (2024-10-01)
+
+
+### Bug Fixes
+
+* using on events instead of addEventListener ([a342e9f](https://github.com/James-Frowen/SimpleWebTransport/commit/a342e9f5ff4ccd4323af6da812cffc38f744edbd))
+
 ## [2.2.1](https://github.com/James-Frowen/SimpleWebTransport/compare/v2.2.0...v2.2.1) (2024-07-08)
 
 
