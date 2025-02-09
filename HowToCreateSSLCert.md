@@ -21,10 +21,15 @@ Find the instructions for your server version, below is link for `Ubuntu 18.04 L
 
 https://certbot.eff.org/lets-encrypt/ubuntubionic-other
 
-For instruction 7
+### For instruction 7
 
 ```
 sudo certbot certonly --standalone
+```
+
+⚠ **Unity Only**: Unity has a issue mono when using openSSL 3 certificate
+```
+sudo certbot certonly --standalone --key-type rsa
 ```
 
 After filling in details you will get a result like this 
@@ -53,6 +58,11 @@ To create a pfx file that SimpleWebTransport can use run this command in the `/e
 
 ```sh
 openssl pkcs12 -export -out cert.pfx -inkey privkey.pem -in cert.pem -certfile chain.pem
+```
+
+⚠ **Unity Only**: Unity has a issue mono when using openSSL 3 certificate
+```sh
+openssl pkcs12 -export -out cert.pfx -inkey privkey.pem -in cert.pem -certfile chain.pem -legacy
 ```
 You will be asked for a password, you can set a password or leave it blank.
 
