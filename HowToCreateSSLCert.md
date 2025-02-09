@@ -17,11 +17,13 @@ Follows guides here:
 https://letsencrypt.org/getting-started/
 https://certbot.eff.org/instructions
 
-Find the instructions for your server version, below is link for `Ubuntu 18.04 LTS (bionic)`
+Find the instructions for your server version, below is link for **Linux**
 
-https://certbot.eff.org/lets-encrypt/ubuntubionic-other
+https://certbot.eff.org/instructions?ws=other&os=snap
 
-### For instruction 7
+### Running certbot
+
+For instruction 6 run the `standalone` option 
 
 ```
 sudo certbot certonly --standalone
