@@ -157,16 +157,16 @@ namespace JamesFrowen.SimpleWeb
             }
             else if (!finished)
             {
-                // Fragmented message, should be binary
-                if (opcode == OpCode.binary)
+                // Fragmented message, should be binary or text
+                if (opcode == OpCode.binary || opcode == OpCode.text)
                     return;
 
-                throw new InvalidDataException("Expected opcode to be binary");
+                throw new InvalidDataException("Expected opcode to be binary or text");
             }
             else
             {
                 // Normal message, should be binary, text, or close
-                if (opcode == OpCode.binary || opcode == OpCode.close)
+                if (opcode == OpCode.binary || opcode == OpCode.text || opcode == OpCode.close)
                     return;
 
                 throw new InvalidDataException($"Unexpected opcode {opcode}");

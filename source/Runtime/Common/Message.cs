@@ -2,7 +2,7 @@ using System;
 
 namespace JamesFrowen.SimpleWeb
 {
-    public struct Message
+    public readonly struct Message
     {
         public readonly int connId;
         public readonly EventType type;
@@ -32,7 +32,7 @@ namespace JamesFrowen.SimpleWeb
             this.type = type;
         }
 
-        public Message(int connId, ArrayBuffer data) : this()
+        public Message(int connId, ArrayBuffer data, EventType type) : this()
         {
             this.connId = connId;
             type = EventType.Data;

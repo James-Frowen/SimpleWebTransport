@@ -74,6 +74,29 @@ namespace JamesFrowen.SimpleWeb.Tests.Server
             }
         }
 
+        [UnityTest]
+        public IEnumerator ReceiveManyTextMessages()
+        {
+            // Don't worry about result, run will timeout by itself
+            _ = RunNode.RunAsync("SendManyTextMessages.js");
+
+            yield return server.WaitForConnection;
+
+            // Wait for messages
+            yield return new WaitForSeconds(0.5f);
+            const int expectedCount = 100;
+
+            Assert.That(server.onData, Has.Count.EqualTo(expectedCount), $"Should have {expectedCount} messages");
+
+            for (int i = 0; i < expectedCount; i++)
+            {
+                (int connId, string data) = server.onData[i];
+
+                Assert.That(connId, Is.EqualTo(1), "Conn id should be 1");
+
+                Assert.That(data, Is.EqualTo($"Message {i}"), "Data should match the sent message");
+            }
+        }
 
         [UnityTest]
         public IEnumerator ReceiveAlmostLargeArrays()

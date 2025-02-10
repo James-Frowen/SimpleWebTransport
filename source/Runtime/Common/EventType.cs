@@ -4,6 +4,7 @@ namespace JamesFrowen.SimpleWeb
     {
         Connected,
         Data,
+        Text,
         Disconnected,
         Error
     }
