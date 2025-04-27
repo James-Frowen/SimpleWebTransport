@@ -34,6 +34,7 @@ namespace JamesFrowen.SimpleWeb
 
         public ManualResetEventSlim sendPending = new ManualResetEventSlim(false);
         public ConcurrentQueue<ArrayBuffer> sendQueue = new ConcurrentQueue<ArrayBuffer>();
+        public bool needsPong;
 
         public Action<Connection> onDispose;
         private volatile bool hasDisposed;

@@ -10,6 +10,8 @@ namespace JamesFrowen.SimpleWeb
         text = 1,
         binary = 2,
         close = 8,
+        ping = 9,
+        pong = 10,
     }
 
     public static class MessageProcessor
@@ -165,8 +167,8 @@ namespace JamesFrowen.SimpleWeb
             }
             else
             {
-                // Normal message, should be binary, text, or close
-                if (opcode == OpCode.binary || opcode == OpCode.close)
+                // Normal message, should be binary, text, close, or ping
+                if (opcode == OpCode.binary || opcode == OpCode.close || opcode == OpCode.ping || opcode == OpCode.pong)
                     return;
 
                 throw new InvalidDataException($"Unexpected opcode {opcode}");

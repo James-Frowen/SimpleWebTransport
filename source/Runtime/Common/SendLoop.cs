@@ -14,6 +14,8 @@ namespace JamesFrowen.SimpleWeb
     }
     internal static class SendLoop
     {
+        private static readonly byte[] PongResponse = new byte[] { 0b1000_0000 | 10, 0 }; // FIN bit + PONG opcode, Length 0
+
         public struct Config
         {
             public readonly Connection conn;
@@ -57,6 +59,10 @@ namespace JamesFrowen.SimpleWeb
                 {
                     // wait for message
                     conn.sendPending.Wait();
+
+                    if (conn.needsPong)
+                        SendPongResponse(conn);
+
                     // wait for 1ms for mirror to send other messages
                     if (SendLoopConfig.sleepBeforeSend)
                     {
@@ -128,6 +134,13 @@ namespace JamesFrowen.SimpleWeb
                 conn.Dispose();
                 maskHelper?.Dispose();
             }
+        }
+
+
+        static void SendPongResponse(Connection conn)
+        {
+            conn.stream.Write(PongResponse, 0, PongResponse.Length);
+            conn.needsPong = false;
         }
 
         /// <returns>new offset in buffer</returns>
