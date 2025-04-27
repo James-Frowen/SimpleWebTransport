@@ -1,3 +1,10 @@
+## [2.2.3](https://github.com/James-Frowen/SimpleWebTransport/compare/v2.2.2...v2.2.3) (2025-04-27)
+
+
+### Bug Fixes
+
+* adding ping/pong support to avoid error on receive ([0828049](https://github.com/James-Frowen/SimpleWebTransport/commit/0828049f4c33272047d83916e2f98b483c83f0ec))
+
 ## [2.2.2](https://github.com/James-Frowen/SimpleWebTransport/compare/v2.2.1...v2.2.2) (2024-10-01)
 
 
