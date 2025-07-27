@@ -59,7 +59,7 @@ Below are some examples of how to set up a server and client so that they will c
 
 ```cs
 // create server instance
-var tcpConfig = new TcpConfig(noDelay: false, sendTimeout: 5000, receiveTimeout: 20000);
+var tcpConfig = new TcpConfig(noDelay: true, sendTimeout: 5000, receiveTimeout: 20000);
 var server = new SimpleWebServer(5000, tcpConfig, ushort.MaxValue, 5000, new SslConfig());
 
 // listen for events
@@ -80,7 +80,7 @@ server.ProcessMessageQueue();
 ```cs
 // create client instance
 // call static SimpleWebClient.Create method so that the correct client for WebGL or standalone is created
-var tcpConfig = new TcpConfig(noDelay: false, sendTimeout: 5000, receiveTimeout: 20000);
+var tcpConfig = new TcpConfig(noDelay: true, sendTimeout: 5000, receiveTimeout: 20000);
 var client = SimpleWebClient.Create(ushort.MaxValue, 5000, tcpConfig);
 
 // listen for events
