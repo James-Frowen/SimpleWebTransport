@@ -209,15 +209,24 @@ namespace JamesFrowen.SimpleWeb
             }
         }
 
-        public string GetClientAddress(int id)
+        public void GetClientEndPoint(int id, out string address, out int port)
         {
             if (!connections.TryGetValue(id, out Connection conn))
             {
                 Log.Error($"Cant get address of connection {id} because connection was not found in dictionary");
-                return null;
+                address = null;
+                port = 0;
+                return;
             }
 
-            return conn.remoteAddress;
+            address = conn.remoteAddress;
+            port = conn.remotePort;
+        }
+
+        public string GetClientAddress(int id)
+        {
+            GetClientEndPoint(id, out string address, out int port);
+            return address;
         }
 
         public Request GetClientRequest(int id)
