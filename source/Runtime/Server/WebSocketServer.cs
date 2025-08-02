@@ -223,6 +223,12 @@ namespace JamesFrowen.SimpleWeb
             port = conn.remotePort;
         }
 
+        public string GetClientAddress(int id)
+        {
+            GetClientEndPoint(id, out string address, out int port);
+            return address;
+        }
+
         public Request GetClientRequest(int id)
         {
             if (!connections.TryGetValue(id, out Connection conn))
