@@ -26,7 +26,7 @@ jobs:
         run: dotnet tool install -g unity-packer
   
       - name: Release
-        uses: cycjimmy/semantic-release-action@v3
+        uses: cycjimmy/semantic-release-action@v4
         with:
           extra_plugins: |
             @semantic-release/exec
