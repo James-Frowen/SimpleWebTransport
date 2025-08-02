@@ -96,7 +96,7 @@ namespace JamesFrowen.SimpleWeb
 
         public bool KickClient(int connectionId) => server.CloseConnection(connectionId);
 
-        public string GetClientAddress(int connectionId) => server.GetClientAddress(connectionId);
+        public void GetClientEndPoint(int connectionId, out string address, out int port) => server.GetClientEndPoint(connectionId, out address, out port);
 
         public Request GetClientRequest(int connectionId) => server.GetClientRequest(connectionId);
 

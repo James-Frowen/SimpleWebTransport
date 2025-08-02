@@ -27,6 +27,7 @@ namespace JamesFrowen.SimpleWeb
         /// <para>Only valid on server</para>
         /// </summary>
         public string remoteAddress;
+        public int remotePort;
 
         public Stream stream;
         public Thread receiveThread;
@@ -111,13 +112,14 @@ namespace JamesFrowen.SimpleWeb
         /// Gets the address based on the <see cref="request"/> and RemoteEndPoint
         /// <para>Called after ServerHandShake is accepted</para>
         /// </summary>
-        internal string CalculateAddress()
+        internal void CalculateEndPoint(out string address, out int port)
         {
             if (request.Headers.TryGetValue("X-Forwarded-For", out string forwardFor))
             {
                 string actualClientIP = forwardFor.ToString().Split(',').First();
                 // Remove the port number from the address
-                return actualClientIP.Split(':').First();
+                address = actualClientIP.Split(':').First();
+                port = int.Parse(actualClientIP.Split(':').Last());
             }
             else
             {
@@ -126,7 +128,8 @@ namespace JamesFrowen.SimpleWeb
                 if (ipAddress.IsIPv4MappedToIPv6)
                     ipAddress = ipAddress.MapToIPv4();
 
-                return ipAddress.ToString();
+                address = ipAddress.ToString();
+                port = ipEndPoint.Port;
             }
         }
     }
