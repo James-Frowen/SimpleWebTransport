@@ -214,7 +214,7 @@ namespace JamesFrowen.SimpleWeb
             if (!connections.TryGetValue(id, out Connection conn))
             {
                 Log.Error($"Cant get address of connection {id} because connection was not found in dictionary");
-                address = string.Empty;
+                address = null;
                 port = 0;
                 return;
             }
