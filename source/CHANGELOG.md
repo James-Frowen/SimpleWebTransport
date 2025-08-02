@@ -1,3 +1,10 @@
+# [2.3.0](https://github.com/James-Frowen/SimpleWebTransport/compare/v2.2.3...v2.3.0) (2025-08-02)
+
+
+### Features
+
+* adding function to get remotePort ([#17](https://github.com/James-Frowen/SimpleWebTransport/issues/17)) ([0af2ec0](https://github.com/James-Frowen/SimpleWebTransport/commit/0af2ec0f44520f2f11436daca49e74f20cb8561e))
+
 ## [2.2.3](https://github.com/James-Frowen/SimpleWebTransport/compare/v2.2.2...v2.2.3) (2025-04-27)
 
 
