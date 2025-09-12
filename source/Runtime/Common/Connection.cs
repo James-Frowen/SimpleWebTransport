@@ -119,7 +119,7 @@ namespace JamesFrowen.SimpleWeb
                 string actualClientIP = forwardFor.ToString().Split(',').First();
                 // Remove the port number from the address
                 address = actualClientIP.Split(':').First();
-                port = int.Parse(actualClientIP.Split(':').Last());
+                port = 0;
             }
             else
             {
