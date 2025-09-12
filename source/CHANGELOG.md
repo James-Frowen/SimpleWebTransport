@@ -1,3 +1,10 @@
+## [2.3.1](https://github.com/James-Frowen/SimpleWebTransport/compare/v2.3.0...v2.3.1) (2025-09-12)
+
+
+### Bug Fixes
+
+* do not parse port on reverse proxy ([#19](https://github.com/James-Frowen/SimpleWebTransport/issues/19)) ([2fa1407](https://github.com/James-Frowen/SimpleWebTransport/commit/2fa14074a32a88edb2a761b5641cea335f950046))
+
 # [2.3.0](https://github.com/James-Frowen/SimpleWebTransport/compare/v2.2.3...v2.3.0) (2025-08-02)
 
 
