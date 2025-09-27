@@ -1,3 +1,10 @@
+## [2.3.2](https://github.com/James-Frowen/SimpleWebTransport/compare/v2.3.1...v2.3.2) (2025-09-27)
+
+
+### Bug Fixes
+
+* skipping zero length check for Ping/Pong opcodes ([0f9ee38](https://github.com/James-Frowen/SimpleWebTransport/commit/0f9ee385f6dce827246a5da2d4e19de6080156bd)), closes [#20](https://github.com/James-Frowen/SimpleWebTransport/issues/20)
+
 ## [2.3.1](https://github.com/James-Frowen/SimpleWebTransport/compare/v2.3.0...v2.3.1) (2025-09-12)
 
 
