@@ -71,7 +71,7 @@ namespace JamesFrowen.SimpleWeb
 
             int msglen = GetMessageLength(buffer, 0, lenByte);
 
-            ThrowIfLengthZero(msglen);
+            ThrowIfLengthZero(opcode, msglen);
             ThrowIfMsgLengthTooLong(msglen, maxLength);
         }
 
@@ -176,8 +176,12 @@ namespace JamesFrowen.SimpleWeb
         }
 
         /// <exception cref="InvalidDataException"></exception>
-        static void ThrowIfLengthZero(int msglen)
+        static void ThrowIfLengthZero(OpCode opcode, int msglen)
         {
+            // ping/pong are allowed to have length zero
+            if (opcode == OpCode.ping || opcode == OpCode.pong)
+                return;
+
             if (msglen == 0)
             {
                 throw new InvalidDataException("Message length was zero");
