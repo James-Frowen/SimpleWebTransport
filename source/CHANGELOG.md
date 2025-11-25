@@ -1,3 +1,10 @@
+## [2.3.3](https://github.com/James-Frowen/SimpleWebTransport/compare/v2.3.2...v2.3.3) (2025-11-25)
+
+
+### Bug Fixes
+
+* using makeDynCall macro to support unity 6 ([a524c07](https://github.com/James-Frowen/SimpleWebTransport/commit/a524c07ffcb353a8defe7c74e0f6a9a50da88bfe))
+
 ## [2.3.2](https://github.com/James-Frowen/SimpleWebTransport/compare/v2.3.1...v2.3.2) (2025-09-27)
 
 
