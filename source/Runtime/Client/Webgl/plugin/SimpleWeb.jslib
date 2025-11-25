@@ -37,11 +37,11 @@ function Connect(addressPtr, openCallbackPtr, closeCallBackPtr, messageCallbackP
     // Connection opened
     webSocket.onopen = function (event) {
         console.log("Connected to " + address);
-        dynCall('vi', openCallbackPtr, [index]);
+        {{{ makeDynCall('vi', 'openCallbackPtr') }}}(index);
     }
     webSocket.onclose = function (event) {
         console.log("Disconnected from " + address);
-        dynCall('vi', closeCallBackPtr, [index]);
+        {{{ makeDynCall('vi', 'closeCallBackPtr') }}}(index);
     }
 
     // Listen for messages
@@ -55,7 +55,7 @@ function Connect(addressPtr, openCallbackPtr, closeCallBackPtr, messageCallbackP
             var dataBuffer = new Uint8Array(HEAPU8.buffer, bufferPtr, arrayLength);
             dataBuffer.set(array);
 
-            dynCall('viii', messageCallbackPtr, [index, bufferPtr, arrayLength]);
+            {{{ makeDynCall('viii', 'messageCallbackPtr') }}}(index, bufferPtr, arrayLength);
             _free(bufferPtr);
         }
         else {
@@ -66,7 +66,7 @@ function Connect(addressPtr, openCallbackPtr, closeCallBackPtr, messageCallbackP
     webSocket.onerror = function (event) {
         console.error('Socket Error', event);
 
-        dynCall('vi', errorCallbackPtr, [index]);
+        {{{ makeDynCall('vi', 'errorCallbackPtr') }}}(index);
     }
 
     return index;
