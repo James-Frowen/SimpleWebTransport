@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Concurrent;
-using UnityEngine;
 
 namespace JamesFrowen.SimpleWeb
 {
@@ -48,24 +47,15 @@ namespace JamesFrowen.SimpleWeb
         public event Action<Exception> onError;
 
         /// <summary>
-        /// Processes all new messages
-        /// </summary>
-        public void ProcessMessageQueue()
-        {
-            ProcessMessageQueue(null);
-        }
-
-        /// <summary>
-        /// Processes all messages while <paramref name="behaviour"/> is enabled
+        /// Processes all messages while <paramref name="keepProcessing"/> is null or returns true
         /// </summary>
         /// <param name="behaviour"></param>
-        public void ProcessMessageQueue(MonoBehaviour behaviour)
+        public void ProcessMessageQueue(Func<bool> keepProcessing = null)
         {
             int processedCount = 0;
-            bool skipEnabled = behaviour == null;
             // check enabled every time in case behaviour was disabled after data
             while (
-                (skipEnabled || behaviour.enabled) &&
+                (keepProcessing?.Invoke() ?? true) &&
                 processedCount < maxMessagesPerTick &&
                 // Dequeue last
                 receiveQueue.TryDequeue(out Message next)
