@@ -30,7 +30,7 @@ namespace JamesFrowen.SimpleWeb.Tests.Server
         public IEnumerator MultipleGoodAndBadClients()
         {
             int connectIndex = 1;
-            server.OnServerConnected =
+            server.OnServerConnected +=
             ((connId) =>
             {
                 Assert.That(connId == connectIndex, "Clients should be connected in order with the next index");

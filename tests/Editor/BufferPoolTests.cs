@@ -18,7 +18,7 @@ namespace JamesFrowen.SimpleWeb.Tests
                 BufferPool bufferPool = new BufferPool(5, smallest, 16384);
             });
 
-            Assert.That(exception.Message, Is.EqualTo("Smallest must be atleast 1"));
+            Assert.That(exception.Message, Is.EqualTo("Smallest must be at least 1"));
         }
 
         [Test]
@@ -47,7 +47,7 @@ namespace JamesFrowen.SimpleWeb.Tests
                 BufferPool bufferPool = new BufferPool(count, 2, 16384);
             });
 
-            Assert.That(exception.Message, Is.EqualTo("Count must be atleast 2"));
+            Assert.That(exception.Message, Is.EqualTo("Count must be at least 2"));
         }
 
         static IEnumerable CreatesCorrectCountSource => Enumerable.Range(2, 100);

@@ -48,7 +48,7 @@ namespace JamesFrowen.SimpleWeb.Tests.Client
         public IEnumerator Wss_CanPingAndStayConnectedForTime()
         {
             // server gets message and sends reply
-            server.OnServerDataReceived =
+            server.OnServerDataReceived +=
             ((i, data, __) =>
             {
                 Assert.That(i, Is.EqualTo(1), "Conenction Id should be 1");

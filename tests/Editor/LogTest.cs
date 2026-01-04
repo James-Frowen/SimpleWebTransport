@@ -76,13 +76,13 @@ namespace JamesFrowen.SimpleWeb.Tests
 
             if (levels >= Log.Levels.verbose)
             {
-                LogAssert.Expect(UnityEngine.LogType.Log, $"VERBOSE: <color=blue>{Label}: {expected}</color>");
+                LogAssert.Expect(UnityEngine.LogType.Log, $"VERBOSE: <color=cyan>{Label}: {expected}</color>");
             }
 
             if (asArrayBuffer)
             {
-                var buffer = new ArrayBuffer(null, 10);
-                buffer.CopyFrom(data, 1, 3);
+                ArrayBuffer buffer = new ArrayBuffer(null, 10);
+                buffer.CopyFrom(data.AsSpan(1, 3));
                 Log.DumpBuffer(Label, buffer);
             }
             else
@@ -101,7 +101,7 @@ namespace JamesFrowen.SimpleWeb.Tests
 
             Exception myException = new IOException(SomeMessage);
             // Exception isnt effected by log level
-            LogAssert.Expect(UnityEngine.LogType.Error, $"EXCEPTION: <color=red>{nameof(IOException)}</color> Message: {SomeMessage}\n{myException.StackTrace}");
+            LogAssert.Expect(UnityEngine.LogType.Error, $"EXCEPTION: <color=red>{nameof(IOException)}</color> Message: {SomeMessage}\n{myException.StackTrace}\n\n");
             Log.Exception(myException);
 
             LogAssert.NoUnexpectedReceived();
@@ -135,7 +135,7 @@ namespace JamesFrowen.SimpleWeb.Tests
 
             if (levels >= Log.Levels.info)
             {
-                LogAssert.Expect(UnityEngine.LogType.Log, $"INFO_EXCEPTION: <color=blue>{nameof(IOException)}</color> Message: {SomeMessage}");
+                LogAssert.Expect(UnityEngine.LogType.Log, $"INFO_EXCEPTION: <color=cyan>{nameof(IOException)}</color> Message: {SomeMessage}\n{myException.StackTrace}\n\n");
             }
             Log.InfoException(myException);
 
@@ -151,7 +151,7 @@ namespace JamesFrowen.SimpleWeb.Tests
             if (levels >= Log.Levels.info)
             {
                 if (showColor)
-                    LogAssert.Expect(UnityEngine.LogType.Log, $"INFO: <color=blue>{SomeMessage}</color>");
+                    LogAssert.Expect(UnityEngine.LogType.Log, $"INFO: <color=cyan>{SomeMessage}</color>");
                 else
                     LogAssert.Expect(UnityEngine.LogType.Log, $"INFO: {SomeMessage}");
             }
@@ -169,7 +169,7 @@ namespace JamesFrowen.SimpleWeb.Tests
             if (levels >= Log.Levels.verbose)
             {
                 if (showColor)
-                    LogAssert.Expect(UnityEngine.LogType.Log, $"VERBOSE: <color=blue>{SomeMessage}</color>");
+                    LogAssert.Expect(UnityEngine.LogType.Log, $"VERBOSE: <color=cyan>{SomeMessage}</color>");
                 else
                     LogAssert.Expect(UnityEngine.LogType.Log, $"VERBOSE: {SomeMessage}");
             }

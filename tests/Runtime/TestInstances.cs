@@ -192,8 +192,8 @@ namespace JamesFrowen.SimpleWeb
         /// </summary>
         public void ProcessMessages()
         {
-            server?.ProcessMessageQueue(this);
-            client?.ProcessMessageQueue(this);
+            server?.ProcessMessageQueue(() => enabled);
+            client?.ProcessMessageQueue(() => enabled);
         }
 
         #region Client
@@ -214,7 +214,7 @@ namespace JamesFrowen.SimpleWeb
                 return;
             }
 
-            var builder = new UriBuilder
+            UriBuilder builder = new UriBuilder
             {
                 Scheme = GetClientScheme(),
                 Host = hostname,
@@ -289,10 +289,10 @@ namespace JamesFrowen.SimpleWeb
             SslConfig config = SslConfigLoader.Load(sslEnabled, sslCertJson, sslProtocols);
             server = new SimpleWebServer(serverMaxMessagesPerTick, TcpConfig, maxMessageSize, handshakeMaxSize, config);
 
-            server.onConnect += OnServerConnected.Invoke;
-            server.onDisconnect += OnServerDisconnected.Invoke;
-            server.onData += (int connId, ArraySegment<byte> data) => OnServerDataReceived.Invoke(connId, data, Channels.DefaultReliable);
-            server.onError += OnServerError.Invoke;
+            server.onConnect += (IConnection iconn) => OnServerConnected.Invoke(iconn.Id);
+            server.onDisconnect += (IConnection iconn) => OnServerDisconnected.Invoke(iconn.Id);
+            server.onData += (IConnection iconn, ArraySegment<byte> data) => OnServerDataReceived.Invoke(iconn.Id, data, Channels.DefaultReliable);
+            server.onError += (IConnection iconn, Exception e) => OnServerError.Invoke(iconn.Id, e);
 
             SendLoopConfig.batchSend = batchSend || waitBeforeSend;
             SendLoopConfig.sleepBeforeSend = waitBeforeSend;
@@ -353,7 +353,7 @@ namespace JamesFrowen.SimpleWeb
 
         public override Uri ServerUri()
         {
-            var builder = new UriBuilder
+            UriBuilder builder = new UriBuilder
             {
                 Scheme = GetServerScheme(),
                 Host = Dns.GetHostName(),

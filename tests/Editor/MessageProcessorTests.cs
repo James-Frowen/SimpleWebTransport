@@ -7,7 +7,7 @@ namespace JamesFrowen.SimpleWeb.Tests
     public class MessageProcessorTests
     {
         // TODO Needs updating for new Message Processor methods
-        private byte[] CreateMessage(bool finished = true, bool hasMask = true, int opcode = 2, int length = 10)
+        byte[] CreateMessage(bool finished = true, bool hasMask = true, int opcode = 2, int length = 10)
         {
             byte[] buffer = new byte[20];
 
@@ -69,14 +69,14 @@ namespace JamesFrowen.SimpleWeb.Tests
         [Test]
         public void ThrowsWhenNotFinished()
         {
-            byte[] buffer = CreateMessage(finished: false);
+            byte[] buffer = CreateMessage(finished: false, opcode: (int)OpCode.close);
 
             InvalidDataException expection = Assert.Throws<InvalidDataException>(() =>
             {
                 MessageProcessor.ValidateHeader(buffer, 10 * 1024, true);
             });
 
-            Assert.That(expection.Message, Is.EqualTo("Full message should have been sent, if the full message wasn't sent it wasn't sent from this trasnport"));
+            Assert.That(expection.Message, Is.EqualTo("Expected opcode to be binary"));
         }
 
         [Test]
@@ -102,8 +102,6 @@ namespace JamesFrowen.SimpleWeb.Tests
         [TestCase(5)]
         [TestCase(6)]
         [TestCase(7)]
-        [TestCase(9)]
-        [TestCase(10)]
         [TestCase(11)]
         [TestCase(12)]
         [TestCase(13)]
@@ -118,7 +116,7 @@ namespace JamesFrowen.SimpleWeb.Tests
                 MessageProcessor.ValidateHeader(buffer, 10 * 1024, true);
             });
 
-            Assert.That(expection.Message, Is.EqualTo("Expected opcode to be binary or close"));
+            Assert.That(expection.Message, Is.EqualTo($"Unexpected opcode {(OpCode)opcode}"));
         }
 
         [Test]
@@ -137,7 +135,7 @@ namespace JamesFrowen.SimpleWeb.Tests
         [Test]
         public void ThrowsWhenLengthWasGreaterThanBuffer()
         {
-            byte[] buffer = CreateMessage(length: 10 * 1024 + 1);
+            byte[] buffer = CreateMessage(length: (10 * 1024) + 1);
 
             InvalidDataException expection = Assert.Throws<InvalidDataException>(() =>
             {

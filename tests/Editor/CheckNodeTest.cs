@@ -14,7 +14,7 @@ namespace JamesFrowen.SimpleWeb.Tests
         public void FindFullPath()
         {
             string actual = RunNode.ResolvePath("HelloWorld.js");
-            string expected = "./Assets/SimpleWebTransport/tests/node~/HelloWorld.js";
+            string expected = "./Assets/Tests/node~/HelloWorld.js";
 
             Assert.That(Path.GetFullPath(actual), Is.EqualTo(Path.GetFullPath(expected)));
         }
