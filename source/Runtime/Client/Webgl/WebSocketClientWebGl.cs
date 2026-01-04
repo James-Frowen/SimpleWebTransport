@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using AOT;
 
 namespace JamesFrowen.SimpleWeb
@@ -46,23 +45,23 @@ namespace JamesFrowen.SimpleWeb
             SimpleWebJSLib.Disconnect(index);
         }
 
-        public override void Send(ArraySegment<byte> segment)
+        public override void Send(ReadOnlySpan<byte> span)
         {
-            if (segment.Count > maxMessageSize)
+            if (span.Length > maxMessageSize)
             {
-                Log.Error($"Cant send message with length {segment.Count} because it is over the max size of {maxMessageSize}");
+                Log.Error($"Cant send message with length {span.Length} because it is over the max size of {maxMessageSize}");
                 return;
             }
 
             if (state == ClientState.Connected)
             {
-                SimpleWebJSLib.Send(index, segment.Array, segment.Offset, segment.Count);
+                SimpleWebJSLib.Send(index, span);
             }
             else
             {
                 if (ConnectingSendQueue == null)
                     ConnectingSendQueue = new Queue<byte[]>();
-                ConnectingSendQueue.Enqueue(segment.ToArray());
+                ConnectingSendQueue.Enqueue(span.ToArray());
             }
         }
 
@@ -76,7 +75,7 @@ namespace JamesFrowen.SimpleWeb
                 while (ConnectingSendQueue.Count > 0)
                 {
                     byte[] next = ConnectingSendQueue.Dequeue();
-                    SimpleWebJSLib.Send(index, next, 0, next.Length);
+                    SimpleWebJSLib.Send(index, next.AsSpan());
                 }
                 ConnectingSendQueue = null;
             }
@@ -96,7 +95,11 @@ namespace JamesFrowen.SimpleWeb
             try
             {
                 ArrayBuffer buffer = bufferPool.Take(count);
-                buffer.CopyFrom(bufferPtr, count);
+                unsafe
+                {
+                    ReadOnlySpan<byte> sourceSpan = new ReadOnlySpan<byte>(bufferPtr.ToPointer(), count);
+                    buffer.CopyFrom(sourceSpan);
+                }
 
                 receiveQueue.Enqueue(new Message(buffer));
             }

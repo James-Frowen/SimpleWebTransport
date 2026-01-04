@@ -81,10 +81,10 @@ function Disconnect(index) {
     SimpleWeb.RemoveSocket(index);
 }
 
-function Send(index, arrayPtr, offset, length) {
+function Send(index, arrayPtr, length) {
     var webSocket = SimpleWeb.GetWebSocket(index);
     if (webSocket) {
-        const start = arrayPtr + offset;
+        const start = arrayPtr;
         const end = start + length;
         const data = HEAPU8.buffer.slice(start, end);
         webSocket.send(data);

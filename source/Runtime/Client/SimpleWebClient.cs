@@ -94,6 +94,6 @@ namespace JamesFrowen.SimpleWeb
 
         public abstract void Connect(Uri serverAddress);
         public abstract void Disconnect();
-        public abstract void Send(ArraySegment<byte> segment);
+        public abstract void Send(ReadOnlySpan<byte> span);
     }
 }

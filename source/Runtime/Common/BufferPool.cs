@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 using System.Threading;
 
 namespace JamesFrowen.SimpleWeb
@@ -61,32 +60,30 @@ namespace JamesFrowen.SimpleWeb
         }
 
 
-        public void CopyTo(byte[] target, int offset)
+        /// <summary>Copies this buffer's valid data into a target span</summary>
+        public void CopyTo(Span<byte> target)
         {
-            if (count > (target.Length + offset)) throw new ArgumentException($"{nameof(count)} was greater than {nameof(target)}.length", nameof(target));
+            if (count > target.Length)
+                throw new ArgumentException($"Buffer count {count} is greater than target length {target.Length}");
 
-            Buffer.BlockCopy(array, 0, target, offset, count);
+            // Use AsSpan() helper to get the slice of valid data
+            new ReadOnlySpan<byte>(array, 0, count).CopyTo(target);
         }
 
-        public void CopyFrom(ArraySegment<byte> segment)
+        /// <summary>Copies data from a source span into this buffer and updates count</summary>
+        public void CopyFrom(ReadOnlySpan<byte> source)
         {
-            CopyFrom(segment.Array, segment.Offset, segment.Count);
+            if (source.Length > array.Length)
+                throw new ArgumentException($"Source length {source.Length} is greater than buffer array length {array.Length}");
+
+            count = source.Length;
+            source.CopyTo(array);
         }
 
-        public void CopyFrom(byte[] source, int offset, int length)
+
+        public Span<byte> ToSpan()
         {
-            if (length > array.Length) throw new ArgumentException($"{nameof(length)} was greater than {nameof(array)}.length", nameof(length));
-
-            count = length;
-            Buffer.BlockCopy(source, offset, array, 0, length);
-        }
-
-        public void CopyFrom(IntPtr bufferPtr, int length)
-        {
-            if (length > array.Length) throw new ArgumentException($"{nameof(length)} was greater than {nameof(array)}.length", nameof(length));
-
-            count = length;
-            Marshal.Copy(bufferPtr, array, 0, length);
+            return new Span<byte>(array, 0, count);
         }
 
         public ArraySegment<byte> ToSegment()
@@ -104,7 +101,7 @@ namespace JamesFrowen.SimpleWeb
         }
     }
 
-    internal class BufferBucket : IBufferOwner
+    class BufferBucket : IBufferOwner
     {
         public readonly int arraySize;
         readonly ConcurrentQueue<ArrayBuffer> buffers;

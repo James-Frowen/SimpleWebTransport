@@ -131,10 +131,10 @@ namespace JamesFrowen.SimpleWeb
             }
         }
 
-        public override void Send(ArraySegment<byte> segment)
+        public override void Send(ReadOnlySpan<byte> span)
         {
-            ArrayBuffer buffer = bufferPool.Take(segment.Count);
-            buffer.CopyFrom(segment);
+            ArrayBuffer buffer = bufferPool.Take(span.Length);
+            buffer.CopyFrom(span);
 
             conn.sendQueue.Enqueue(buffer);
             conn.sendPending.Set();

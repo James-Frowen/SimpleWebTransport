@@ -20,7 +20,7 @@ namespace JamesFrowen.SimpleWeb
         internal static extern void Disconnect(int index);
 
         [DllImport("__Internal")]
-        internal static extern bool Send(int index, byte[] array, int offset, int length);
+        internal static extern bool Send(int index, IntPtr ptr, int length);
 #else
         internal static bool IsConnected(int index) => throw new NotSupportedException();
 
@@ -28,7 +28,20 @@ namespace JamesFrowen.SimpleWeb
 
         internal static void Disconnect(int index) => throw new NotSupportedException();
 
-        internal static bool Send(int index, byte[] array, int offset, int length) => throw new NotSupportedException();
+        internal static bool Send(int index, IntPtr ptr, int length) => throw new NotSupportedException();
 #endif
+
+        internal static unsafe bool Send(int index, byte[] array, int offset, int length)
+        {
+            // just convert to span here, so we dont need to do pointer math
+            return Send(index, new ReadOnlySpan<byte>(array, offset, length));
+        }
+        internal static unsafe bool Send(int index, ReadOnlySpan<byte> span)
+        {
+            fixed (byte* ptr = span)
+            {
+                return Send(index, new IntPtr(ptr), span.Length);
+            }
+        }
     }
 }
