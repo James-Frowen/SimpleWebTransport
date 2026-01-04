@@ -76,11 +76,11 @@ namespace JamesFrowen.SimpleWeb
                         // TODO keep track of connections before they are in connections dictionary
                         //      this might not be a problem as HandshakeAndReceiveLoop checks for stop
                         //      and returns/disposes before sending message to queue
-                        var conn = new Connection(client, AfterConnectionDisposed);
+                        Connection conn = new Connection(client, AfterConnectionDisposed);
                         Log.Info($"A client connected {conn}");
 
                         // handshake needs its own thread as it needs to wait for message from client
-                        var receiveThread = new Thread(() => HandshakeAndReceiveLoop(conn));
+                        Thread receiveThread = new Thread(() => HandshakeAndReceiveLoop(conn));
 
                         conn.receiveThread = receiveThread;
 
@@ -135,11 +135,11 @@ namespace JamesFrowen.SimpleWeb
                 conn.connId = Interlocked.Increment(ref _idCounter);
                 connections.TryAdd(conn.connId, conn);
 
-                receiveQueue.Enqueue(new Message(conn.connId, EventType.Connected));
+                receiveQueue.Enqueue(new Message(conn, EventType.Connected));
 
-                var sendThread = new Thread(() =>
+                Thread sendThread = new Thread(() =>
                 {
-                    var sendConfig = new SendLoop.Config(
+                    SendLoop.Config sendConfig = new SendLoop.Config(
                         conn,
                         bufferSize: Constants.HeaderSize + maxMessageSize,
                         setMask: false);
@@ -152,7 +152,7 @@ namespace JamesFrowen.SimpleWeb
                 sendThread.Name = $"SendLoop {conn.connId}";
                 sendThread.Start();
 
-                var receiveConfig = new ReceiveLoop.Config(
+                ReceiveLoop.Config receiveConfig = new ReceiveLoop.Config(
                     conn,
                     maxMessageSize,
                     expectMask: true,
@@ -175,31 +175,72 @@ namespace JamesFrowen.SimpleWeb
         {
             if (conn.connId != Connection.IdNotSet)
             {
-                receiveQueue.Enqueue(new Message(conn.connId, EventType.Disconnected));
+                receiveQueue.Enqueue(new Message(conn, EventType.Disconnected));
                 connections.TryRemove(conn.connId, out Connection _);
             }
         }
 
+        public void Send(IConnection connection, ArrayBuffer buffer)
+        {
+            Connection conn = (Connection)connection;
+
+            conn.sendQueue.Enqueue(buffer);
+            conn.sendPending.Set();
+        }
+
+        public bool CloseConnection(IConnection connection)
+        {
+            Connection conn = (Connection)connection;
+
+            Log.Info($"Kicking connection {conn.connId}");
+            conn.Dispose();
+            return true;
+        }
+
+        public void GetClientEndPoint(IConnection connection, out string address, out int port)
+        {
+            Connection conn = (Connection)connection;
+            address = conn.remoteAddress;
+            port = conn.remotePort;
+        }
+
+        public string GetClientAddress(IConnection connection)
+        {
+            GetClientEndPoint(connection, out string address, out _);
+            return address;
+        }
+
+        public Request GetClientRequest(IConnection connection)
+        {
+            Connection conn = (Connection)connection;
+            return conn.request;
+        }
+
+        /// <summary>get IConnection back using id</summary>
+        public bool TryGetConnection(int id, out IConnection connection)
+        {
+            bool found = connections.TryGetValue(id, out Connection conn);
+            connection = conn;
+            return found;
+        }
+
+        #region legacy helper methods
         public void Send(int id, ArrayBuffer buffer)
         {
-            if (connections.TryGetValue(id, out Connection conn))
+            if (TryGetConnection(id, out IConnection conn))
             {
-                conn.sendQueue.Enqueue(buffer);
-                conn.sendPending.Set();
+                Send(conn, buffer);
             }
             else
             {
                 Log.Warn($"Cant send message to {id} because connection was not found in dictionary. Maybe it disconnected.");
             }
         }
-
         public bool CloseConnection(int id)
         {
-            if (connections.TryGetValue(id, out Connection conn))
+            if (TryGetConnection(id, out IConnection conn))
             {
-                Log.Info($"Kicking connection {id}");
-                conn.Dispose();
-                return true;
+                return CloseConnection(conn);
             }
             else
             {
@@ -208,36 +249,36 @@ namespace JamesFrowen.SimpleWeb
                 return false;
             }
         }
-
         public void GetClientEndPoint(int id, out string address, out int port)
         {
-            if (!connections.TryGetValue(id, out Connection conn))
+            if (TryGetConnection(id, out IConnection conn))
+            {
+                GetClientEndPoint(conn, out address, out port);
+            }
+            else
             {
                 Log.Error($"Cant get address of connection {id} because connection was not found in dictionary");
                 address = null;
                 port = 0;
-                return;
             }
-
-            address = conn.remoteAddress;
-            port = conn.remotePort;
         }
-
         public string GetClientAddress(int id)
         {
-            GetClientEndPoint(id, out string address, out int port);
+            GetClientEndPoint(id, out string address, out _);
             return address;
         }
-
         public Request GetClientRequest(int id)
         {
-            if (!connections.TryGetValue(id, out Connection conn))
+            if (TryGetConnection(id, out IConnection conn))
+            {
+                return GetClientRequest(conn);
+            }
+            else
             {
                 Log.Error($"Cant get request of connection {id} because connection was not found in dictionary");
                 return null;
             }
-
-            return conn.request;
         }
+        #endregion
     }
 }

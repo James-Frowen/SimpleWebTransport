@@ -9,7 +9,7 @@ namespace JamesFrowen.SimpleWeb
     /// Handles Handshakes from new clients on the server
     /// <para>The server handshake has buffers to reduce allocations when clients connect</para>
     /// </summary>
-    internal class ServerHandshake
+    class ServerHandshake
     {
         const int GetSize = 3;
         const int ResponseLength = 129;

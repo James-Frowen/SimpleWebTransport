@@ -22,7 +22,7 @@ namespace JamesFrowen.SimpleWeb
             this.sslProtocols = sslProtocols;
         }
     }
-    internal class ServerSslHelper
+    class ServerSslHelper
     {
         readonly SslConfig config;
         readonly X509Certificate2 certificate;
@@ -59,7 +59,7 @@ namespace JamesFrowen.SimpleWeb
 
         Stream CreateStream(NetworkStream stream)
         {
-            var sslStream = new SslStream(stream, true, acceptClient);
+            SslStream sslStream = new SslStream(stream, true, acceptClient);
             sslStream.AuthenticateAsServer(certificate, false, config.sslProtocols, false);
 
             return sslStream;

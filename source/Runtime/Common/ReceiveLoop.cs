@@ -84,23 +84,23 @@ namespace JamesFrowen.SimpleWeb
             {
                 // this could happen if wss client closes stream
                 Log.Warn($"ReceiveLoop SocketException\n{e.Message}", false);
-                queue.Enqueue(new Message(conn.connId, e));
+                queue.Enqueue(new Message(conn, e));
             }
             catch (IOException e)
             {
                 // this could happen if client disconnects
                 Log.Warn($"ReceiveLoop IOException\n{e.Message}", false);
-                queue.Enqueue(new Message(conn.connId, e));
+                queue.Enqueue(new Message(conn, e));
             }
             catch (InvalidDataException e)
             {
                 Log.Error($"Invalid data from {conn}: {e.Message}");
-                queue.Enqueue(new Message(conn.connId, e));
+                queue.Enqueue(new Message(conn, e));
             }
             catch (Exception e)
             {
                 Log.Exception(e);
-                queue.Enqueue(new Message(conn.connId, e));
+                queue.Enqueue(new Message(conn, e));
             }
             finally
             {
@@ -166,7 +166,7 @@ namespace JamesFrowen.SimpleWeb
                 {
                     ArrayBuffer part = fragments.Dequeue();
 
-                    part.CopyTo(msg.array, msg.count);
+                    part.CopyTo(msg.array.AsSpan(msg.count));
                     msg.count += part.count;
 
                     part.Release();
@@ -175,7 +175,7 @@ namespace JamesFrowen.SimpleWeb
                 // dump after mask off
                 Log.DumpBuffer($"Message", msg);
 
-                queue.Enqueue(new Message(conn.connId, msg));
+                queue.Enqueue(new Message(conn, msg));
             }
         }
 
@@ -226,7 +226,7 @@ namespace JamesFrowen.SimpleWeb
             // dump after mask off
             Log.DumpBuffer($"Message", arrayBuffer);
 
-            queue.Enqueue(new Message(conn.connId, arrayBuffer));
+            queue.Enqueue(new Message(conn, arrayBuffer));
         }
 
         static ArrayBuffer CopyMessageToBuffer(BufferPool bufferPool, bool expectMask, byte[] buffer, int msgOffset, int payloadLength)
@@ -241,7 +241,7 @@ namespace JamesFrowen.SimpleWeb
             }
             else
             {
-                arrayBuffer.CopyFrom(buffer, msgOffset, payloadLength);
+                arrayBuffer.CopyFrom(buffer.AsSpan(msgOffset, payloadLength));
             }
 
             return arrayBuffer;

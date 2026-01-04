@@ -8,10 +8,31 @@ using System.Threading;
 
 namespace JamesFrowen.SimpleWeb
 {
-    internal sealed class Connection : IDisposable
+    /// <summary>
+    /// Represents a handle to a remote connection.
+    /// </summary>
+    public interface IConnection
+    {
+        /// <summary>
+        /// An opaque application-defined context associated with this connection.
+        /// <para>Use this to store references to high-level objects like a Player or Session.</para>
+        /// <remarks>This value is typically cleared by the transport when the connection is disconnected.</remarks>
+        /// </summary>
+        object Context { get; set; }
+
+        /// <summary>
+        /// The unique underlying identifier for this connection.
+        /// </summary>
+        int Id { get; }
+    }
+
+    sealed class Connection : IDisposable, IConnection
     {
         public const int IdNotSet = -1;
-        private readonly object disposedLock = new object();
+        readonly object disposedLock = new object();
+
+        public object Context { get; set; }
+        public int Id => connId;
 
         public TcpClient client;
 
@@ -38,7 +59,7 @@ namespace JamesFrowen.SimpleWeb
         public bool needsPong;
 
         public Action<Connection> onDispose;
-        private volatile bool hasDisposed;
+        volatile bool hasDisposed;
 
         public Connection(TcpClient client, Action<Connection> onDispose)
         {

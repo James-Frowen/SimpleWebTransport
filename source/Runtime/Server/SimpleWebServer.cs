@@ -1,16 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
 
 namespace JamesFrowen.SimpleWeb
 {
     public class SimpleWebServer
     {
-        public event Action<int> onConnect;
-        public event Action<int> onDisconnect;
-        public event Action<int, ArraySegment<byte>> onData;
-        public event Action<int, Exception> onError;
+        public event Action<IConnection> onConnect;
+        public event Action<IConnection> onDisconnect;
+        public event Action<IConnection, ArraySegment<byte>> onData;
+        public event Action<IConnection, Exception> onError;
 
         readonly int maxMessagesPerTick;
         readonly WebSocketServer server;
@@ -40,71 +39,64 @@ namespace JamesFrowen.SimpleWeb
         }
 
         /// <summary>
-        /// Sends to a list of connections, use <see cref="List{int}"/> version to avoid foreach allocation
+        /// Sends to a list of connections, use <see cref="List{IConnection}"/> version to avoid foreach allocation
         /// </summary>
-        /// <param name="connectionIds"></param>
+        /// <param name="connections"></param>
         /// <param name="source"></param>
-        public void SendAll(List<int> connectionIds, ArraySegment<byte> source)
+        public void SendAll(List<IConnection> connections, ArraySegment<byte> source)
         {
             ArrayBuffer buffer = bufferPool.Take(source.Count);
             buffer.CopyFrom(source);
-            buffer.SetReleasesRequired(connectionIds.Count);
+            buffer.SetReleasesRequired(connections.Count);
 
-            // make copy of array before for each, data sent to each client is the same
-            foreach (int id in connectionIds)
-                server.Send(id, buffer);
+            foreach (IConnection conn in connections)
+                server.Send(conn, buffer);
         }
 
         /// <summary>
-        /// Sends to a list of connections, use <see cref="ICollection{int}"/> version when you are using a non-list collection (will allocate in foreach)
+        /// Sends to a list of connections, use <see cref="ICollection{IConnection}"/> version when you are using a non-list collection (will allocate in foreach)
         /// </summary>
-        /// <param name="connectionIds"></param>
+        /// <param name="connections"></param>
         /// <param name="source"></param>
-        public void SendAll(ICollection<int> connectionIds, ArraySegment<byte> source)
+        public void SendAll(ICollection<IConnection> connections, ArraySegment<byte> source)
         {
             ArrayBuffer buffer = bufferPool.Take(source.Count);
             buffer.CopyFrom(source);
-            buffer.SetReleasesRequired(connectionIds.Count);
+            buffer.SetReleasesRequired(connections.Count);
 
-            // make copy of array before for each, data sent to each client is the same
-            foreach (int id in connectionIds)
-                server.Send(id, buffer);
+            foreach (IConnection conn in connections)
+                server.Send(conn, buffer);
         }
 
         /// <summary>
-        /// Sends to a list of connections, use <see cref="IEnumerable{int}"/> version in cases where you want to use LINQ to get connections (will allocate from LINQ functions and foreach)
+        /// Sends to a list of connections, use <see cref="IEnumerable{IConnection}"/> version in cases where you want to use LINQ to get connections (will allocate from LINQ functions and foreach)
         /// </summary>
-        /// <param name="connectionIds"></param>
+        /// <param name="connections"></param>
         /// <param name="source"></param>
-        public void SendAll(IEnumerable<int> connectionIds, ArraySegment<byte> source)
+        public void SendAll(IEnumerable<IConnection> connections, ArraySegment<byte> source)
         {
             ArrayBuffer buffer = bufferPool.Take(source.Count);
             buffer.CopyFrom(source);
-            buffer.SetReleasesRequired(connectionIds.Count());
+            buffer.SetReleasesRequired(connections.Count());
 
-            // make copy of array before for each, data sent to each client is the same
-            foreach (int id in connectionIds)
-                server.Send(id, buffer);
+            foreach (IConnection conn in connections)
+                server.Send(conn, buffer);
         }
 
-        public void SendOne(int connectionId, ArraySegment<byte> source)
+        public void SendOne(IConnection conn, ArraySegment<byte> source)
         {
             ArrayBuffer buffer = bufferPool.Take(source.Count);
             buffer.CopyFrom(source);
-            server.Send(connectionId, buffer);
+            server.Send(conn, buffer);
         }
 
-        public bool KickClient(int connectionId) => server.CloseConnection(connectionId);
+        public bool KickClient(IConnection conn) => server.CloseConnection(conn);
 
-        public void GetClientEndPoint(int connectionId, out string address, out int port) => server.GetClientEndPoint(connectionId, out address, out port);
-        
-        public string GetClientAddress(int connectionId)
-        {
-            server.GetClientEndPoint(connectionId, out string address, out int port);
-            return address;
-        }
+        public void GetClientEndPoint(IConnection conn, out string address, out int port) => server.GetClientEndPoint(conn, out address, out port);
 
-        public Request GetClientRequest(int connectionId) => server.GetClientRequest(connectionId);
+        public string GetClientAddress(IConnection conn) => server.GetClientAddress(conn);
+
+        public Request GetClientRequest(IConnection conn) => server.GetClientRequest(conn);
 
         /// <summary>
         /// Processes all messages while <paramref name="keepProcessing"/> is null or returns true
@@ -126,17 +118,17 @@ namespace JamesFrowen.SimpleWeb
                 switch (next.type)
                 {
                     case EventType.Connected:
-                        onConnect?.Invoke(next.connId);
+                        onConnect?.Invoke(next.conn);
                         break;
                     case EventType.Data:
-                        onData?.Invoke(next.connId, next.data.ToSegment());
+                        onData?.Invoke(next.conn, next.data.ToSegment());
                         next.data.Release();
                         break;
                     case EventType.Disconnected:
-                        onDisconnect?.Invoke(next.connId);
+                        onDisconnect?.Invoke(next.conn);
                         break;
                     case EventType.Error:
-                        onError?.Invoke(next.connId, next.exception);
+                        onError?.Invoke(next.conn, next.exception);
                         break;
                 }
             }
@@ -146,5 +138,143 @@ namespace JamesFrowen.SimpleWeb
                 Log.Warn($"SimpleWebServer ProcessMessageQueue has {server.receiveQueue.Count} remaining.");
             }
         }
+
+        /// <summary>get IConnection back using id</summary>
+        public bool TryGetConnection(int id, out IConnection connection) => server.TryGetConnection(id, out connection);
+
+        #region legacy helper methods
+        /// <summary>
+        /// Sends to a list of connections, use <see cref="List{int}"/> version to avoid foreach allocation
+        /// </summary>
+        /// <param name="connectionIds"></param>
+        /// <param name="source"></param>
+        public void SendAll(List<int> connectionIds, ArraySegment<byte> source)
+        {
+            ArrayBuffer buffer = bufferPool.Take(source.Count);
+            buffer.CopyFrom(source);
+            buffer.SetReleasesRequired(connectionIds.Count);
+
+            foreach (int id in connectionIds)
+            {
+                if (TryGetConnection(id, out IConnection conn))
+                {
+                    server.Send(conn, buffer);
+                }
+                else
+                {
+                    Log.Warn($"Cant send message to {id} because connection was not found in dictionary. Maybe it disconnected.");
+                    buffer.Release(); // Release if not sent
+                }
+            }
+        }
+        /// <summary>
+        /// Sends to a list of connections, use <see cref="ICollection{int}"/> version when you are using a non-list collection (will allocate in foreach)
+        /// </summary>
+        /// <param name="connectionIds"></param>
+        /// <param name="source"></param>
+        public void SendAll(ICollection<int> connectionIds, ArraySegment<byte> source)
+        {
+            ArrayBuffer buffer = bufferPool.Take(source.Count);
+            buffer.CopyFrom(source);
+            buffer.SetReleasesRequired(connectionIds.Count);
+
+            foreach (int id in connectionIds)
+            {
+                if (TryGetConnection(id, out IConnection conn))
+                {
+                    server.Send(conn, buffer);
+                }
+                else
+                {
+                    Log.Warn($"Cant send message to {id} because connection was not found in dictionary. Maybe it disconnected.");
+                    buffer.Release(); // Release if not sent
+                }
+            }
+        }
+        /// <summary>
+        /// Sends to a list of connections, use <see cref="IEnumerable{int}"/> version in cases where you want to use LINQ to get connections (will allocate from LINQ functions and foreach)
+        /// </summary>
+        /// <param name="connectionIds"></param>
+        /// <param name="source"></param>
+        public void SendAll(IEnumerable<int> connectionIds, ArraySegment<byte> source)
+        {
+            ArrayBuffer buffer = bufferPool.Take(source.Count);
+            buffer.CopyFrom(source);
+            buffer.SetReleasesRequired(connectionIds.Count());
+
+            foreach (int id in connectionIds)
+            {
+                if (TryGetConnection(id, out IConnection conn))
+                {
+                    server.Send(conn, buffer);
+                }
+                else
+                {
+                    Log.Warn($"Cant send message to {id} because connection was not found in dictionary. Maybe it disconnected.");
+                    buffer.Release(); // Release if not sent
+                }
+            }
+        }
+        public void SendOne(int connectionId, ArraySegment<byte> source)
+        {
+            if (TryGetConnection(connectionId, out IConnection conn))
+            {
+                SendOne(conn, source);
+            }
+            else
+            {
+                Log.Warn($"Cant send message to {connectionId} because connection was not found in dictionary. Maybe it disconnected.");
+            }
+        }
+        public bool KickClient(int connectionId)
+        {
+            if (TryGetConnection(connectionId, out IConnection conn))
+            {
+                return KickClient(conn);
+            }
+            else
+            {
+                Log.Warn($"Failed to kick {connectionId} because id not found");
+                return false;
+            }
+        }
+        public void GetClientEndPoint(int connectionId, out string address, out int port)
+        {
+            if (TryGetConnection(connectionId, out IConnection conn))
+            {
+                GetClientEndPoint(conn, out address, out port);
+            }
+            else
+            {
+                Log.Error($"Cant get address of connection {connectionId} because connection was not found in dictionary");
+                address = null;
+                port = 0;
+            }
+        }
+        public string GetClientAddress(int connectionId)
+        {
+            if (TryGetConnection(connectionId, out IConnection conn))
+            {
+                return GetClientAddress(conn);
+            }
+            else
+            {
+                Log.Error($"Cant get address of connection {connectionId} because connection was not found in dictionary");
+                return null;
+            }
+        }
+        public Request GetClientRequest(int connectionId)
+        {
+            if (TryGetConnection(connectionId, out IConnection conn))
+            {
+                return GetClientRequest(conn);
+            }
+            else
+            {
+                Log.Error($"Cant get request of connection {connectionId} because connection was not found in dictionary");
+                return null;
+            }
+        }
+        #endregion
     }
 }

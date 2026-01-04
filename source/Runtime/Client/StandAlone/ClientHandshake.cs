@@ -9,7 +9,7 @@ namespace JamesFrowen.SimpleWeb
     /// Handles Handshake to the server when it first connects
     /// <para>The client handshake does not need buffers to reduce allocations since it only happens once</para>
     /// </summary>
-    internal class ClientHandshake
+    class ClientHandshake
     {
         public bool TryHandshake(Connection conn, Uri uri)
         {
@@ -18,7 +18,7 @@ namespace JamesFrowen.SimpleWeb
                 Stream stream = conn.stream;
 
                 byte[] keyBuffer = new byte[16];
-                using (var rng = new RNGCryptoServiceProvider())
+                using (RNGCryptoServiceProvider rng = new RNGCryptoServiceProvider())
                 {
                     rng.GetBytes(keyBuffer);
                 }

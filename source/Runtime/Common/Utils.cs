@@ -2,7 +2,7 @@ using System.Threading;
 
 namespace JamesFrowen.SimpleWeb
 {
-    internal static class Utils
+    static class Utils
     {
         public static void CheckForInterupt()
         {

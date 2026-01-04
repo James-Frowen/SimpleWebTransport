@@ -12,9 +12,9 @@ namespace JamesFrowen.SimpleWeb
         public static volatile bool batchSend = false;
         public static volatile bool sleepBeforeSend = false;
     }
-    internal static class SendLoop
+    static class SendLoop
     {
-        private static readonly byte[] PongResponse = new byte[] { 0b1000_0000 | 10, 0 }; // FIN bit + PONG opcode, Length 0
+        static readonly byte[] PongResponse = new byte[] { 0b1000_0000 | 10, 0 }; // FIN bit + PONG opcode, Length 0
 
         public struct Config
         {
@@ -154,7 +154,7 @@ namespace JamesFrowen.SimpleWeb
                 offset = maskHelper.WriteMask(buffer, offset);
             }
 
-            msg.CopyTo(buffer, offset);
+            msg.CopyTo(buffer.AsSpan(offset));
             offset += msgLength;
 
             // dump before mask on

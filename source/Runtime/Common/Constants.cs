@@ -8,7 +8,7 @@ namespace JamesFrowen.SimpleWeb
     /// Some values are from https://tools.ietf.org/html/rfc6455
     /// </para>
     /// </summary>
-    internal static class Constants
+    static class Constants
     {
         /// <summary>
         /// Header is at most 4 bytes
