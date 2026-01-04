@@ -1,3 +1,19 @@
+# [3.0.0](https://github.com/James-Frowen/SimpleWebTransport/compare/v2.3.3...v3.0.0) (2026-01-04)
+
+
+* feat!: adding IConnection as opaque reference to use instead of int id ([b832298](https://github.com/James-Frowen/SimpleWebTransport/commit/b832298ae6c41ad28351e95c3feb33771065ac87))
+* refactor!: changing some ArraySegment to Span ([12d6873](https://github.com/James-Frowen/SimpleWebTransport/commit/12d6873e5930b03452b87d02839dc8f52fb452d8))
+* refactor!: removing MonoBehaviour from ProcessMessageQueue ([b634c35](https://github.com/James-Frowen/SimpleWebTransport/commit/b634c35404aa85ef1ed6c8d7d03373aa873f6aa9))
+
+
+### BREAKING CHANGES
+
+* most methods now use IConnection instead of int id
+* ProcessMessageQueue now takes Func<bool> keepProcessing instead of MonoBehaviour
+* - Send method now use ReadOnlySpan<byte> instead of ArraySegment<byte>
+- CopyTo and CopyFrom methods in ArrayBuffer now use Span<byte>
+- jsLib function no longer passing offset
+
 ## [2.3.3](https://github.com/James-Frowen/SimpleWebTransport/compare/v2.3.2...v2.3.3) (2025-11-25)
 
 
