@@ -24,7 +24,7 @@ Includes a Websocket server, standalone client, and a WebGL client so that both 
 If you prefer to install a specific version or hash directly from GitHub, you can add the following line to your `Packages/manifest.json` file under the `dependencies` section:
 
 ```json
-"com.miragenet.mirage": "https:/github.com/James-Frowen/SimpleWebTransport.git?path=/source#v3.0.1",
+"com.james-frowen.simplewebtransport": "https:/github.com/James-Frowen/SimpleWebTransport.git?path=/source#v3.0.1",
 ```
 
 
@@ -46,7 +46,7 @@ Or add to `Packages/manifest.json`
 ```json
 {
     "dependencies": {
-        "com.james-frowen.simplewebtransport": "2.2.0"
+        "com.james-frowen.simplewebtransport": "3.0.1"
     },
     "scopedRegistries": [
         {
