@@ -1,11 +1,17 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace JamesFrowen.SimpleWeb
 {
     public class WebSocketClientWebGl : SimpleWebClient
     {
         static readonly Dictionary<int, WebSocketClientWebGl> instances = new Dictionary<int, WebSocketClientWebGl>();
+
+        /// <summary>
+        /// buffer used by jslib to avoid allocations
+        /// </summary>
+        IntPtr incomingDataBuffer;
 
         /// <summary>
         /// key for instances sent between c# and js
@@ -32,7 +38,8 @@ namespace JamesFrowen.SimpleWeb
 
         public override void Connect(Uri serverAddress)
         {
-            index = SimpleWebJSLib.Connect(serverAddress.ToString(), OpenCallback, CloseCallBack, MessageCallback, ErrorCallback);
+            incomingDataBuffer = Marshal.AllocHGlobal(maxMessageSize);
+            index = SimpleWebJSLib.Connect(serverAddress.ToString(), OpenCallback, CloseCallBack, MessageCallback, ErrorCallback, incomingDataBuffer, maxMessageSize);
             instances.Add(index, this);
             state = ClientState.Connecting;
         }
@@ -42,6 +49,8 @@ namespace JamesFrowen.SimpleWeb
             state = ClientState.Disconnecting;
             // disconnect should cause closeCallback and OnDisconnect to be called
             SimpleWebJSLib.Disconnect(index);
+            Marshal.FreeHGlobal(incomingDataBuffer);
+            incomingDataBuffer = IntPtr.Zero;
         }
 
         public override void Send(ReadOnlySpan<byte> span)
@@ -114,6 +123,7 @@ namespace JamesFrowen.SimpleWeb
             receiveQueue.Enqueue(new Message(new Exception("Javascript Websocket error")));
             Disconnect();
         }
+
 
 #if UNITY_WEBGL
         [AOT.MonoPInvokeCallback(typeof(Action<int>))]
