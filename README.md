@@ -6,7 +6,7 @@
 
 # Simple Web Transport
 
-Low level Websocket Transport use by [Mirror](https://github.com/vis2k/Mirror) and [Mirage](https://github.com/MirageNet/Mirage)
+Low level Websocket Transport use by [Mirror](https://github.com/MirrorNetworking/Mirror) and [Mirage](https://github.com/MirageNet/Mirage)
 
 This Transport uses the websocket protocol. This allows this transport to be used in WebGL builds of unity.
 
@@ -18,6 +18,15 @@ Includes a Websocket server, standalone client, and a WebGL client so that both 
 
 1) Download the code from the source folder or package on [Release](https://github.com/James-Frowen/SimpleWebTransport/releases) page.
 2) Put the code somewhere in your Assets folder
+
+#### Git URL
+
+If you prefer to install a specific version or hash directly from GitHub, you can add the following line to your `Packages/manifest.json` file under the `dependencies` section:
+
+```json
+"com.miragenet.mirage": "https:/github.com/James-Frowen/SimpleWebTransport.git?path=/source#v3.0.1",
+```
+
 
 #### openUPM
 
