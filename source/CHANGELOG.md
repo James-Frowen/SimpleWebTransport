@@ -1,3 +1,16 @@
+## [3.0.1](https://github.com/James-Frowen/SimpleWebTransport/compare/v3.0.0...v3.0.1) (2026-02-25)
+
+
+### Bug Fixes
+
+* fixing negative pointers with WebAssembly2023 ([ffa9ece](https://github.com/James-Frowen/SimpleWebTransport/commit/ffa9ece192580778570ccc82fd8370fa64b2eb6d))
+* using #if to avoid compile error outside of unity ([e0a7539](https://github.com/James-Frowen/SimpleWebTransport/commit/e0a7539c4408b51659cc28bc74ec97b04d90fc36))
+
+
+### Performance Improvements
+
+* removing allocation inside webSocket.onmessage ([b309f64](https://github.com/James-Frowen/SimpleWebTransport/commit/b309f642c0a8cbe9db68fc005ff140e0de7e9d11))
+
 # [3.0.0](https://github.com/James-Frowen/SimpleWebTransport/compare/v2.3.3...v3.0.0) (2026-01-04)
 
 
