@@ -83,7 +83,7 @@ function Disconnect(index) {
     var webSocket = SimpleWeb.GetWebSocket(index);
     if (webSocket) {
         webSocket._incomingDataBufferAlive = false;
-        webSocket.close(1000, "Disconnect Called by Mirror");
+        webSocket.close(1000, "Disconnect Called by SimpleWeb");
     }
 
     SimpleWeb.RemoveSocket(index);
