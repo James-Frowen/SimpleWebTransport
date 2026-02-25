@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using AOT;
 
 namespace JamesFrowen.SimpleWeb
 {
@@ -116,16 +115,24 @@ namespace JamesFrowen.SimpleWeb
             Disconnect();
         }
 
-        [MonoPInvokeCallback(typeof(Action<int>))]
+#if UNITY_WEBGL
+        [AOT.MonoPInvokeCallback(typeof(Action<int>))]
+#endif
         static void OpenCallback(int index) => instances[index].onOpen();
 
-        [MonoPInvokeCallback(typeof(Action<int>))]
+#if UNITY_WEBGL
+        [AOT.MonoPInvokeCallback(typeof(Action<int>))]
+#endif
         static void CloseCallBack(int index) => instances[index].onClose();
 
-        [MonoPInvokeCallback(typeof(Action<int, IntPtr, int>))]
+#if UNITY_WEBGL
+        [AOT.MonoPInvokeCallback(typeof(Action<int, IntPtr, int>))]
+#endif
         static void MessageCallback(int index, IntPtr bufferPtr, int count) => instances[index].onMessage(bufferPtr, count);
 
-        [MonoPInvokeCallback(typeof(Action<int>))]
+#if UNITY_WEBGL
+        [AOT.MonoPInvokeCallback(typeof(Action<int>))]
+#endif
         static void ErrorCallback(int index) => instances[index].onErr();
     }
 }
