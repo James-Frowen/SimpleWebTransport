@@ -2,3 +2,6 @@
 /NginxConfig/*.meta
 bin/
 obj/
+.vs/
+.vscode/
+
