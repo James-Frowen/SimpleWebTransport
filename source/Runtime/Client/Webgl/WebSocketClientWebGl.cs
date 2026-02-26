@@ -49,8 +49,16 @@ namespace JamesFrowen.SimpleWeb
             state = ClientState.Disconnecting;
             // disconnect should cause closeCallback and OnDisconnect to be called
             SimpleWebJSLib.Disconnect(index);
-            Marshal.FreeHGlobal(incomingDataBuffer);
-            incomingDataBuffer = IntPtr.Zero;
+            SafeFreeDataBuffer();
+        }
+
+        void SafeFreeDataBuffer()
+        {
+            if (incomingDataBuffer != IntPtr.Zero)
+            {
+                Marshal.FreeHGlobal(incomingDataBuffer);
+                incomingDataBuffer = IntPtr.Zero;
+            }
         }
 
         public override void Send(ReadOnlySpan<byte> span)
@@ -96,6 +104,7 @@ namespace JamesFrowen.SimpleWeb
             receiveQueue.Enqueue(new Message(EventType.Disconnected));
             state = ClientState.NotConnected;
             instances.Remove(index);
+            SafeFreeDataBuffer();
         }
 
         void onMessage(IntPtr bufferPtr, int count)

@@ -44,6 +44,7 @@ function Connect(addressPtr, openCallbackPtr, closeCallBackPtr, messageCallbackP
     webSocket.onclose = function (event) {
         console.log("Disconnected from " + address);
         {{{ makeDynCall('vi', 'closeCallBackPtr') }}}(index);
+        webSocket._incomingDataBufferAlive = false;
     }
 
     // Listen for messages
@@ -57,7 +58,7 @@ function Connect(addressPtr, openCallbackPtr, closeCallBackPtr, messageCallbackP
             var arrayLength = array.length;
 
             if (arrayLength > incomingDataBufferLength) {
-                console.error(`Incoming message is too large arge: ${arrayLength} > ${incomingDataBufferLength}`);
+                console.error(`Incoming message is too large: ${arrayLength} > ${incomingDataBufferLength}`);
                 return;
             }
 
