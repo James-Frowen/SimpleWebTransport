@@ -1,3 +1,10 @@
+## [3.0.2](https://github.com/James-Frowen/SimpleWebTransport/compare/v3.0.1...v3.0.2) (2026-02-26)
+
+
+### Bug Fixes
+
+* improving handling of pointer free ([1371b69](https://github.com/James-Frowen/SimpleWebTransport/commit/1371b69ae1d690a46cb06ba513dc0dca5ec6f788))
+
 ## [3.0.1](https://github.com/James-Frowen/SimpleWebTransport/compare/v3.0.0...v3.0.1) (2026-02-25)
 
 
