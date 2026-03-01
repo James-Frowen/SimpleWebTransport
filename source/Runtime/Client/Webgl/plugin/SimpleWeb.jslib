@@ -1,18 +1,24 @@
 // this will create a global object
 const SimpleWeb = {
-    webSockets: new Map(),
+    webSockets: null, // unity converts Map to {}, so we have to use new at runtime
     next: 1,
     GetWebSocket: function (index) {
-        return SimpleWeb.webSockets.get(index);
+        if (SimpleWeb.webSockets)
+            return SimpleWeb.webSockets.get(index);
+        else 
+            return null;
     },
     AddNextSocket: function (webSocket) {
+        if (!SimpleWeb.webSockets)
+            SimpleWeb.webSockets = new Map();
         var index = SimpleWeb.next;
         SimpleWeb.next++;
         SimpleWeb.webSockets.set(index, webSocket);
         return index;
     },
     RemoveSocket: function (index) {
-        SimpleWeb.webSockets.delete(index);
+        if (SimpleWeb.webSockets)
+            SimpleWeb.webSockets.delete(index);
     },
 };
 
