@@ -1,18 +1,18 @@
 // this will create a global object
 const SimpleWeb = {
-    webSockets: [],
+    webSockets: new Map(),
     next: 1,
     GetWebSocket: function (index) {
-        return SimpleWeb.webSockets[index]
+        return SimpleWeb.webSockets.get(index);
     },
     AddNextSocket: function (webSocket) {
         var index = SimpleWeb.next;
         SimpleWeb.next++;
-        SimpleWeb.webSockets[index] = webSocket;
+        SimpleWeb.webSockets.set(index, webSocket);
         return index;
     },
     RemoveSocket: function (index) {
-        SimpleWeb.webSockets[index] = undefined;
+        SimpleWeb.webSockets.delete(index);
     },
 };
 
