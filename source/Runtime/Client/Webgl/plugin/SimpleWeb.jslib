@@ -16,7 +16,7 @@ const SimpleWeb = {
     },
 };
 
-function IsConnected(index) {
+function SimpleWeb_IsConnected(index) {
     var webSocket = SimpleWeb.GetWebSocket(index);
     if (webSocket) {
         return webSocket.readyState === webSocket.OPEN;
@@ -26,7 +26,7 @@ function IsConnected(index) {
     }
 }
 
-function Connect(addressPtr, openCallbackPtr, closeCallBackPtr, messageCallbackPtr, errorCallbackPtr, incomingDataBuffer, incomingDataBufferLength) {
+function SimpleWeb_Connect(addressPtr, openCallbackPtr, closeCallBackPtr, messageCallbackPtr, errorCallbackPtr, incomingDataBuffer, incomingDataBufferLength) {
     const address = UTF8ToString(addressPtr);
     console.log("Connecting to " + address);
     // Create webSocket connection.
@@ -80,7 +80,7 @@ function Connect(addressPtr, openCallbackPtr, closeCallBackPtr, messageCallbackP
     return index;
 }
 
-function Disconnect(index) {
+function SimpleWeb_Disconnect(index) {
     var webSocket = SimpleWeb.GetWebSocket(index);
     if (webSocket) {
         webSocket._incomingDataBufferAlive = false;
@@ -90,7 +90,7 @@ function Disconnect(index) {
     SimpleWeb.RemoveSocket(index);
 }
 
-function Send(index, arrayPtr, length) {
+function SimpleWeb_Send(index, arrayPtr, length) {
     var webSocket = SimpleWeb.GetWebSocket(index);
     if (webSocket) {
         const start = arrayPtr >>> 0; // Ensure unsigned 32-bit integer
@@ -105,10 +105,10 @@ function Send(index, arrayPtr, length) {
 
 const SimpleWebLib = {
     $SimpleWeb: SimpleWeb,
-    IsConnected,
-    Connect,
-    Disconnect,
-    Send
+    SimpleWeb_IsConnected,
+    SimpleWeb_Connect,
+    SimpleWeb_Disconnect,
+    SimpleWeb_Send
 };
 autoAddDeps(SimpleWebLib, '$SimpleWeb');
 mergeInto(LibraryManager.library, SimpleWebLib);

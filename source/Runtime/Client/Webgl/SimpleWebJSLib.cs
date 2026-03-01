@@ -8,11 +8,11 @@ namespace JamesFrowen.SimpleWeb
     static class SimpleWebJSLib
     {
 #if UNITY_WEBGL
-        [DllImport("__Internal")]
+        [DllImport("__Internal", EntryPoint = "SimpleWeb_IsConnected")]
         internal static extern bool IsConnected(int index);
 
 #pragma warning disable CA2101 // Specify marshaling for P/Invoke string arguments
-        [DllImport("__Internal")]
+        [DllImport("__Internal", EntryPoint = "SimpleWeb_Connect")]
 #pragma warning restore CA2101 // Specify marshaling for P/Invoke string arguments
         internal static extern int Connect(string address,
             Action<int> openCallback,
@@ -23,10 +23,10 @@ namespace JamesFrowen.SimpleWeb
             int incomingDataBufferLength
             );
 
-        [DllImport("__Internal")]
+        [DllImport("__Internal", EntryPoint = "SimpleWeb_Disconnect")]
         internal static extern void Disconnect(int index);
 
-        [DllImport("__Internal")]
+        [DllImport("__Internal", EntryPoint = "SimpleWeb_Send")]
         internal static extern bool Send(int index, IntPtr ptr, int length);
 #else
         internal static bool IsConnected(int index) => throw new NotSupportedException();
