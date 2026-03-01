@@ -1,3 +1,10 @@
+## [3.0.4](https://github.com/James-Frowen/SimpleWebTransport/compare/v3.0.3...v3.0.4) (2026-03-01)
+
+
+### Bug Fixes
+
+* fixing unity removing new Map ([51e37cb](https://github.com/James-Frowen/SimpleWebTransport/commit/51e37cbec18014a667cc7706d4e8693d749dde08))
+
 ## [3.0.3](https://github.com/James-Frowen/SimpleWebTransport/compare/v3.0.2...v3.0.3) (2026-03-01)
 
 
