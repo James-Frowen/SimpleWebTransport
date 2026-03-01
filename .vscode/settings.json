@@ -1,0 +1,9 @@
+{
+    "files.associations": {
+        "*.jslib": "javascript"
+    },
+    // avoid breaking formatting for makeDynCall
+    "[javascript]": {
+        "editor.formatOnSave": false
+    }
+}
