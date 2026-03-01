@@ -1,3 +1,16 @@
+## [3.0.3](https://github.com/James-Frowen/SimpleWebTransport/compare/v3.0.2...v3.0.3) (2026-03-01)
+
+
+### Bug Fixes
+
+* adding SimpleWeb_ prefix to avoid name collision with other jslib ([0c51ad9](https://github.com/James-Frowen/SimpleWebTransport/commit/0c51ad9b280f92e5ffb726c3c97ee508931a09df))
+* calling RemoveSocket from onclose to clean up js connections ([7863fe1](https://github.com/James-Frowen/SimpleWebTransport/commit/7863fe13322ef7e134df09bd2454e0f7f6f2e1d6))
+
+
+### Performance Improvements
+
+* using Map instead of array to avoid memory growth for long lived servers ([fff36f1](https://github.com/James-Frowen/SimpleWebTransport/commit/fff36f1b79d94eb6dcc7ae7faef80492e929c214))
+
 ## [3.0.2](https://github.com/James-Frowen/SimpleWebTransport/compare/v3.0.1...v3.0.2) (2026-02-26)
 
 
