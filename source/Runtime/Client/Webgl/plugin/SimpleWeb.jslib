@@ -44,7 +44,10 @@ function SimpleWeb_Connect(addressPtr, openCallbackPtr, closeCallBackPtr, messag
     webSocket.onclose = function (event) {
         console.log("Disconnected from " + address);
         {{{ makeDynCall('vi', 'closeCallBackPtr') }}}(index);
+
+        // remove from js side incase c# does not call Disconnect
         webSocket._incomingDataBufferAlive = false;
+        SimpleWeb.RemoveSocket(index);
     }
 
     // Listen for messages
