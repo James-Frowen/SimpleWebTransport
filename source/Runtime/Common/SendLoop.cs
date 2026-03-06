@@ -75,11 +75,11 @@ namespace JamesFrowen.SimpleWeb
                         int offset = 0;
                         while (conn.sendQueue.TryDequeue(out ArrayBuffer msg))
                         {
+                            using ArrayBuffer _ = msg; // auto release
                             // check if connected before sending message
                             if (!client.Connected)
                             {
                                 Log.Info($"SendLoop {conn} not connected");
-                                msg.Release();
                                 return;
                             }
 
@@ -93,7 +93,6 @@ namespace JamesFrowen.SimpleWeb
                             }
 
                             offset = SendMessage(writeBuffer, offset, msg, setMask, maskHelper);
-                            msg.Release();
                         }
 
                         // after no message in queue, send remaining messages
@@ -105,17 +104,16 @@ namespace JamesFrowen.SimpleWeb
                     {
                         while (conn.sendQueue.TryDequeue(out ArrayBuffer msg))
                         {
+                            using ArrayBuffer _ = msg;
                             // check if connected before sending message
                             if (!client.Connected)
                             {
                                 Log.Info($"SendLoop {conn} not connected");
-                                msg.Release();
                                 return;
                             }
 
                             int length = SendMessage(writeBuffer, 0, msg, setMask, maskHelper);
                             stream.Write(writeBuffer, 0, length);
-                            msg.Release();
                         }
                     }
                 }

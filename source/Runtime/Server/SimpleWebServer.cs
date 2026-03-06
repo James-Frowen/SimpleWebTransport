@@ -127,8 +127,10 @@ namespace JamesFrowen.SimpleWeb
                         onConnect?.Invoke(next.conn);
                         break;
                     case EventType.Data:
-                        onData?.Invoke(next.conn, next.data.ToSegment());
-                        next.data.Release();
+                        using (next.data)
+                        {
+                            onData?.Invoke(next.conn, next.data.ToSegment());
+                        }
                         break;
                     case EventType.Disconnected:
                         onDisconnect?.Invoke(next.conn);

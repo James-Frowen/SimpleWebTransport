@@ -69,8 +69,10 @@ namespace JamesFrowen.SimpleWeb
                         onConnect?.Invoke();
                         break;
                     case EventType.Data:
-                        onData?.Invoke(next.data.ToSegment());
-                        next.data.Release();
+                        using (next.data) // auto release
+                        {
+                            onData?.Invoke(next.data.ToSegment());
+                        }
                         break;
                     case EventType.Disconnected:
                         onDisconnect?.Invoke();
