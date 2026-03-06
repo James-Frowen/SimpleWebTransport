@@ -234,6 +234,7 @@ namespace JamesFrowen.SimpleWeb
             else
             {
                 Log.Warn($"Cant send message to {id} because connection was not found in dictionary. Maybe it disconnected.");
+                buffer.Release();
             }
         }
         public bool CloseConnection(int id)

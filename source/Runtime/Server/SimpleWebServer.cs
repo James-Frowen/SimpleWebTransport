@@ -164,17 +164,7 @@ namespace JamesFrowen.SimpleWeb
             buffer.SetReleasesRequired(connectionIds.Count);
 
             foreach (int id in connectionIds)
-            {
-                if (TryGetConnection(id, out IConnection conn))
-                {
-                    server.Send(conn, buffer);
-                }
-                else
-                {
-                    Log.Warn($"Cant send message to {id} because connection was not found in dictionary. Maybe it disconnected.");
-                    buffer.Release(); // Release if not sent
-                }
-            }
+                server.Send(id, buffer);
         }
         /// <summary>
         /// Sends to a list of connections, use <see cref="ICollection{int}"/> version when you are using a non-list collection (will allocate in foreach)
@@ -191,17 +181,7 @@ namespace JamesFrowen.SimpleWeb
             buffer.SetReleasesRequired(connectionIds.Count);
 
             foreach (int id in connectionIds)
-            {
-                if (TryGetConnection(id, out IConnection conn))
-                {
-                    server.Send(conn, buffer);
-                }
-                else
-                {
-                    Log.Warn($"Cant send message to {id} because connection was not found in dictionary. Maybe it disconnected.");
-                    buffer.Release(); // Release if not sent
-                }
-            }
+                server.Send(id, buffer);
         }
         /// <summary>
         /// Sends to a list of connections, use <see cref="IEnumerable{int}"/> version in cases where you want to use LINQ to get connections (will allocate from LINQ functions and foreach)
