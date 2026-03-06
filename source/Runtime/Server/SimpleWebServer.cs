@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace JamesFrowen.SimpleWeb
 {
@@ -14,6 +13,8 @@ namespace JamesFrowen.SimpleWeb
         readonly int maxMessagesPerTick;
         readonly WebSocketServer server;
         readonly BufferPool bufferPool;
+        List<IConnection> sendAllConnCache;
+        List<int> sendAllIdCache;
 
         public bool Active { get; private set; }
 
@@ -45,6 +46,9 @@ namespace JamesFrowen.SimpleWeb
         /// <param name="source"></param>
         public void SendAll(List<IConnection> connections, ArraySegment<byte> source)
         {
+            if (connections.Count == 0)
+                return;
+
             ArrayBuffer buffer = bufferPool.Take(source.Count);
             buffer.CopyFrom(source);
             buffer.SetReleasesRequired(connections.Count);
@@ -60,6 +64,9 @@ namespace JamesFrowen.SimpleWeb
         /// <param name="source"></param>
         public void SendAll(ICollection<IConnection> connections, ArraySegment<byte> source)
         {
+            if (connections.Count == 0)
+                return;
+
             ArrayBuffer buffer = bufferPool.Take(source.Count);
             buffer.CopyFrom(source);
             buffer.SetReleasesRequired(connections.Count);
@@ -75,12 +82,11 @@ namespace JamesFrowen.SimpleWeb
         /// <param name="source"></param>
         public void SendAll(IEnumerable<IConnection> connections, ArraySegment<byte> source)
         {
-            ArrayBuffer buffer = bufferPool.Take(source.Count);
-            buffer.CopyFrom(source);
-            buffer.SetReleasesRequired(connections.Count());
-
-            foreach (IConnection conn in connections)
-                server.Send(conn, buffer);
+            sendAllConnCache ??= new();
+            sendAllConnCache.Clear();
+            // copy to list incase IEnumerable is unstable (different result each loop)
+            sendAllConnCache.AddRange(connections);
+            SendAll(sendAllConnCache, source);
         }
 
         public void SendOne(IConnection conn, ArraySegment<byte> source)
@@ -150,6 +156,9 @@ namespace JamesFrowen.SimpleWeb
         /// <param name="source"></param>
         public void SendAll(List<int> connectionIds, ArraySegment<byte> source)
         {
+            if (connectionIds.Count == 0)
+                return;
+
             ArrayBuffer buffer = bufferPool.Take(source.Count);
             buffer.CopyFrom(source);
             buffer.SetReleasesRequired(connectionIds.Count);
@@ -174,6 +183,9 @@ namespace JamesFrowen.SimpleWeb
         /// <param name="source"></param>
         public void SendAll(ICollection<int> connectionIds, ArraySegment<byte> source)
         {
+            if (connectionIds.Count == 0)
+                return;
+
             ArrayBuffer buffer = bufferPool.Take(source.Count);
             buffer.CopyFrom(source);
             buffer.SetReleasesRequired(connectionIds.Count);
@@ -198,22 +210,11 @@ namespace JamesFrowen.SimpleWeb
         /// <param name="source"></param>
         public void SendAll(IEnumerable<int> connectionIds, ArraySegment<byte> source)
         {
-            ArrayBuffer buffer = bufferPool.Take(source.Count);
-            buffer.CopyFrom(source);
-            buffer.SetReleasesRequired(connectionIds.Count());
-
-            foreach (int id in connectionIds)
-            {
-                if (TryGetConnection(id, out IConnection conn))
-                {
-                    server.Send(conn, buffer);
-                }
-                else
-                {
-                    Log.Warn($"Cant send message to {id} because connection was not found in dictionary. Maybe it disconnected.");
-                    buffer.Release(); // Release if not sent
-                }
-            }
+            sendAllIdCache ??= new();
+            sendAllIdCache.Clear();
+            // copy to list incase IEnumerable is unstable (different result each loop)
+            sendAllIdCache.AddRange(connectionIds);
+            SendAll(sendAllIdCache, source);
         }
         public void SendOne(int connectionId, ArraySegment<byte> source)
         {
