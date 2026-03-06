@@ -52,6 +52,7 @@ namespace JamesFrowen.SimpleWeb
 
             Profiler.BeginThreadProfiling("SimpleWeb", $"ReceiveLoop {conn.connId}");
 
+            Queue<ArrayBuffer> fragments = new Queue<ArrayBuffer>(); // create queue once to avoid allocation each time
             byte[] readBuffer = new byte[Constants.HeaderSize + (expectMask ? Constants.MaskSize : 0) + maxMessageSize];
             try
             {
@@ -61,7 +62,7 @@ namespace JamesFrowen.SimpleWeb
 
                     while (client.Connected)
                     {
-                        ReadOneMessage(config, readBuffer);
+                        ReadOneMessage(config, readBuffer, fragments);
                     }
 
                     Log.Info($"{conn} Not Connected");
@@ -107,10 +108,14 @@ namespace JamesFrowen.SimpleWeb
                 Profiler.EndThreadProfiling();
 
                 conn.Dispose();
+
+                // release any unprocessed fragments in case ReadOneMessage throws mid loop
+                while (fragments.TryDequeue(out ArrayBuffer buffer))
+                    buffer.Release();
             }
         }
 
-        static void ReadOneMessage(Config config, byte[] buffer)
+        static void ReadOneMessage(Config config, byte[] buffer, Queue<ArrayBuffer> fragments)
         {
             (Connection conn, int maxMessageSize, bool expectMask, ConcurrentQueue<Message> queue, BufferPool bufferPool) = config;
             Stream stream = conn.stream;
@@ -141,7 +146,6 @@ namespace JamesFrowen.SimpleWeb
             else
             {
                 // todo cache this to avoid allocations
-                Queue<ArrayBuffer> fragments = new Queue<ArrayBuffer>();
                 fragments.Enqueue(CopyMessageToBuffer(bufferPool, expectMask, buffer, msgOffset, header.payloadLength));
                 int totalSize = header.payloadLength;
 
