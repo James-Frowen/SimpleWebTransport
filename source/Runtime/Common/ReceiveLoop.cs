@@ -131,9 +131,7 @@ namespace JamesFrowen.SimpleWeb
                         HandleCloseMessage(config, buffer, msgOffset, header.payloadLength);
                         break;
                     case OpCode.ping:
-                        // Set flag to send pong response
-                        conn.needsPong = true;
-                        conn.sendPending.Set();
+                        conn.SetNeedsPong();
                         break;
                     case OpCode.pong:
                         // nothing
