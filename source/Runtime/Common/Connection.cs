@@ -54,8 +54,8 @@ namespace JamesFrowen.SimpleWeb
         public Thread receiveThread;
         public Thread sendThread;
 
-        public ManualResetEventSlim sendPending = new ManualResetEventSlim(false);
-        public ConcurrentQueue<ArrayBuffer> sendQueue = new ConcurrentQueue<ArrayBuffer>();
+        ManualResetEventSlim sendPending = new ManualResetEventSlim(false);
+        ConcurrentQueue<ArrayBuffer> sendQueue = new ConcurrentQueue<ArrayBuffer>();
         public bool needsPong;
 
         public Action<Connection> onDispose;
@@ -65,6 +65,37 @@ namespace JamesFrowen.SimpleWeb
         {
             this.client = client ?? throw new ArgumentNullException(nameof(client));
             this.onDispose = onDispose;
+        }
+
+        public void SetNeedsPong()
+        {
+            // Set flag to send pong response
+            needsPong = true;
+            sendPending.Set();
+        }
+
+        public void QueueSend(ArrayBuffer buffer)
+        {
+            // note: need to check disposedLock, so we done Enqueue while Dispose is running
+            //       Dispose will empty and release buffers in sendQueue
+            //       we want to make sure we do no queue after that
+            lock (disposedLock)
+            {
+                if (hasDisposed)
+                {
+                    Log.Warn($"Message sent to id={connId} after it was been disposed");
+                    buffer.Release();
+                }
+                else
+                {
+                    sendQueue.Enqueue(buffer);
+                    sendPending.Set();
+                }
+            }
+        }
+        public (ManualResetEventSlim sendPending, ConcurrentQueue<ArrayBuffer> sendQueue) GetSendQueue()
+        {
+            return (sendPending, sendQueue);
         }
 
         /// <summary>

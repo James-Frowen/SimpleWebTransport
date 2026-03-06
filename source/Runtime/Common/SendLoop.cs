@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Net.Sockets;
 using System.Security.Cryptography;
@@ -50,6 +51,7 @@ namespace JamesFrowen.SimpleWeb
             {
                 TcpClient client = conn.client;
                 Stream stream = conn.stream;
+                (ManualResetEventSlim sendPending, ConcurrentQueue<ArrayBuffer> sendQueue) = conn.GetSendQueue();
 
                 // null check in case disconnect while send thread is starting
                 if (client == null)
@@ -58,7 +60,7 @@ namespace JamesFrowen.SimpleWeb
                 while (client.Connected)
                 {
                     // wait for message
-                    conn.sendPending.Wait();
+                    sendPending.Wait();
 
                     if (conn.needsPong)
                         SendPongResponse(conn);
@@ -68,12 +70,12 @@ namespace JamesFrowen.SimpleWeb
                     {
                         Thread.Sleep(1);
                     }
-                    conn.sendPending.Reset();
+                    sendPending.Reset();
 
                     if (SendLoopConfig.batchSend)
                     {
                         int offset = 0;
-                        while (conn.sendQueue.TryDequeue(out ArrayBuffer msg))
+                        while (sendQueue.TryDequeue(out ArrayBuffer msg))
                         {
                             using ArrayBuffer _ = msg; // auto release
                             // check if connected before sending message
@@ -102,7 +104,7 @@ namespace JamesFrowen.SimpleWeb
                     }
                     else
                     {
-                        while (conn.sendQueue.TryDequeue(out ArrayBuffer msg))
+                        while (sendQueue.TryDequeue(out ArrayBuffer msg))
                         {
                             using ArrayBuffer _ = msg;
                             // check if connected before sending message

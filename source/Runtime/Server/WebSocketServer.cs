@@ -183,9 +183,7 @@ namespace JamesFrowen.SimpleWeb
         public void Send(IConnection connection, ArrayBuffer buffer)
         {
             Connection conn = (Connection)connection;
-
-            conn.sendQueue.Enqueue(buffer);
-            conn.sendPending.Set();
+            conn.QueueSend(buffer);
         }
 
         public bool CloseConnection(IConnection connection)

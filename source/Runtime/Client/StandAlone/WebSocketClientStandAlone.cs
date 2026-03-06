@@ -135,9 +135,7 @@ namespace JamesFrowen.SimpleWeb
         {
             ArrayBuffer buffer = bufferPool.Take(span.Length);
             buffer.CopyFrom(span);
-
-            conn.sendQueue.Enqueue(buffer);
-            conn.sendPending.Set();
+            conn.QueueSend(buffer);
         }
     }
 }
