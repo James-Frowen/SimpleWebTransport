@@ -48,7 +48,7 @@ public class EchoDebug : MonoBehaviour
 
             // create server instance
             var tcpConfig = new TcpConfig(noDelay: false, sendTimeout: 5000, receiveTimeout: 20000);
-            var server = new SimpleWebServer(5000, tcpConfig, ushort.MaxValue, 5000, new SslConfig());
+            var server = new SimpleWebServer(5000, tcpConfig, ushort.MaxValue, 5000, new SslConfig(), 1000);
 
             // listen for events
             server.onConnect += (id) => Debug.Log($"New Client connected, id:{id}");

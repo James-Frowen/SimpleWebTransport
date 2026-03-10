@@ -56,15 +56,19 @@ namespace JamesFrowen.SimpleWeb
 
         ManualResetEventSlim sendPending = new ManualResetEventSlim(false);
         ConcurrentQueue<ArrayBuffer> sendQueue = new ConcurrentQueue<ArrayBuffer>();
+        Action<Connection> onSendQueueFull;
+        readonly int maxSendQueueSize;
         public bool needsPong;
 
-        public Action<Connection> onDispose;
+        Action<Connection> onDispose;
         volatile bool hasDisposed;
 
-        public Connection(TcpClient client, Action<Connection> onDispose)
+        public Connection(TcpClient client, Action<Connection> onDispose, Action<Connection> onSendQueueFull, int maxSendQueueSize)
         {
             this.client = client ?? throw new ArgumentNullException(nameof(client));
             this.onDispose = onDispose;
+            this.onSendQueueFull = onSendQueueFull;
+            this.maxSendQueueSize = maxSendQueueSize;
         }
 
         public void SetNeedsPong()
@@ -79,11 +83,17 @@ namespace JamesFrowen.SimpleWeb
             // note: need to check disposedLock, so we done Enqueue while Dispose is running
             //       Dispose will empty and release buffers in sendQueue
             //       we want to make sure we do no queue after that
+            bool queueFull = false;
             lock (disposedLock)
             {
                 if (hasDisposed)
                 {
                     Log.Warn($"Message sent to id={connId} after it was been disposed");
+                    buffer.Release();
+                }
+                else if (sendQueue.Count >= maxSendQueueSize)
+                {
+                    queueFull = true;
                     buffer.Release();
                 }
                 else
@@ -92,7 +102,15 @@ namespace JamesFrowen.SimpleWeb
                     sendPending.Set();
                 }
             }
+
+            if (queueFull)
+            {
+                Log.Warn($"Send queue was over {maxSendQueueSize} for {ToString()}, kicking connection.");
+                onSendQueueFull?.Invoke(this);
+                Dispose();
+            }
         }
+
         public (ManualResetEventSlim sendPending, ConcurrentQueue<ArrayBuffer> sendQueue) GetSendQueue()
         {
             return (sendPending, sendQueue);
