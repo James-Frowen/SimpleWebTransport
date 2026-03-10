@@ -18,6 +18,7 @@ namespace JamesFrowen.SimpleWeb.Examples
         [SerializeField] private int _receiveTimeout = 5000;
 
         [SerializeField] private int _maxMessagePerTick = 5000;
+        [SerializeField] private int _maxSendQueueSize = 1000;
 
         [Header("Ssl Settings")]
         [SerializeField] private bool sslEnabled;
@@ -35,7 +36,7 @@ namespace JamesFrowen.SimpleWeb.Examples
             TcpConfig tcpConfig = new TcpConfig(_noDelay, _sendTimeout, _receiveTimeout);
 
             SslConfig sslConfig = SslConfigLoader.Load(sslEnabled, sslCertJson, sslProtocols);
-            server = new SimpleWebServer(_maxMessagePerTick, tcpConfig, _maxMessageSize, _maxHandShakeSize, sslConfig);
+            server = new SimpleWebServer(_maxMessagePerTick, tcpConfig, _maxMessageSize, _maxHandShakeSize, sslConfig, _maxSendQueueSize);
 
             server.onConnect += (id) => { connection = true; Debug.Log($"New Client connected, id:{id}"); };
             server.onDisconnect += (id) => Debug.Log($"Client disconnected, id:{id}");

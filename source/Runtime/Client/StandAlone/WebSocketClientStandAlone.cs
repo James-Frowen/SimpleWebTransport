@@ -31,7 +31,7 @@ namespace JamesFrowen.SimpleWeb
             tcpConfig.ApplyTo(client);
 
             // create connection object here so dispose correctly disconnects on failed connect
-            conn = new Connection(client, AfterConnectionDisposed);
+            conn = new Connection(client, AfterConnectionDisposed, onSendQueueFull: null, maxSendQueueSize: int.MaxValue);
 
             Thread receiveThread = new Thread(() => ConnectAndReceiveLoop(serverAddress));
             receiveThread.IsBackground = true;

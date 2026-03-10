@@ -12,6 +12,7 @@ namespace JamesFrowen.SimpleWeb
 
         readonly TcpConfig tcpConfig;
         readonly int maxMessageSize;
+        readonly int maxSendQueueSize;
 
         TcpListener listener;
         Thread acceptThread;
@@ -23,13 +24,16 @@ namespace JamesFrowen.SimpleWeb
 
         int _idCounter = 0;
 
-        public WebSocketServer(TcpConfig tcpConfig, int maxMessageSize, int handshakeMaxSize, SslConfig sslConfig, BufferPool bufferPool)
+        public WebSocketServer(TcpConfig tcpConfig, int maxMessageSize, int handshakeMaxSize, SslConfig sslConfig, BufferPool bufferPool, int maxSendQueueSize)
         {
             this.tcpConfig = tcpConfig;
             this.maxMessageSize = maxMessageSize;
             sslHelper = new ServerSslHelper(sslConfig);
             this.bufferPool = bufferPool;
             handShake = new ServerHandshake(this.bufferPool, handshakeMaxSize);
+            if (maxSendQueueSize <= 0)
+                throw new ArgumentException($"maxSendQueueSize must be positive value", nameof(maxSendQueueSize));
+            this.maxSendQueueSize = maxSendQueueSize;
         }
 
         public void Listen(int port)
@@ -76,7 +80,7 @@ namespace JamesFrowen.SimpleWeb
                         // TODO keep track of connections before they are in connections dictionary
                         //      this might not be a problem as HandshakeAndReceiveLoop checks for stop
                         //      and returns/disposes before sending message to queue
-                        Connection conn = new Connection(client, AfterConnectionDisposed);
+                        Connection conn = new Connection(client, AfterConnectionDisposed, SendQueueFull, maxSendQueueSize);
                         Log.Info($"A client connected {conn}");
 
                         // handshake needs its own thread as it needs to wait for message from client
@@ -178,6 +182,11 @@ namespace JamesFrowen.SimpleWeb
                 receiveQueue.Enqueue(new Message(conn, EventType.Disconnected));
                 connections.TryRemove(conn.connId, out Connection _);
             }
+        }
+
+        void SendQueueFull(Connection conn)
+        {
+            receiveQueue.Enqueue(new Message(conn, new Exception("Send Queue Full")));
         }
 
         public void Send(IConnection connection, ArrayBuffer buffer)
