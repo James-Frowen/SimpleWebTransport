@@ -1,3 +1,19 @@
+# [3.1.0](https://github.com/James-Frowen/SimpleWebTransport/compare/v3.0.4...v3.1.0) (2026-03-10)
+
+
+### Bug Fixes
+
+* adding count == 0 check to SendAll before taking ArrayBuffer ([a43c50c](https://github.com/James-Frowen/SimpleWebTransport/commit/a43c50c732eff53cc28f1774efd7b8d1fae65e61))
+* adding thread safe send method to ensure buffer is released ([c0fc993](https://github.com/James-Frowen/SimpleWebTransport/commit/c0fc99362dcbb50234fd7b6e24ac8dd143871060))
+* releasing buffers in fragment queue incase loop stops in the middle of a large message ([455d594](https://github.com/James-Frowen/SimpleWebTransport/commit/455d594da2b232fbbc263938d2e427a9e0aa61bb))
+* simplify legacy SendAll and calling release inside legacy Send ([6e7f43a](https://github.com/James-Frowen/SimpleWebTransport/commit/6e7f43ab7d22284858a33972f9bb6be5a63267f7))
+* using auto dispose to safely release buffers ([c8301d7](https://github.com/James-Frowen/SimpleWebTransport/commit/c8301d71b377f452df0b53232ce61e7953185e79))
+
+
+### Features
+
+* adding maxSendQueueSize for server to limit how many pending sends each connection can have ([1dda1b0](https://github.com/James-Frowen/SimpleWebTransport/commit/1dda1b0272fb2d0f8f35bfeb1d1c17ee28490c64))
+
 ## [3.0.4](https://github.com/James-Frowen/SimpleWebTransport/compare/v3.0.3...v3.0.4) (2026-03-01)
 
 
