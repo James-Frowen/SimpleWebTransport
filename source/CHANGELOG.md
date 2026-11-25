@@ -1,3 +1,19 @@
+# [3.2.0](https://github.com/James-Frowen/SimpleWebTransport/compare/v3.1.0...v3.2.0) (2026-11-25)
+
+
+### Bug Fixes
+
+* SslConfigLoader only compiled inside unity ([96c632c](https://github.com/James-Frowen/SimpleWebTransport/commit/96c632cb753ad0110ff1b1072d3e4d21ee254e31))
+* TcpConfig tooltip only used inside unity ([c474fc8](https://github.com/James-Frowen/SimpleWebTransport/commit/c474fc8b0e908d0f0f79c63ad5ff451826ce4f2f))
+
+
+### Features
+
+* adding dotnet projects to build outside of unity ([239e024](https://github.com/James-Frowen/SimpleWebTransport/commit/239e024d0b4aafed69374898f20571aa650f40da))
+* adding SIMPLEWEB_PROFILER_ENABLED define for thread profiling ([7790283](https://github.com/James-Frowen/SimpleWebTransport/commit/7790283ec776365797867ac36b8841f3773abc33))
+* InternalsVisibleTo for split Server and Client dlls ([7f66a20](https://github.com/James-Frowen/SimpleWebTransport/commit/7f66a20ed41def2830861b4b67089741f1694533))
+* Log can be used outside of unity ([2cd05b0](https://github.com/James-Frowen/SimpleWebTransport/commit/2cd05b0dbf6f63e1b4b2ec626e1489991414bd32))
+
 # [3.1.0](https://github.com/James-Frowen/SimpleWebTransport/compare/v3.0.4...v3.1.0) (2026-03-10)
 
 
