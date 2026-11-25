@@ -1,3 +1,5 @@
+// uses JsonUtility, outside unity create SslConfig directly instead
+#if UNITY_5_3_OR_NEWER
 using System.IO;
 using System.Security.Authentication;
 using UnityEngine;
@@ -50,3 +52,4 @@ namespace JamesFrowen.SimpleWeb
         }
     }
 }
+#endif
