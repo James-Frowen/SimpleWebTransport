@@ -4,7 +4,6 @@ using System.IO;
 using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Threading;
-using UnityEngine.Profiling;
 
 namespace JamesFrowen.SimpleWeb
 {
@@ -42,7 +41,9 @@ namespace JamesFrowen.SimpleWeb
         {
             (Connection conn, int bufferSize, bool setMask) = config;
 
-            Profiler.BeginThreadProfiling("SimpleWeb", $"SendLoop {conn.connId}");
+#if SIMPLEWEB_PROFILER_ENABLED
+            UnityEngine.Profiling.Profiler.BeginThreadProfiling("SimpleWeb", $"SendLoop {conn.connId}");
+#endif
 
             // create write buffer for this thread
             byte[] writeBuffer = new byte[bufferSize];
@@ -130,7 +131,9 @@ namespace JamesFrowen.SimpleWeb
             }
             finally
             {
-                Profiler.EndThreadProfiling();
+#if SIMPLEWEB_PROFILER_ENABLED
+                UnityEngine.Profiling.Profiler.EndThreadProfiling();
+#endif
                 conn.Dispose();
                 maskHelper?.Dispose();
             }

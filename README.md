@@ -172,4 +172,10 @@ These preprocessor defines effect the logging
 
 Without `SIMPLEWEB_LOG_ENABLED` info or verbose logging will never happen even if log level allows it.
 
+### Profiler
+
+The send and receive threads can be shown in the Unity Profiler by adding the `SIMPLEWEB_PROFILER_ENABLED` define.
+
+This is disabled by default so that the transport can be compiled without a reference to `UnityEngine`.
+
 See the [Unity docs](https://docs.unity3d.com/Manual/PlatformDependentCompilation.html) on how set custom defines.

@@ -5,7 +5,6 @@ using System.IO;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
-using UnityEngine.Profiling;
 
 namespace JamesFrowen.SimpleWeb
 {
@@ -50,7 +49,9 @@ namespace JamesFrowen.SimpleWeb
         {
             (Connection conn, int maxMessageSize, bool expectMask, ConcurrentQueue<Message> queue, BufferPool _) = config;
 
-            Profiler.BeginThreadProfiling("SimpleWeb", $"ReceiveLoop {conn.connId}");
+#if SIMPLEWEB_PROFILER_ENABLED
+            UnityEngine.Profiling.Profiler.BeginThreadProfiling("SimpleWeb", $"ReceiveLoop {conn.connId}");
+#endif
 
             Queue<ArrayBuffer> fragments = new Queue<ArrayBuffer>(); // create queue once to avoid allocation each time
             byte[] readBuffer = new byte[Constants.HeaderSize + (expectMask ? Constants.MaskSize : 0) + maxMessageSize];
@@ -105,7 +106,9 @@ namespace JamesFrowen.SimpleWeb
             }
             finally
             {
-                Profiler.EndThreadProfiling();
+#if SIMPLEWEB_PROFILER_ENABLED
+                UnityEngine.Profiling.Profiler.EndThreadProfiling();
+#endif
 
                 conn.Dispose();
 
