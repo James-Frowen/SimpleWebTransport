@@ -167,7 +167,7 @@ namespace JamesFrowen.SimpleWeb
             }
             else
             {
-                // Normal message, should be binary, text, close, or ping
+                // Normal message, should be binary, close, ping, or pong
                 if (opcode == OpCode.binary || opcode == OpCode.close || opcode == OpCode.ping || opcode == OpCode.pong)
                     return;
 
