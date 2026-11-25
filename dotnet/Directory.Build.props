@@ -1,0 +1,13 @@
+<Project>
+
+  <!-- shared settings for building the transport as separate Common/Client/Server dlls outside of unity -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <!-- netstandard2.1 defaults to C# 8, unity 2022 uses C# 9 -->
+    <LangVersion>9.0</LangVersion>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <RuntimeSrc>$(MSBuildThisFileDirectory)../source/Runtime/</RuntimeSrc>
+  </PropertyGroup>
+</Project>

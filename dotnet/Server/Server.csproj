@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>SimpleWebTransport.Server</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="$(RuntimeSrc)Server/**/*.cs" />
+    <!-- SslConfigLoader is in the Runtime root, but only the server uses it -->
+    <Compile Include="$(RuntimeSrc)SslConfigLoader.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Common/Common.csproj" />
+  </ItemGroup>
+</Project>
