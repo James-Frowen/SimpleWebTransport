@@ -8,7 +8,7 @@ using System.Threading;
 
 namespace JamesFrowen.SimpleWeb
 {
-    static class ReceiveLoop
+    internal static class ReceiveLoop
     {
         public struct Config
         {
@@ -37,7 +37,7 @@ namespace JamesFrowen.SimpleWeb
             }
         }
 
-        struct Header
+        private struct Header
         {
             public int payloadLength;
             public int offset;
@@ -118,7 +118,7 @@ namespace JamesFrowen.SimpleWeb
             }
         }
 
-        static void ReadOneMessage(Config config, byte[] buffer, Queue<ArrayBuffer> fragments)
+        private static void ReadOneMessage(Config config, byte[] buffer, Queue<ArrayBuffer> fragments)
         {
             (Connection conn, int maxMessageSize, bool expectMask, ConcurrentQueue<Message> queue, BufferPool bufferPool) = config;
             Stream stream = conn.stream;
@@ -184,7 +184,7 @@ namespace JamesFrowen.SimpleWeb
             }
         }
 
-        static Header ReadHeader(Config config, byte[] buffer, bool opCodeContinuation = false)
+        private static Header ReadHeader(Config config, byte[] buffer, bool opCodeContinuation = false)
         {
             (Connection conn, int maxMessageSize, bool expectMask, ConcurrentQueue<Message> queue, BufferPool bufferPool) = config;
             Stream stream = conn.stream;
@@ -222,7 +222,7 @@ namespace JamesFrowen.SimpleWeb
             return header;
         }
 
-        static void HandleArrayMessage(Config config, byte[] buffer, int msgOffset, int payloadLength)
+        private static void HandleArrayMessage(Config config, byte[] buffer, int msgOffset, int payloadLength)
         {
             (Connection conn, int _, bool expectMask, ConcurrentQueue<Message> queue, BufferPool bufferPool) = config;
 
@@ -234,7 +234,7 @@ namespace JamesFrowen.SimpleWeb
             queue.Enqueue(new Message(conn, arrayBuffer));
         }
 
-        static ArrayBuffer CopyMessageToBuffer(BufferPool bufferPool, bool expectMask, byte[] buffer, int msgOffset, int payloadLength)
+        private static ArrayBuffer CopyMessageToBuffer(BufferPool bufferPool, bool expectMask, byte[] buffer, int msgOffset, int payloadLength)
         {
             ArrayBuffer arrayBuffer = bufferPool.Take(payloadLength);
 
@@ -252,7 +252,7 @@ namespace JamesFrowen.SimpleWeb
             return arrayBuffer;
         }
 
-        static void HandleCloseMessage(Config config, byte[] buffer, int msgOffset, int payloadLength)
+        private static void HandleCloseMessage(Config config, byte[] buffer, int msgOffset, int payloadLength)
         {
             (Connection conn, int _, bool expectMask, ConcurrentQueue<Message> _, BufferPool _) = config;
 
@@ -270,12 +270,12 @@ namespace JamesFrowen.SimpleWeb
             conn.Dispose();
         }
 
-        static string GetCloseMessage(byte[] buffer, int msgOffset, int payloadLength)
+        private static string GetCloseMessage(byte[] buffer, int msgOffset, int payloadLength)
         {
             return Encoding.UTF8.GetString(buffer, msgOffset + 2, payloadLength - 2);
         }
 
-        static int GetCloseCode(byte[] buffer, int msgOffset)
+        private static int GetCloseCode(byte[] buffer, int msgOffset)
         {
             return (buffer[msgOffset + 0] << 8) | buffer[msgOffset + 1];
         }

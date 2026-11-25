@@ -17,10 +17,10 @@ namespace JamesFrowen.SimpleWeb
         Warning = 2,
         Log = 3,
     }
-    class Debug
+    internal class Debug
     {
         public static ILogger unityLogger = new DefaultLogger();
-        class DefaultLogger : ILogger
+        private class DefaultLogger : ILogger
         {
             public void Log(LogType log, string text)
             {

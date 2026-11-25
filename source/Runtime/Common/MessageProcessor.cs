@@ -17,7 +17,7 @@ namespace JamesFrowen.SimpleWeb
     public static class MessageProcessor
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static byte FirstLengthByte(byte[] buffer) => (byte)(buffer[1] & 0b0111_1111);
+        private static byte FirstLengthByte(byte[] buffer) => (byte)(buffer[1] & 0b0111_1111);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool NeedToReadShortLength(byte[] buffer)
@@ -99,7 +99,7 @@ namespace JamesFrowen.SimpleWeb
         }
 
         /// <exception cref="InvalidDataException"></exception>
-        static int GetMessageLength(byte[] buffer, int offset, byte lenByte)
+        private static int GetMessageLength(byte[] buffer, int offset, byte lenByte)
         {
             if (lenByte == Constants.UshortPayloadLength)
             {
@@ -137,7 +137,7 @@ namespace JamesFrowen.SimpleWeb
         }
 
         /// <exception cref="InvalidDataException"></exception>
-        static void ThrowIfMaskNotExpected(bool hasMask, bool expectMask)
+        private static void ThrowIfMaskNotExpected(bool hasMask, bool expectMask)
         {
             if (hasMask != expectMask)
             {
@@ -146,7 +146,7 @@ namespace JamesFrowen.SimpleWeb
         }
 
         /// <exception cref="InvalidDataException"></exception>
-        static void ThrowIfBadOpCode(OpCode opcode, bool finished, bool opCodeContinuation)
+        private static void ThrowIfBadOpCode(OpCode opcode, bool finished, bool opCodeContinuation)
         {
             // do we expect Continuation?
             if (opCodeContinuation)
@@ -176,7 +176,7 @@ namespace JamesFrowen.SimpleWeb
         }
 
         /// <exception cref="InvalidDataException"></exception>
-        static void ThrowIfLengthZero(OpCode opcode, int msglen)
+        private static void ThrowIfLengthZero(OpCode opcode, int msglen)
         {
             // ping/pong are allowed to have length zero
             if (opcode == OpCode.ping || opcode == OpCode.pong)

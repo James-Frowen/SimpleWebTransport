@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 namespace JamesFrowen.SimpleWeb
 {
-    static class SimpleWebJSLib
+    internal static class SimpleWebJSLib
     {
 #if UNITY_WEBGL
         [DllImport("__Internal", EntryPoint = "SimpleWeb_IsConnected")]

@@ -22,10 +22,10 @@ namespace JamesFrowen.SimpleWeb
             this.sslProtocols = sslProtocols;
         }
     }
-    class ServerSslHelper
+    internal class ServerSslHelper
     {
-        readonly SslConfig config;
-        readonly X509Certificate2 certificate;
+        private readonly SslConfig config;
+        private readonly X509Certificate2 certificate;
 
         public ServerSslHelper(SslConfig sslConfig)
         {
@@ -57,7 +57,7 @@ namespace JamesFrowen.SimpleWeb
             }
         }
 
-        Stream CreateStream(NetworkStream stream)
+        private Stream CreateStream(NetworkStream stream)
         {
             SslStream sslStream = new SslStream(stream, true, acceptClient);
             sslStream.AuthenticateAsServer(certificate, false, config.sslProtocols, false);
@@ -65,7 +65,7 @@ namespace JamesFrowen.SimpleWeb
             return sslStream;
         }
 
-        bool acceptClient(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+        private bool acceptClient(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
         {
             // always accept client
             return true;

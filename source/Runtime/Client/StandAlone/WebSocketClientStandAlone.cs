@@ -6,10 +6,10 @@ namespace JamesFrowen.SimpleWeb
 {
     public class WebSocketClientStandAlone : SimpleWebClient
     {
-        readonly ClientSslHelper sslHelper;
-        readonly ClientHandshake handshake;
-        readonly TcpConfig tcpConfig;
-        Connection conn;
+        private readonly ClientSslHelper sslHelper;
+        private readonly ClientHandshake handshake;
+        private readonly TcpConfig tcpConfig;
+        private Connection conn;
 
         internal WebSocketClientStandAlone(int maxMessageSize, int maxMessagesPerTick, TcpConfig tcpConfig, bool allowSSLErrors) : base(maxMessageSize, maxMessagesPerTick)
         {
@@ -38,7 +38,7 @@ namespace JamesFrowen.SimpleWeb
             receiveThread.Start();
         }
 
-        void ConnectAndReceiveLoop(Uri serverAddress)
+        private void ConnectAndReceiveLoop(Uri serverAddress)
         {
             try
             {
@@ -110,7 +110,7 @@ namespace JamesFrowen.SimpleWeb
             }
         }
 
-        void AfterConnectionDisposed(Connection conn)
+        private void AfterConnectionDisposed(Connection conn)
         {
             state = ClientState.NotConnected;
             // make sure Disconnected event is only called once

@@ -10,19 +10,19 @@ namespace JamesFrowen.SimpleWeb
     {
         public readonly ConcurrentQueue<Message> receiveQueue = new ConcurrentQueue<Message>();
 
-        readonly TcpConfig tcpConfig;
-        readonly int maxMessageSize;
-        readonly int maxSendQueueSize;
+        private readonly TcpConfig tcpConfig;
+        private readonly int maxMessageSize;
+        private readonly int maxSendQueueSize;
 
-        TcpListener listener;
-        Thread acceptThread;
-        bool serverStopped;
-        readonly ServerHandshake handShake;
-        readonly ServerSslHelper sslHelper;
-        readonly BufferPool bufferPool;
-        readonly ConcurrentDictionary<int, Connection> connections = new ConcurrentDictionary<int, Connection>();
+        private TcpListener listener;
+        private Thread acceptThread;
+        private bool serverStopped;
+        private readonly ServerHandshake handShake;
+        private readonly ServerSslHelper sslHelper;
+        private readonly BufferPool bufferPool;
+        private readonly ConcurrentDictionary<int, Connection> connections = new ConcurrentDictionary<int, Connection>();
 
-        int _idCounter = 0;
+        private int _idCounter = 0;
 
         public WebSocketServer(TcpConfig tcpConfig, int maxMessageSize, int handshakeMaxSize, SslConfig sslConfig, BufferPool bufferPool, int maxSendQueueSize)
         {
@@ -66,7 +66,7 @@ namespace JamesFrowen.SimpleWeb
             connections.Clear();
         }
 
-        void acceptLoop()
+        private void acceptLoop()
         {
             try
             {
@@ -104,7 +104,7 @@ namespace JamesFrowen.SimpleWeb
             catch (Exception e) { Log.Exception(e); }
         }
 
-        void HandshakeAndReceiveLoop(Connection conn)
+        private void HandshakeAndReceiveLoop(Connection conn)
         {
             try
             {
@@ -175,7 +175,7 @@ namespace JamesFrowen.SimpleWeb
             }
         }
 
-        void AfterConnectionDisposed(Connection conn)
+        private void AfterConnectionDisposed(Connection conn)
         {
             if (conn.connId != Connection.IdNotSet)
             {
@@ -184,7 +184,7 @@ namespace JamesFrowen.SimpleWeb
             }
         }
 
-        void SendQueueFull(Connection conn)
+        private void SendQueueFull(Connection conn)
         {
             receiveQueue.Enqueue(new Message(conn, new Exception("Send Queue Full")));
         }

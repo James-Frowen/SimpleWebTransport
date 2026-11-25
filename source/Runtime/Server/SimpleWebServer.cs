@@ -10,11 +10,11 @@ namespace JamesFrowen.SimpleWeb
         public event Action<IConnection, ArraySegment<byte>> onData;
         public event Action<IConnection, Exception> onError;
 
-        readonly int maxMessagesPerTick;
-        readonly WebSocketServer server;
-        readonly BufferPool bufferPool;
-        List<IConnection> sendAllConnCache;
-        List<int> sendAllIdCache;
+        private readonly int maxMessagesPerTick;
+        private readonly WebSocketServer server;
+        private readonly BufferPool bufferPool;
+        private List<IConnection> sendAllConnCache;
+        private List<int> sendAllIdCache;
 
         public bool Active { get; private set; }
 

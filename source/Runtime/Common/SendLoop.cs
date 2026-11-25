@@ -12,9 +12,9 @@ namespace JamesFrowen.SimpleWeb
         public static volatile bool batchSend = false;
         public static volatile bool sleepBeforeSend = false;
     }
-    static class SendLoop
+    internal static class SendLoop
     {
-        static readonly byte[] PongResponse = new byte[] { 0b1000_0000 | 10, 0 }; // FIN bit + PONG opcode, Length 0
+        private static readonly byte[] PongResponse = new byte[] { 0b1000_0000 | 10, 0 }; // FIN bit + PONG opcode, Length 0
 
         public struct Config
         {
@@ -140,14 +140,14 @@ namespace JamesFrowen.SimpleWeb
         }
 
 
-        static void SendPongResponse(Connection conn)
+        private static void SendPongResponse(Connection conn)
         {
             conn.stream.Write(PongResponse, 0, PongResponse.Length);
             conn.needsPong = false;
         }
 
         /// <returns>new offset in buffer</returns>
-        static int SendMessage(byte[] buffer, int startOffset, ArrayBuffer msg, bool setMask, MaskHelper maskHelper)
+        private static int SendMessage(byte[] buffer, int startOffset, ArrayBuffer msg, bool setMask, MaskHelper maskHelper)
         {
             int msgLength = msg.count;
             int offset = WriteHeader(buffer, startOffset, msgLength, setMask);
@@ -218,10 +218,10 @@ namespace JamesFrowen.SimpleWeb
         }
 
     }
-    sealed class MaskHelper : IDisposable
+    internal sealed class MaskHelper : IDisposable
     {
-        readonly byte[] maskBuffer;
-        readonly RNGCryptoServiceProvider random;
+        private readonly byte[] maskBuffer;
+        private readonly RNGCryptoServiceProvider random;
 
         public MaskHelper()
         {

@@ -9,18 +9,18 @@ namespace JamesFrowen.SimpleWeb
     /// Handles Handshakes from new clients on the server
     /// <para>The server handshake has buffers to reduce allocations when clients connect</para>
     /// </summary>
-    class ServerHandshake
+    internal class ServerHandshake
     {
-        const int GetSize = 3;
-        const int ResponseLength = 129;
+        private const int GetSize = 3;
+        private const int ResponseLength = 129;
         internal const int KeyLength = 24;
-        const int MergedKeyLength = 60;
-        const string KeyHeaderString = "\r\nSec-WebSocket-Key: ";
+        private const int MergedKeyLength = 60;
+        private const string KeyHeaderString = "\r\nSec-WebSocket-Key: ";
         // this isn't an official max, just a reasonable size for a websocket handshake
-        readonly int maxHttpHeaderSize = 3000;
+        private readonly int maxHttpHeaderSize = 3000;
 
-        readonly SHA1 sha1 = SHA1.Create();
-        readonly BufferPool bufferPool;
+        private readonly SHA1 sha1 = SHA1.Create();
+        private readonly BufferPool bufferPool;
 
         public ServerHandshake(BufferPool bufferPool, int handshakeMaxSize)
         {
@@ -74,7 +74,7 @@ namespace JamesFrowen.SimpleWeb
             }
         }
 
-        string ReadToEndForHandshake(Stream stream)
+        private string ReadToEndForHandshake(Stream stream)
         {
             using (ArrayBuffer readBuffer = bufferPool.Take(maxHttpHeaderSize))
             {
@@ -91,7 +91,7 @@ namespace JamesFrowen.SimpleWeb
             }
         }
 
-        static bool IsGet(byte[] getHeader)
+        private static bool IsGet(byte[] getHeader)
         {
             // just check bytes here instead of using Encoding.ASCII
             return getHeader[0] == 71 && // G
@@ -99,7 +99,7 @@ namespace JamesFrowen.SimpleWeb
                    getHeader[2] == 84;   // T
         }
 
-        void AcceptHandshake(Stream stream, string msg)
+        private void AcceptHandshake(Stream stream, string msg)
         {
             using (
                 ArrayBuffer keyBuffer = bufferPool.Take(KeyLength + Constants.HandshakeGUIDLength),
@@ -122,18 +122,18 @@ namespace JamesFrowen.SimpleWeb
             Encoding.ASCII.GetBytes(msg, start, KeyLength, keyBuffer, 0);
         }
 
-        static void AppendGuid(byte[] keyBuffer)
+        private static void AppendGuid(byte[] keyBuffer)
         {
             Buffer.BlockCopy(Constants.HandshakeGUIDBytes, 0, keyBuffer, KeyLength, Constants.HandshakeGUIDLength);
         }
 
-        byte[] CreateHash(byte[] keyBuffer)
+        private byte[] CreateHash(byte[] keyBuffer)
         {
             Log.Verbose($"Handshake Hashing {Encoding.ASCII.GetString(keyBuffer, 0, MergedKeyLength)}");
             return sha1.ComputeHash(keyBuffer, 0, MergedKeyLength);
         }
 
-        static void CreateResponse(byte[] keyHash, byte[] responseBuffer)
+        private static void CreateResponse(byte[] keyHash, byte[] responseBuffer)
         {
             string keyHashString = Convert.ToBase64String(keyHash);
 

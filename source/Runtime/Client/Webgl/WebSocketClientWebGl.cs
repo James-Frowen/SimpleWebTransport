@@ -6,17 +6,17 @@ namespace JamesFrowen.SimpleWeb
 {
     public class WebSocketClientWebGl : SimpleWebClient
     {
-        static readonly Dictionary<int, WebSocketClientWebGl> instances = new Dictionary<int, WebSocketClientWebGl>();
+        private static readonly Dictionary<int, WebSocketClientWebGl> instances = new Dictionary<int, WebSocketClientWebGl>();
 
         /// <summary>
         /// buffer used by jslib to avoid allocations
         /// </summary>
-        IntPtr incomingDataBuffer;
+        private IntPtr incomingDataBuffer;
 
         /// <summary>
         /// key for instances sent between c# and js
         /// </summary>
-        int index;
+        private int index;
 
         /// <summary>
         /// Queue for messages sent by high level while still connecting, they will be sent after onOpen is called.
@@ -25,7 +25,7 @@ namespace JamesFrowen.SimpleWeb
         ///     Without this the JS websocket will give errors.
         /// </para>
         /// </summary>
-        Queue<byte[]> ConnectingSendQueue;
+        private Queue<byte[]> ConnectingSendQueue;
 
         internal WebSocketClientWebGl(int maxMessageSize, int maxMessagesPerTick) : base(maxMessageSize, maxMessagesPerTick)
         {
@@ -52,7 +52,7 @@ namespace JamesFrowen.SimpleWeb
             SafeFreeDataBuffer();
         }
 
-        void SafeFreeDataBuffer()
+        private void SafeFreeDataBuffer()
         {
             if (incomingDataBuffer != IntPtr.Zero)
             {
@@ -81,7 +81,7 @@ namespace JamesFrowen.SimpleWeb
             }
         }
 
-        void onOpen()
+        private void onOpen()
         {
             receiveQueue.Enqueue(new Message(EventType.Connected));
             state = ClientState.Connected;
@@ -97,7 +97,7 @@ namespace JamesFrowen.SimpleWeb
             }
         }
 
-        void onClose()
+        private void onClose()
         {
             // this code should be last in this class
 
@@ -107,7 +107,7 @@ namespace JamesFrowen.SimpleWeb
             SafeFreeDataBuffer();
         }
 
-        void onMessage(IntPtr bufferPtr, int count)
+        private void onMessage(IntPtr bufferPtr, int count)
         {
             try
             {
@@ -127,7 +127,7 @@ namespace JamesFrowen.SimpleWeb
             }
         }
 
-        void onErr()
+        private void onErr()
         {
             receiveQueue.Enqueue(new Message(new Exception("Javascript Websocket error")));
             Disconnect();
@@ -137,21 +137,21 @@ namespace JamesFrowen.SimpleWeb
 #if UNITY_WEBGL
         [AOT.MonoPInvokeCallback(typeof(Action<int>))]
 #endif
-        static void OpenCallback(int index) => instances[index].onOpen();
+        private static void OpenCallback(int index) => instances[index].onOpen();
 
 #if UNITY_WEBGL
         [AOT.MonoPInvokeCallback(typeof(Action<int>))]
 #endif
-        static void CloseCallBack(int index) => instances[index].onClose();
+        private static void CloseCallBack(int index) => instances[index].onClose();
 
 #if UNITY_WEBGL
         [AOT.MonoPInvokeCallback(typeof(Action<int, IntPtr, int>))]
 #endif
-        static void MessageCallback(int index, IntPtr bufferPtr, int count) => instances[index].onMessage(bufferPtr, count);
+        private static void MessageCallback(int index, IntPtr bufferPtr, int count) => instances[index].onMessage(bufferPtr, count);
 
 #if UNITY_WEBGL
         [AOT.MonoPInvokeCallback(typeof(Action<int>))]
 #endif
-        static void ErrorCallback(int index) => instances[index].onErr();
+        private static void ErrorCallback(int index) => instances[index].onErr();
     }
 }

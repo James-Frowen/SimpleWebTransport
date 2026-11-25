@@ -12,7 +12,7 @@ namespace JamesFrowen.SimpleWeb
 
     public sealed class ArrayBuffer : IDisposable
     {
-        readonly IBufferOwner owner;
+        private readonly IBufferOwner owner;
 
         public readonly byte[] array;
 
@@ -37,7 +37,7 @@ namespace JamesFrowen.SimpleWeb
         /// <remarks>
         /// This value is normally 0, but can be changed to require release to be called multiple times
         /// </remarks>
-        int releasesRequired;
+        private int releasesRequired;
 
         public ArrayBuffer(IBufferOwner owner, int size)
         {
@@ -101,10 +101,10 @@ namespace JamesFrowen.SimpleWeb
         }
     }
 
-    class BufferBucket : IBufferOwner
+    internal class BufferBucket : IBufferOwner
     {
         public readonly int arraySize;
-        readonly ConcurrentQueue<ArrayBuffer> buffers;
+        private readonly ConcurrentQueue<ArrayBuffer> buffers;
 
         /// <summary>
         /// keeps track of how many arrays are taken vs returned
@@ -139,13 +139,13 @@ namespace JamesFrowen.SimpleWeb
         }
 
         [Conditional("DEBUG")]
-        void IncrementCreated()
+        private void IncrementCreated()
         {
             int next = Interlocked.Increment(ref _current);
             Log.Verbose($"BufferBucket({arraySize}) count:{next}");
         }
         [Conditional("DEBUG")]
-        void DecrementCreated()
+        private void DecrementCreated()
         {
             int next = Interlocked.Decrement(ref _current);
             Log.Verbose($"BufferBucket({arraySize}) count:{next}");
@@ -173,9 +173,9 @@ namespace JamesFrowen.SimpleWeb
     public class BufferPool
     {
         internal readonly BufferBucket[] buckets;
-        readonly int bucketCount;
-        readonly int smallest;
-        readonly int largest;
+        private readonly int bucketCount;
+        private readonly int smallest;
+        private readonly int largest;
 
         public BufferPool(int bucketCount, int smallest, int largest)
         {
@@ -229,7 +229,7 @@ namespace JamesFrowen.SimpleWeb
         }
 
         [Conditional("UNITY_ASSERTIONS")]
-        void Validate()
+        private void Validate()
         {
             if (buckets[0].arraySize != smallest)
             {

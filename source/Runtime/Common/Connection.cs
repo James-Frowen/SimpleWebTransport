@@ -26,10 +26,10 @@ namespace JamesFrowen.SimpleWeb
         int Id { get; }
     }
 
-    sealed class Connection : IDisposable, IConnection
+    internal sealed class Connection : IDisposable, IConnection
     {
         public const int IdNotSet = -1;
-        readonly object disposedLock = new object();
+        private readonly object disposedLock = new object();
 
         public object Context { get; set; }
         public int Id => connId;
@@ -54,14 +54,14 @@ namespace JamesFrowen.SimpleWeb
         public Thread receiveThread;
         public Thread sendThread;
 
-        ManualResetEventSlim sendPending = new ManualResetEventSlim(false);
-        ConcurrentQueue<ArrayBuffer> sendQueue = new ConcurrentQueue<ArrayBuffer>();
-        Action<Connection> onSendQueueFull;
-        readonly int maxSendQueueSize;
+        private ManualResetEventSlim sendPending = new ManualResetEventSlim(false);
+        private ConcurrentQueue<ArrayBuffer> sendQueue = new ConcurrentQueue<ArrayBuffer>();
+        private Action<Connection> onSendQueueFull;
+        private readonly int maxSendQueueSize;
         public bool needsPong;
 
-        Action<Connection> onDispose;
-        volatile bool hasDisposed;
+        private Action<Connection> onDispose;
+        private volatile bool hasDisposed;
 
         public Connection(TcpClient client, Action<Connection> onDispose, Action<Connection> onSendQueueFull, int maxSendQueueSize)
         {
