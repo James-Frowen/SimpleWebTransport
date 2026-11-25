@@ -1,9 +1,35 @@
 using System;
-using UnityEngine;
 using Conditional = System.Diagnostics.ConditionalAttribute;
 
 namespace JamesFrowen.SimpleWeb
 {
+#if UNITY_5_3_OR_NEWER
+    using UnityEngine;
+#else
+    public interface ILogger
+    {
+        void Log(LogType log, string text);
+    }
+    // values match UnityEngine.LogType
+    public enum LogType
+    {
+        Error = 0,
+        Warning = 2,
+        Log = 3,
+    }
+    class Debug
+    {
+        public static ILogger unityLogger = new DefaultLogger();
+        class DefaultLogger : ILogger
+        {
+            public void Log(LogType log, string text)
+            {
+                Console.WriteLine(text);
+            }
+        }
+    }
+#endif
+
     public static class Log
     {
         // used for Conditional
