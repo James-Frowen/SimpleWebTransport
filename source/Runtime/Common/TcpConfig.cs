@@ -1,5 +1,4 @@
 using System.Net.Sockets;
-using UnityEngine;
 
 namespace JamesFrowen.SimpleWeb
 {
@@ -7,9 +6,13 @@ namespace JamesFrowen.SimpleWeb
     public struct TcpConfig
     {
         public readonly bool noDelay;
-        [Tooltip("in milliseconds, (0 means no timeout)")]
+#if UNITY_5_3_OR_NEWER
+        [UnityEngine.Tooltip("in milliseconds, (0 means no timeout)")]
+#endif
         public readonly int sendTimeout;
-        [Tooltip("in milliseconds, (0 means no timeout)")]
+#if UNITY_5_3_OR_NEWER
+        [UnityEngine.Tooltip("in milliseconds, (0 means no timeout)")]
+#endif
         public readonly int receiveTimeout;
 
         public TcpConfig(bool noDelay, int sendTimeout, int receiveTimeout)
